@@ -4,7 +4,10 @@
 //   GET  /api/studio/session/:id                      -> { status, status_detail, acus, url, pack }
 //   POST /api/studio/session/:id/message { text, pack } -> asks the same session for a revised pack
 import { lookup } from 'node:dns/promises';
+import http from 'node:http';
+import https from 'node:https';
 import { isIP } from 'node:net';
+import { Readable } from 'node:stream';
 
 const API = 'https://api.devin.ai/v3';
 
@@ -87,30 +90,61 @@ const httpUrl = (u) => {
   return url.href;
 };
 
-const privateIp = (ip) => {
-  const v4 = ip.startsWith('::ffff:') ? ip.slice(7) : ip;
+export const privateIp = (ip) => {
+  const mapped = ip.match(/^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/i);
+  const v4 = mapped
+    ? `${parseInt(mapped[1], 16) >> 8}.${parseInt(mapped[1], 16) & 255}.${parseInt(mapped[2], 16) >> 8}.${parseInt(mapped[2], 16) & 255}`
+    : ip.startsWith('::ffff:') ? ip.slice(7) : ip;
   if (isIP(v4) === 4) {
     const [a, b] = v4.split('.').map(Number);
     return a === 0 || a === 10 || a === 127 || (a === 100 && b >= 64 && b < 128) || (a === 169 && b === 254)
       || (a === 172 && b >= 16 && b < 32) || (a === 192 && b === 168) || (a === 198 && (b === 18 || b === 19)) || a >= 224;
   }
   const v6 = ip.toLowerCase();
-  return v6 === '::' || v6 === '::1' || /^f[cd]/.test(v6) || /^fe[89ab]/.test(v6) || v6.startsWith('ff');
+  return v6 === '::' || v6 === '::1' || /^f[cd]/.test(v6) || /^fe[89abcdef]/.test(v6) || v6.startsWith('ff');
 };
 
-// Fetches a public website only: every hop (including redirects) must resolve to public addresses.
+// Fetches a public website only: every hop (including redirects) uses its validated address.
 async function fetchPublic(u, hops = 4) {
   const url = new URL(httpUrl(u));
   const host = url.hostname.replace(/^\[|\]$/g, '');
-  const addrs = isIP(host) ? [{ address: host }] : await lookup(host, { all: true }).catch(() => []);
+  const addrs = isIP(host) ? [{ address: host, family: isIP(host) }] : await lookup(host, { all: true }).catch(() => []);
   if (!addrs.length) throw fail(400, 'host not found');
   if (addrs.some((a) => privateIp(a.address))) throw fail(400, 'only public websites can be scanned');
-  const res = await fetch(url, { redirect: 'manual', headers: { 'User-Agent': 'Mozilla/5.0 DinoStudio' }, signal: AbortSignal.timeout(15000) });
+  const address = addrs[0];
+  const res = await new Promise((resolve, reject) => {
+    const request = (url.protocol === 'https:' ? https : http).get(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 DinoStudio' },
+      lookup: (_host, _options, callback) => callback(null, address.address, address.family),
+      timeout: 15000,
+    }, (response) => resolve(new Response(
+      [204, 205, 304].includes(response.statusCode) ? null : Readable.toWeb(response),
+      { status: response.statusCode, headers: response.headers },
+    )));
+    request.on('timeout', () => request.destroy(new Error('remote request timed out')));
+    request.on('error', reject);
+  });
   if (res.status >= 300 && res.status < 400 && res.headers.get('location')) {
     if (!hops) throw fail(400, 'too many redirects');
+    await res.body?.cancel();
     return fetchPublic(new URL(res.headers.get('location'), url).href, hops - 1);
   }
   return { res, url: url.href };
+}
+
+export async function readLimited(res, limit) {
+  if (Number(res.headers.get('content-length')) > limit) {
+    await res.body?.cancel();
+    throw fail(413, 'remote response too large');
+  }
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of res.body ?? []) {
+    size += chunk.byteLength;
+    if (size > limit) throw fail(413, 'remote response too large');
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks, size);
 }
 
 // Devin calls spend the server's credits: allowed from this machine, or remotely with STUDIO_TOKEN.
@@ -125,15 +159,14 @@ async function handle(req) {
   const path = req.url.split('?')[0];
   if (req.method === 'POST' && path === '/api/studio/scan') {
     const { res, url } = await fetchPublic((await readJson(req)).url);
-    return scanHtml((await res.text()).slice(0, 3e6), url);
+    return scanHtml((await readLimited(res, 3e6)).toString('utf8'), url);
   }
   if (req.method === 'POST' && path === '/api/studio/image') {
     // Remote logos are proxied so the studio can store them as data URLs (canvas textures need same-origin pixels).
     const { res } = await fetchPublic((await readJson(req)).url);
     const type = res.headers.get('content-type') ?? '';
     if (!res.ok || !type.startsWith('image/')) throw Object.assign(new Error('not an image'), { status: 422 });
-    const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.length > 4e6) throw Object.assign(new Error('image too large'), { status: 413 });
+    const buf = await readLimited(res, 4e6);
     return { dataUrl: `data:${type.split(';')[0]};base64,${buf.toString('base64')}` };
   }
   if (req.method === 'POST' && path === '/api/studio/analyze') {

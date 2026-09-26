@@ -7,6 +7,7 @@ import { Profile } from '../src/meta/Profile.js';
 import { Shop } from '../src/meta/Shop.js';
 import { MemoryStorage } from '../src/meta/Storage.js';
 import { applyContent, seedProfile, validatePack, zonePalette } from '../src/brand/pack.js';
+import { privateIp, readLimited } from '../studio/api.js';
 import bnw from '../src/brand/packs/bnw.json' with { type: 'json' };
 
 test('marque : le jeu principal est intact tant qu’aucun pack n’est appliqué', () => {
@@ -38,4 +39,29 @@ test('marque : BNW ajoute skin + musique et renomme les mondes, sauvegarde sépa
   assert.equal(new Shop(profile).prepareRun().theme, 'brand-bnw');
   assert.equal(new Profile(storage).data.skin, 'reggae', 'la partie principale ne voit pas la marque');
   assert.doesNotThrow(() => applyContent(bnw, { Skins, MusicThemes, zones }), 'réappliquer est idempotent');
+});
+
+test('marque : noms modifiables convertis en texte avant le rendu HTML des menus', () => {
+  const pack = { ...bnw, id: 'injection-check', skin: { name: '<img src=x onerror=alert(1)>' }, music: { name: '<svg onload=alert(1)>' } };
+  const { skin, theme } = applyContent(pack, { Skins, MusicThemes, zones: structuredClone(ZONES) });
+  assert.ok(!Skins.get(skin).name.includes('<'));
+  assert.ok(!MusicThemes.get(theme).name.includes('<'));
+});
+
+test('studio : limite les réponses distantes avant de les charger en mémoire', async () => {
+  const body = () => new ReadableStream({
+    start(controller) {
+      controller.enqueue(new Uint8Array([1, 2, 3]));
+      controller.enqueue(new Uint8Array([4, 5, 6]));
+      controller.close();
+    },
+  });
+  assert.deepEqual(await readLimited(new Response(body()), 6), Buffer.from([1, 2, 3, 4, 5, 6]));
+  await assert.rejects(readLimited(new Response(body()), 4), { status: 413 });
+  await assert.rejects(readLimited(new Response(body(), { headers: { 'content-length': '10' } }), 4), { status: 413 });
+});
+
+test('studio : refuse les adresses privées, y compris IPv4 encapsulées en IPv6', () => {
+  for (const address of ['127.0.0.1', '10.0.0.1', '::1', 'fd00::1', '::ffff:7f00:1']) assert.equal(privateIp(address), true);
+  for (const address of ['8.8.8.8', '2606:4700:4700::1111']) assert.equal(privateIp(address), false);
 });

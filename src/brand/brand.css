@@ -10,4 +10,9 @@
 .brand-badge { position: fixed; right: 16px; top: 50%; transform: translateY(-50%); z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 150px; padding: 12px 14px; border-radius: 15px; background: var(--brand-primary); color: var(--brand-light); font: inherit; font-size: 11px; font-weight: 700; line-height: 1.25; letter-spacing: 1px; text-align: center; text-transform: uppercase; text-decoration: none; box-shadow: 0 5px 20px #174b4022; }
 .brand-badge .brand-logo { height: 30px; padding: 0; }
 @media (max-width: 700px) { .brand-badge { display: none; } }
+@media (max-width: 759px) {
+  .branded #start h1 br { display: revert; }
+  .branded #start h1 { font-size: clamp(40px, 11.5vw, 68px); }
+  .branded .brand-cta { max-width: 100%; font-size: 12px; padding: 11px 14px; }
+}
 @media (prefers-reduced-motion: reduce) { .branded .brand-cta { transition: none; } }

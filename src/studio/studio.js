@@ -103,8 +103,8 @@ function merge(update) {
   const { notes, ...rest } = update;
   const worlds = Array.isArray(rest.worlds) ? rest.worlds.map((wld, i) => ({ ...(pack.worlds?.[i] ?? {}), ...wld })) : pack.worlds;
   const logo = pack.logo;
-  if (rest.logo && !pack.logo?.startsWith('data:')) adoptLogo(rest.logo);
   pack = { ...pack, ...rest, logo, palette: { ...pack.palette, ...rest.palette }, copy: { ...pack.copy, ...rest.copy }, skin: { ...pack.skin, ...rest.skin }, music: { ...pack.music, ...rest.music }, worlds };
+  if (rest.logo && rest.logo !== logo) adoptLogo(rest.logo);
   if (rest.palette) recolorWorlds();
   if (notes) addChat(`Devin: ${notes}`);
   render(); save();
@@ -130,12 +130,14 @@ function showSwatches(colors) {
 // Stores a remote logo as a downscaled data URL so the game can draw it on canvas textures.
 async function adoptLogo(url) {
   if (!url || url.startsWith('data:')) return;
+  const owner = pack, previousLogo = owner.logo;
   try {
     const { dataUrl } = await api('image', { url });
     const img = await new Promise((resolve, reject) => { const i = new Image(); i.onload = () => resolve(i); i.onerror = reject; i.src = dataUrl; });
     const s = Math.min(1, 480 / Math.max(img.width, img.height));
     const c = document.createElement('canvas'); c.width = img.width * s; c.height = img.height * s;
     c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    if (pack !== owner || pack.logo !== previousLogo) return;
     pack.logo = c.toDataURL('image/png');
     render(); save();
   } catch { /* keep the current logo */ }
