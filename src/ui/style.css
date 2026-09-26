@@ -1,6 +1,8 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: 100%; height: 100%; overflow: hidden; background: #f4f4f4; font-family: 'Courier New', monospace; user-select: none; -webkit-user-select: none; touch-action: none; }
 canvas { display: block; }
+html, body, button { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; overscroll-behavior: none; }
+html.touch .desk-only, html:not(.touch) .touch-only { display: none !important; }
 .hidden { display: none !important; }
 
 /* ---------- HUD */

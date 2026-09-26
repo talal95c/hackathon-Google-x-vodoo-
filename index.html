@@ -41,7 +41,7 @@
     </div>
     <div id="music" class="small"></div>
     <ol id="mpBoard" class="hidden"></ol>
-    <div id="shoveBox" class="hidden"><button id="shoveBtn">✋ E / F · SLAP</button><div class="bar"><div class="fill" id="shoveFill"></div></div></div>
+    <div id="shoveBox" class="hidden"><button id="shoveBtn">✋ <span class="desk-only">E / F · </span>SLAP</button><div class="bar"><div class="fill" id="shoveFill"></div></div></div>
   </div>
   <div id="vignette"></div>
   <div id="flash"></div>
@@ -68,7 +68,8 @@
       <button class="nudge-close" data-action="nudge-later" aria-label="Close">✕</button>
     </div>
     <div class="menu-footer">
-      <div class="controls"><span><b>↑</b> run</span><span><b>← →</b> steer</span><span><b>SPACE</b> jump</span><span><b>SHIFT</b> slide</span><span><b>E / F</b> slap</span></div>
+      <div class="controls desk-only"><span><b>↑</b> run</span><span><b>← →</b> steer</span><span><b>SPACE</b> jump</span><span><b>SHIFT</b> slide</span><span><b>E / F</b> slap</span></div>
+      <div class="controls touch-only"><span><b>HOLD</b> run</span><span><b>DRAG ↔</b> steer</span><span><b>SWIPE ↑</b> jump</span><span><b>SWIPE ↓</b> slide</span><span><b>✋</b> slap</span></div>
       <div class="buttons"><button data-action="shop"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l1 13H5zM9 7a3 3 0 0 1 6 0"/></svg><span>Shop</span></button><button data-action="music"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><span>Music</span></button></div>
     </div>
   </div>

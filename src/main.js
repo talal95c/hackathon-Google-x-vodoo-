@@ -93,6 +93,11 @@ if (lyria.hasKey()) lyria.connect();
 // --- Interface
 const hud = new Hud(game, profile);
 const input = new Input();
+// Indications tactiles ou clavier selon le dernier appareil utilisé
+const setTouchUi = (on) => document.documentElement.classList.toggle('touch', on);
+setTouchUi(matchMedia('(pointer: coarse)').matches);
+addEventListener('touchstart', () => setTouchUi(true), { capture: true, passive: true });
+addEventListener('keydown', () => setTouchUi(false), { capture: true, passive: true });
 const voices = new SkinVoices({ sfx }); // répliques des skins à la claque (clips pré-générés dans public/voices/)
 voices.preload();
 const menus = new Menus({ game, profile, shop, lyria, music, voices, onPlay: play, onBack: back });
