@@ -95,11 +95,12 @@ const PATTERNS = {
     for (let k = 0; k < count; k++) group.push(g.spawn(type, s + k * spacing, Math.sin(ph + k * 0.5) * amp, { chunk: chunk.index, group }));
     return count * spacing;
   },
-  riskFork(g, chunk, s, W, { count = 6, spacing = 3.5 } = {}) {
-    const side = g.rng.sign(), group = [];
+  riskFork(g, chunk, s, _W, { count = 6, spacing = 3.5 } = {}) {
+    const side = g.rng.sign(), group = [], frame = {};
     for (let k = 0; k < count; k++) {
-      g.spawn('coin', s + k * spacing, -side * W * 0.22, { chunk: chunk.index, group });
-      g.spawn('goldCoin', s + k * spacing, side * (W / 2 - 1.3), { chunk: chunk.index, group });
+      const at = s + k * spacing, width = g.track.frame(at, frame).w;
+      g.spawn('coin', at, -side * width * 0.22, { chunk: chunk.index, group });
+      g.spawn('goldCoin', at, side * (width / 2 - 1.3), { chunk: chunk.index, group });
     }
     return count * spacing;
   },
