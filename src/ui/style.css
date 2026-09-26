@@ -26,6 +26,16 @@ canvas { display: block; }
 #bottom { bottom: 18px; align-items: flex-end; }
 #speed { font-size: 34px; font-weight: bold; }
 #speed small { font-size: 14px; }
+#speed { --spd: 0; position: relative; overflow: hidden; transition: color .25s, box-shadow .25s, background-color .25s; }
+#speed::after { content: ''; position: absolute; left: 0; bottom: 0; height: 4px; width: 100%; transform-origin: left; transform: scaleX(var(--spd));
+  background: linear-gradient(90deg, #1a73e8, #34a853 55%, #fbbc04 80%, #ea4335); transition: transform .15s linear; }
+#speed[data-tier="quick"] { color: #1a73e8; }
+#speed[data-tier="fast"] { color: #e37400; animation: speed-rumble .09s steps(2) infinite; }
+#speed[data-tier="boost"] { color: #188038; box-shadow: 0 0 0 2px #34a85366, 0 6px 24px #34a85355; animation: speed-rumble .07s steps(2) infinite; }
+#speed.pop { animation: speed-pop .35s cubic-bezier(.3, 1.8, .5, 1); }
+@keyframes speed-pop { 0% { transform: scale(1); } 35% { transform: scale(1.18) rotate(-2deg); } 100% { transform: scale(1); } }
+@keyframes speed-rumble { 0% { translate: 0 0; } 50% { translate: .6px -.6px; } 100% { translate: -.6px .6px; } }
+@media (prefers-reduced-motion: reduce) { #speed, #speed.pop { animation: none !important; } }
 #driftbox { width: min(220px, 40vw); }
 #driftbox .label { font-size: 12px; font-weight: bold; text-align: right; }
 #driftbox .bar { height: 10px; }
