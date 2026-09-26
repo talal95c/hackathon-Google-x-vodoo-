@@ -28,6 +28,7 @@ export class Hud {
     on('runner:manual', ({ on: m, dir }) => { if (m) this.banner(dir > 0 ? '⬅ TIENS À GAUCHE !' : 'TIENS À DROITE ! ➡', 1.2); });
     on('runner:hit', () => this.flash(0.6));
     on('runner:parry', () => { this.banner('PARADE PARFAITE ! +25 FRÉNÉSIE', 1); this.flash(0.3); });
+    on('runner:nearMiss', ({ total }) => this.banner(total > 1 ? `FRÔLÉ ! ×${total}` : 'FRÔLÉ ! +8 FRÉNÉSIE', 0.8));
     on('fever:start', () => { this.banner('FRÉNÉSIE ! DÉTRUIS LES OBSTACLES', 1.8); this.flash(0.4); });
     on('boss:start', ({ boss }) => { this.el.boss.classList.remove('hidden'); this.el.bossName.textContent = `⚠ ${boss.def.name}`; this.banner('BOSS !', 1.6); });
     on('boss:damage', ({ hp, max }) => { this.el.bossFill.style.width = `${(hp / max) * 100}%`; });

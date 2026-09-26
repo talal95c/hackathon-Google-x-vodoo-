@@ -61,6 +61,11 @@ export const GAME = {
   parryWindow: 0.14,
   parryCooldown: 0.5,
   feverDuration: 6,
+  nearMissMargin: 0.9,   // écart (m) sous lequel un obstacle évité compte comme frôlé
+  nearMissSlowMo: 0.35,  // durée réelle du ralenti après un frôlement (s)
+  nearMissTimeScale: 0.4,
+  nearMissFever: 8,
+  parryHitstop: 0.1,     // gel quasi total après une parade (s)
 };
 
 // Génération de la route

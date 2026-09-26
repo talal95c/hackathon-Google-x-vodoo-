@@ -76,6 +76,31 @@ test('les pièces se ramassent plus largement que les obstacles ne frappent', ()
   assert.equal(coin.overlapsRunner(), true);
 });
 
+test('frôler un obstacle sans le toucher déclenche un ralenti et remplit la Frénésie', () => {
+  const g = new Game({ seed: 11 });
+  g.start({ seed: 11 });
+  for (const e of g.entities) e.destroy();
+  g.entities = [];
+  const events = [];
+  g.on('runner:nearMiss', (e) => events.push(e));
+  const hazard = g.spawn('cactus', g.runner.z + 4, g.runner.x + 1.1 + 0.85 * 0.8 + 0.3);
+  const far = g.spawn('cactus', g.runner.z + 4, g.runner.x + 6);
+  const lives = g.lives;
+  for (let i = 0; i < 90 && g.timeWarp.left === 0; i++) g.update(1 / 60, idle);
+  assert.equal(events.length, 1);
+  assert.equal(events[0].entity, hazard);
+  assert.ok(events[0].margin >= 0 && events[0].margin <= 0.9);
+  assert.equal(g.lives, lives);
+  assert.equal(g.fever, 8);
+  assert.ok(g.timeWarp.left > 0 && g.timeWarp.scale < 1);
+  const s = g.runner.z;
+  g.update(0.1, idle);
+  assert.ok(g.runner.z - s < g.runner.speed * 0.1 * 0.6, 'la simulation avance au ralenti');
+  run(g, 1);
+  assert.equal(events.length, 1, 'un seul frôlement par obstacle ; l’obstacle lointain ne compte pas');
+  assert.equal(far.nearMissDone, true);
+});
+
 test('Frénésie : la collecte remplit une jauge temporaire, sans la recharger pendant son effet', () => {
   const g = new Game({ seed: 12 });
   g.start({ seed: 12 });

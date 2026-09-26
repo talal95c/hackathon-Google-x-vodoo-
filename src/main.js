@@ -25,6 +25,7 @@ import { Particles } from './view/Particles.js';
 import { CameraRig } from './view/CameraRig.js';
 import { BeatFx } from './view/BeatFx.js';
 import { Input } from './input/Input.js';
+import { Haptics, bindHaptics } from './input/Haptics.js';
 import { Sfx, bindSfx } from './audio/Sfx.js';
 import { LyriaEngine } from './audio/music/LyriaEngine.js';
 import { SynthEngine } from './audio/music/SynthEngine.js';
@@ -57,6 +58,8 @@ const views = [
 // --- Son et musique
 const sfx = new Sfx();
 bindSfx(game, sfx);
+const haptics = new Haptics();
+bindHaptics(game, haptics);
 const lyria = new LyriaEngine();
 const music = new MusicDirector(game, { lyria, synth: new SynthEngine() });
 sfx.onInit = (audioCtx) => music.setAudioContext(audioCtx);
@@ -67,6 +70,14 @@ if (lyria.hasKey()) lyria.connect();
 const hud = new Hud(game, profile);
 const input = new Input();
 const menus = new Menus({ game, profile, shop, lyria, music, onPlay: play });
+const hapticsToggle = document.getElementById('haptics');
+hapticsToggle.checked = haptics.enabled;
+document.getElementById('hapticsRow').classList.toggle('hidden', !haptics.supported);
+hapticsToggle.addEventListener('change', () => { haptics.setEnabled(hapticsToggle.checked); haptics.pulse('tap'); });
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (b) haptics.pulse('tap', { light: true });
+});
 let overAt = 0;
 
 function play() {

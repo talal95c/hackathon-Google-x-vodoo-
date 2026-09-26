@@ -87,6 +87,7 @@ export function bindSfx(game, sfx) {
     sfx.coin(chain, entity.type === 'goldCoin');
   });
   on('runner:parry', () => { sfx.tone(170, 0.18, 'sawtooth', 0.24, -100); sfx.noise(0.1, 0.18, 1800); });
+  on('runner:nearMiss', () => { sfx.tone(520, 0.16, 'triangle', 0.1, 700); sfx.noise(0.12, 0.06, 3200); });
   on('runner:parry:miss', () => sfx.tone(220, 0.08, 'triangle', 0.06, -90));
   on('fever:start', () => { [440, 554, 659].forEach((f, i) => setTimeout(() => sfx.tone(f, 0.16, 'sawtooth', 0.12), i * 80)); });
   on('zone', () => sfx.zone());

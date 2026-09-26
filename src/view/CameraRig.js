@@ -20,6 +20,7 @@ export class CameraRig extends View {
     this.listen('runner:boost', () => this.addShake(0.25));
     this.listen('boss:damage', () => this.addShake(0.08));
     this.listen('runner:parry', () => this.addShake(0.65));
+    this.listen('runner:nearMiss', () => this.addShake(0.25));
   }
 
   addShake(v) { this.shake = Math.max(this.shake, v); }
