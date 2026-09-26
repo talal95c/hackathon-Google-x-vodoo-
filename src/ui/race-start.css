@@ -1,0 +1,93 @@
+/* A readable control deck, kept clear of the dino and the Play button. */
+#start.screen { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(min-content, 1fr) auto; padding: 28px 4.5vw 24px; gap: 20px; overflow-y: auto; }
+#start .menu-brand { position: static; }
+#start .hero-copy { position: static; transform: none; align-self: center; margin-left: 2.5vw; width: 46vw; }
+#start .menu-footer { position: static; display: block; padding: 18px 20px; border: 1px solid #fff; border-radius: 22px; background: #fffffff2; box-shadow: 0 8px 0 #27333612, 0 18px 50px #2733361a; backdrop-filter: blur(14px); }
+.controls-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+#start .controls-heading h2 { font-size: 16px; letter-spacing: 1.5px; color: #263331; }
+#start .controls-heading p { font-size: 13px; color: #58635d; margin-top: 3px; }
+#start .menu-footer button { font-size: 13px; background: #edf0ed; padding: 10px 15px; }
+#start .controls { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 9px; color: #25352e; }
+.control-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; min-width: 0; padding: 12px 6px; border: 1px solid #dce2dc; border-radius: 13px; background: #f0f3ef; }
+.control-card strong { font-size: clamp(12px, 1.25vw, 15px); white-space: nowrap; }
+.control-card kbd { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 60px; min-height: 37px; padding: 4px 10px; background: #fff; border: 1px solid #b9c3bc; border-bottom: 4px solid #b9c3bc; border-radius: 8px; font: 850 16px 'Avenir Next', system-ui, sans-serif; color: #24392c; }
+.control-card kbd small { font-size: 12px; }
+#start .control-run { background: #e4f5bf; border-color: #afcd79; }
+#start .control-run kbd { background: #263d2b; border-color: #122519; color: #efffcd; }
+#start .control-touch { display: none; }
+.control-touch .control-card b { margin: 0; padding: 0; border: 0; background: none; font-size: 12px; text-align: center; }
+.countdown-hint.control-touch { display: none; }
+
+/* Big arcade start lights, a punched-in numeral and a single expanding ring. */
+.race-countdown { --signal: #ffb354; position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; pointer-events: none; color: #fff; background: radial-gradient(ellipse at center, #14282755 0%, #091b20b3 90%); text-align: center; }
+.race-countdown::before, .race-countdown::after { content: ''; position: absolute; width: 30vw; height: 4px; background: var(--signal); box-shadow: 0 0 35px var(--signal); top: 50%; transform: rotate(-12deg); opacity: .6; }
+.race-countdown::before { left: -12vw; }.race-countdown::after { right: -12vw; }
+.countdown-kicker { font-size: clamp(12px, 2vw, 17px); font-weight: 850; letter-spacing: .3em; padding-left: .3em; }
+.countdown-lights { display: flex; gap: 16px; padding: 14px 23px; margin: 20px 0 5px; border-radius: 40px; background: #091718b3; border: 1px solid #ffffff24; }
+.countdown-lights i { width: 23px; height: 23px; border-radius: 50%; background: #ffffff19; border: 2px solid #ffffff26; transition: background .12s, box-shadow .12s; }
+.countdown-lights i.lit { background: var(--signal); border-color: #fff9; box-shadow: 0 0 22px var(--signal); }
+.countdown-stage { position: relative; display: grid; place-items: center; width: min(390px, 80vw); height: min(310px, 39vh); }
+#countdownNumber { position: relative; font-size: clamp(120px, 25vw, 250px); line-height: 1; font-weight: 950; letter-spacing: -.07em; padding-right: .07em; color: var(--signal); text-shadow: 0 8px 0 #061516, 0 0 50px #ffb35450; }
+.countdown-ring { position: absolute; width: min(260px, 65vw, 33vh); aspect-ratio: 1; border: 3px solid var(--signal); border-radius: 50%; opacity: 0; }
+.countdown-label { font-size: clamp(20px, 4vw, 32px); letter-spacing: .05em; font-weight: 900; text-shadow: 0 3px 14px #0009; }
+.countdown-hint { margin: 24px 16px 0; padding: 12px 20px; border: 1px solid #ffffff26; border-radius: 12px; background: #071b24bd; font-size: clamp(13px, 2vw, 16px); font-weight: 650; }
+.countdown-hint kbd { display: inline-block; padding: 3px 9px; margin: 0 2px; background: white; border-radius: 5px; color: #173628; font: 850 16px system-ui; }
+.race-countdown[data-step="ready"] #countdownNumber { font-size: clamp(54px, 11vw, 100px); letter-spacing: -.05em; }
+.race-countdown[data-step="1"] { --signal: #fff0a2; }
+.race-countdown[data-step="0"] { --signal: #b6ff66; background: radial-gradient(ellipse, transparent 10%, #32732733); }
+.race-countdown[data-step="0"] .countdown-kicker, .race-countdown[data-step="0"] .countdown-lights { visibility: hidden; }
+.race-countdown[data-step="0"] .countdown-label { background: #102819df; padding: 6px 14px; border-radius: 9px; }
+.countdown-hit #countdownNumber { animation: countdown-punch .55s cubic-bezier(.16,1,.3,1) both; }
+.countdown-hit .countdown-ring { animation: countdown-wave .8s ease-out both; }
+@keyframes countdown-punch { from { transform: scale(1.65) rotate(-7deg); opacity: 0; } 35% { opacity: 1; } to { transform: scale(1) rotate(-3deg); opacity: 1; } }
+@keyframes countdown-wave { from { transform: scale(.5); opacity: .75; } to { transform: scale(1.65); opacity: 0; } }
+body.counting-down #hud, body.counting-down #banner { visibility: hidden; }
+
+@media (max-width: 759px) {
+  #start.screen { padding: 18px 18px max(18px, env(safe-area-inset-bottom)); gap: 16px; }
+  #start .hero-copy { width: 100%; margin-left: 0; align-self: end; padding-top: 100px; }
+  #start h1 { font-size: clamp(34px, 10vw, 60px); }
+  #start .hero-description { font-size: 16px; margin-top: 10px; }
+  #start .hero-actions { margin-top: 12px; }
+  #start .menu-footer { padding: 13px; border-radius: 17px; }
+  .controls-heading { margin-bottom: 10px; gap: 8px; }
+  #start .controls-heading h2 { font-size: 12px; letter-spacing: .8px; }
+  #start .controls-heading p { display: none; }
+  #start .menu-footer button { padding: 8px 10px; font-size: 11px; }
+  #start .controls { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+  .control-card { padding: 8px 4px; gap: 6px; }.control-card strong { font-size: 11px; }
+  .control-card kbd { min-width: 48px; min-height: 31px; padding: 3px 7px; font-size: 13px; }
+  .control-card kbd small { font-size: 10px; }
+}
+@media (pointer: coarse) {
+  #start .control-keyboard, .countdown-hint.control-keyboard { display: none; }
+  #start .control-touch { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .countdown-hint.control-touch { display: block; }
+}
+@media (pointer: coarse) and (max-width: 759px) {
+  #start .control-touch { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-height: 620px) and (min-width: 760px) {
+  #start.screen { padding-top: 16px; padding-bottom: 16px; gap: 10px; }
+  #start h1 { font-size: clamp(40px, 5.5vw, 64px); }
+  #start .hero-description { font-size: 18px; margin: 10px 0 0; }
+  #start .hero-actions { margin-top: 10px; }
+  #start .menu-footer { padding: 12px 16px; }.controls-heading { margin-bottom: 8px; }
+  .control-card { padding: 7px 4px; gap: 5px; }
+}
+@media (max-height: 500px) and (min-width: 760px) {
+  #start.screen h1 { font-size: 38px; }
+  #start.screen .hero-description { display: none; }
+  #start.screen .hero-actions { margin-top: 10px; }
+  #start.screen .hero-actions button { min-height: 40px; padding: 9px 15px; }
+  #start.screen .controls-heading p { display: none; }
+}
+@media (max-height: 500px) {
+  .countdown-lights { margin: 10px 0 0; padding: 8px 18px; }
+  .countdown-hint { margin-top: 12px; padding: 8px 14px; }
+  #countdownNumber { font-size: 32vh; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .countdown-hit #countdownNumber, .countdown-hit .countdown-ring { animation: none; }
+  .countdown-lights i { transition: none; }
+}
