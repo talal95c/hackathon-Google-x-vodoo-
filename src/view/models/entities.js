@@ -15,6 +15,7 @@ const tex = () => T || (T = {
 });
 const faced = (side, front) => [lambert(side), lambert(side), lambert(side), lambert(side), front, front];
 const coinGeo = new THREE.CylinderGeometry(0.9, 0.9, 0.18, 20).rotateX(Math.PI / 2);
+const goldCoinMat = new THREE.MeshLambertMaterial({ color: 0xffb300, emissive: 0x945700, emissiveIntensity: 0.55 });
 const cookieGeo = new THREE.CylinderGeometry(1.6, 1.6, 0.6, 18).rotateX(Math.PI / 2);
 const pickupGeo = new THREE.OctahedronGeometry(0.9);
 const GREY = 0x535353;
@@ -26,6 +27,14 @@ Models.register('cactus', () => {
   cube(g, GREY, 0.6, 0.45, 0.6, -0.6, 1.0, 0);
   cube(g, GREY, 0.6, 0.9, 0.6, 0.9, 1.5, 0);
   cube(g, GREY, 0.6, 0.45, 0.6, 0.6, 1.2, 0);
+  return g;
+});
+
+Models.register('parryBlock', () => {
+  const g = new THREE.Group();
+  cube(g, 0x783dcb, 2.1, 2.2, 0.9, 0, 1.1, 0);
+  cube(g, 0xffffff, 0.3, 1.1, 1, 0, 1.1, 0);
+  cube(g, 0xffffff, 1.1, 0.3, 1, 0, 1.1, 0);
   return g;
 });
 
@@ -75,6 +84,11 @@ Models.register('rollingCookie', () => {
 
 Models.register('coin', () => {
   const m = new THREE.Mesh(coinGeo, tex().favicon);
+  m.position.y = 1.2;
+  return { object: m, update(e, dt, t) { m.rotation.y = t * 3 + e.id; } };
+});
+Models.register('goldCoin', () => {
+  const m = new THREE.Mesh(coinGeo, goldCoinMat);
   m.position.y = 1.2;
   return { object: m, update(e, dt, t) { m.rotation.y = t * 3 + e.id; } };
 });

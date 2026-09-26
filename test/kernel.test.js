@@ -6,12 +6,132 @@ import { Game } from '../src/kernel/Game.js';
 import { Shop } from '../src/meta/Shop.js';
 import { Profile } from '../src/meta/Profile.js';
 import { MemoryStorage } from '../src/meta/Storage.js';
+import { CHALLENGES } from '../src/content/challenges.js';
+import { Input } from '../src/input/Input.js';
 
 const idle = { steer: 0, drift: false, brake: false, jump: false };
 const run = (game, seconds, intent = idle) => { for (let t = 0; t < seconds; t += 1 / 60) game.update(1 / 60, typeof intent === 'function' ? intent(game) : intent); };
 
 // Pilote simple : reste au centre, contre la force centrifuge
 const pilot = (g) => ({ ...idle, steer: Math.max(-1, Math.min(1, (-g.runner.x * 3 - g.runner.push) / 10)) });
+
+test('tap bref = une parade ; glissement vers le haut = saut sans parade', () => {
+  const handlers = {}, oldWindow = globalThis.window;
+  globalThis.window = { innerWidth: 800 };
+  try {
+    const input = new Input({ addEventListener: (type, fn) => { handlers[type] = fn; } });
+    const touch = (identifier, x, y) => ({ identifier, clientX: x, clientY: y });
+    const event = (type, changedTouches, touches) => ({ type, changedTouches, touches, target: {}, preventDefault() {} });
+    const start = touch(1, 200, 300);
+    handlers.touchstart(event('touchstart', [start], [start]));
+    handlers.touchend(event('touchend', [touch(1, 202, 302)], []));
+    assert.equal(input.read(1 / 60).attack, true);
+    assert.equal(input.read(1 / 60).attack, false);
+    handlers.touchstart(event('touchstart', [start], [start]));
+    handlers.touchmove(event('touchmove', [touch(1, 200, 220)], [start]));
+    handlers.touchend(event('touchend', [touch(1, 200, 220)], []));
+    const intent = input.read(1 / 60);
+    assert.equal(intent.jump, true);
+    assert.equal(intent.attack, false);
+  } finally {
+    if (oldWindow === undefined) delete globalThis.window;
+    else globalThis.window = oldWindow;
+  }
+});
+
+test('parade : cible violette proche uniquement, cooldown et récompense', () => {
+  const g = new Game({ seed: 10 });
+  g.start({ seed: 10 });
+  for (const e of g.entities) e.destroy();
+  g.entities = [];
+  const far = g.spawn('parryBlock', g.runner.z + 14, g.runner.x);
+  g.update(1 / 60, { ...idle, attack: true });
+  assert.equal(far.alive, true);
+  assert.equal(g.parries, 0);
+  const near = g.spawn('parryBlock', g.runner.z + 3, g.runner.x);
+  g.update(1 / 60, { ...idle, attack: true });
+  assert.equal(near.alive, true, 'une deuxième attaque immédiate est bloquée');
+  run(g, 0.55, pilot);
+  const next = g.spawn('parryBlock', g.runner.z + 3, g.runner.x);
+  g.update(1 / 60, { ...idle, attack: true });
+  assert.equal(far.alive, false, 'la cible la plus proche est parée en priorité');
+  assert.equal(next.alive, true);
+  assert.equal(g.parries, 1);
+  assert.equal(g.fever, 25);
+  assert.ok(g.coins >= far.reward);
+});
+
+test('les pièces se ramassent plus largement que les obstacles ne frappent', () => {
+  const g = new Game({ seed: 11 });
+  g.start({ seed: 11 });
+  const { z, x } = g.runner;
+  const hazard = g.spawn('cactus', z, x + 1.8);
+  const coin = g.spawn('coin', z, x + 1.8);
+  assert.equal(hazard.overlapsRunner(), false);
+  assert.equal(coin.overlapsRunner(), true);
+});
+
+test('Frénésie : la collecte remplit une jauge temporaire, sans la recharger pendant son effet', () => {
+  const g = new Game({ seed: 12 });
+  g.start({ seed: 12 });
+  const coin = g.spawn('goldCoin', g.runner.z, g.runner.x);
+  coin.onContact(g.runner);
+  assert.equal(g.coins >= 3, true);
+  assert.equal(g.fever, 12);
+  g.addFever(88);
+  assert.equal(g.feverTime, 6);
+  assert.equal(g.runner.smashes, true);
+  const hazard = g.spawn('cactus', g.runner.z, g.runner.x);
+  hazard.onContact(g.runner);
+  assert.equal(hazard.alive, false);
+  g.addFever(80);
+  assert.equal(g.fever, 0);
+  let ended = 0;
+  g.on('fever:end', () => ended++);
+  g.feverTime = 1 / 120;
+  g.update(1 / 60, idle);
+  assert.equal(ended, 1);
+  assert.equal(g.runner.smashes, false);
+  assert.equal(g.runner.isInvulnerable, false);
+  g.start({ seed: 12 });
+  assert.equal(g.feverTime, 0);
+  assert.equal(g.fever, 0);
+});
+
+test('défis facultatifs : sélection conservée, seule la réussite crédite la récompense', () => {
+  const profile = new Profile(new MemoryStorage());
+  profile.selectChallenge('parrier');
+  profile.selectChallenge('unknown');
+  assert.equal(profile.data.challenge, 'parrier');
+  const g = new Game({ seed: 13 });
+  g.start({ seed: 13, challenge: profile.data.challenge });
+  assert.equal(g.challengeProgress, 0);
+  g.parries = 2;
+  assert.equal(g.challengeProgress, 2);
+  let result;
+  g.on('game:over', (r) => { result = r; });
+  for (let i = 0; i < 3; i++) { g.runner.invul = 0; g.runner.hurt({}); }
+  assert.equal(result.challenge.complete, true);
+  assert.equal(profile.recordRun(result).challengeReward, CHALLENGES[1].reward);
+  assert.equal(profile.coins, result.coins + CHALLENGES[1].reward);
+  g.start({ seed: 13, challenge: profile.data.challenge });
+  for (let i = 0; i < 3; i++) { g.runner.invul = 0; g.runner.hurt({}); }
+  assert.equal(result.challenge.complete, false);
+  assert.equal(profile.recordRun(result).challengeReward, 0);
+});
+
+test('le choix de trajectoire propose une voie sûre et une voie dorée en bord de piste', () => {
+  const g = new Game({ seed: 14 });
+  g.track.ensure(700);
+  const gold = g.entities.filter((e) => e.type === 'goldCoin');
+  assert.ok(gold.length > 0);
+  for (const e of gold) {
+    const safe = g.entities.find((c) => c.type === 'coin' && c.s === e.s && Math.sign(c.d) === -Math.sign(e.d));
+    assert.ok(safe, `voie sûre absente à ${e.s}`);
+    assert.ok(Math.abs(e.d) > Math.abs(safe.d));
+    assert.ok(Math.abs(e.d) < g.track.frame(e.s, {}).w / 2);
+  }
+});
 
 test('même graine = même route', () => {
   const a = new Game({ seed: 42 }), b = new Game({ seed: 42 });

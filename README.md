@@ -29,7 +29,13 @@ boss, boutique (skins, musiques, améliorations) et musique générée en direct
 - ESPACE / ↑ : sauter
 - SHIFT (en tournant) : glissade ; relâcher = sprint (bleu, puis orange si chargé)
 - ↓ : freiner
-- Mobile : moitié gauche/droite de l'écran, glisser vers le haut = saut, deux doigts = glissade
+- F : parer un bloc violet à proximité (fenêtre de 0,14 s)
+- Mobile : moitié gauche/droite de l'écran, glisser vers le haut = saut, deux doigts = glissade, tap bref = parade
+
+Les pièces remplissent la jauge de Frénésie : pendant 6 secondes, le dino écrase les obstacles
+sur la route, mais peut toujours tomber. Certaines sections proposent une voie sûre avec des
+pièces normales et une voie en bord de piste avec des pièces dorées. Le menu Défis permet de
+sélectionner un objectif facultatif par course, sans limite de temps.
 
 ## Publier sur itch.io
     npm run zip        # crée dino-escape-itch.zip
