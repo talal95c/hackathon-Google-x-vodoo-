@@ -7,9 +7,11 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
-    "zip": "vite build && cd dist && rm -f ../dino-escape-itch.zip && zip -r ../dino-escape-itch.zip ."
+    "zip": "vite build && cd dist && rm -f ../dino-escape-itch.zip && zip -r ../dino-escape-itch.zip .",
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
+    "@google/genai": "^2.24.0",
     "three": "^0.186.1"
   },
   "devDependencies": {

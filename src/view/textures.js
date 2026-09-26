@@ -70,16 +70,3 @@ export const faviconTex = () => canvasTex(128, 128, (g, w, h) => {
   g.fillStyle = '#fbbc04'; g.beginPath(); g.arc(64, 64, 60, 0, Math.PI * 2); g.fill();
   g.fillStyle = '#fff'; g.font = 'bold 80px sans-serif'; g.textAlign = 'center'; g.fillText('★', 64, 92);
 });
-
-// Chevrons de virage (façon circuit), pointant à gauche ou à droite de l'écran
-export const chevronTex = (left) => canvasTex(512, 128, (g, w, h) => {
-  g.fillStyle = '#e53935'; g.fillRect(0, 0, w, h);
-  g.fillStyle = '#fff';
-  for (let i = 0; i < 4; i++) {
-    const x = 70 + i * 120;
-    g.beginPath();
-    if (left) { g.moveTo(x - 40, h / 2); g.lineTo(x + 10, 14); g.lineTo(x + 40, 14); g.lineTo(x - 10, h / 2); g.lineTo(x + 40, h - 14); g.lineTo(x + 10, h - 14); }
-    else { g.moveTo(x + 40, h / 2); g.lineTo(x - 10, 14); g.lineTo(x - 40, 14); g.lineTo(x + 10, h / 2); g.lineTo(x - 40, h - 14); g.lineTo(x - 10, h - 14); }
-    g.fill();
-  }
-});

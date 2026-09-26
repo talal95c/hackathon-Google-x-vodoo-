@@ -1,4 +1,5 @@
-// Sons 100 % synthétisés (WebAudio) : aucun fichier à charger.
+// Bruitages 100 % synthétisés (WebAudio) : aucun fichier à charger.
+// bindSfx(game, sfx) branche les sons sur les événements du kernel.
 export class Sfx {
   init() {
     if (this.ctx) { this.ctx.resume(); return; }
@@ -8,17 +9,7 @@ export class Sfx {
     this.master = this.ctx.createGain();
     this.master.gain.value = 0.5;
     this.master.connect(this.ctx.destination);
-
-    // Moteur : deux dents de scie filtrées
-    this.engineGain = this.ctx.createGain();
-    this.engineGain.gain.value = 0;
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass'; filter.frequency.value = 900;
-    this.engineGain.connect(filter).connect(this.master);
-    this.osc1 = this.ctx.createOscillator(); this.osc1.type = 'sawtooth';
-    this.osc2 = this.ctx.createOscillator(); this.osc2.type = 'square';
-    this.osc1.connect(this.engineGain); this.osc2.connect(this.engineGain);
-    this.osc1.start(); this.osc2.start();
+    this.onInit?.(this.ctx);
 
     // Crissement de drift : bruit filtré
     const len = this.ctx.sampleRate;
@@ -33,14 +24,10 @@ export class Sfx {
     src.start();
   }
 
-  engine(speed, on, drifting) {
+  // Crissement pendant la glissade
+  skid(on) {
     if (!this.ctx) return;
-    const t = this.ctx.currentTime;
-    const f = 45 + speed * 2.2;
-    this.osc1.frequency.setTargetAtTime(f, t, 0.05);
-    this.osc2.frequency.setTargetAtTime(f * 0.501, t, 0.05);
-    this.engineGain.gain.setTargetAtTime(0, t, 0.1); // pas de moteur : c'est un dino
-    this.skidGain.gain.setTargetAtTime(on && drifting ? 0.08 : 0, t, 0.05);
+    this.skidGain.gain.setTargetAtTime(on ? 0.08 : 0, this.ctx.currentTime, 0.05);
   }
 
   tone(freq, dur, type = 'square', vol = 0.15, slide = 0) {
@@ -75,4 +62,26 @@ export class Sfx {
   jump() { this.tone(620, 0.09, 'square', 0.12, 300); }
   step(heavy) { this.noise(heavy ? 0.12 : 0.05, heavy ? 0.35 : 0.12, heavy ? 300 : 500); }
   click() { this.tone(1800, 0.03, 'square', 0.2); }
+}
+
+export function bindSfx(game, sfx) {
+  const on = (t, fn) => game.on(t, fn);
+  on('runner:jump', () => sfx.jump());
+  on('runner:land', ({ impact }) => sfx.step(impact > 0.3));
+  on('runner:step', () => sfx.step(false));
+  on('runner:boost', ({ big }) => sfx.boost(big));
+  on('runner:hit', () => sfx.crash());
+  on('runner:fall', () => sfx.tone(600, 0.8, 'sawtooth', 0.12, -500));
+  on('runner:drift', ({ on: d }) => sfx.skid(d));
+  on('coins', ({ amount }) => { if (amount <= 2) sfx.coin(); });
+  on('zone', () => sfx.zone());
+  on('weapon:equip', () => sfx.tone(440, 0.3, 'sawtooth', 0.12, 440));
+  on('weapon:fire', () => sfx.tone(1400, 0.05, 'square', 0.04, -900));
+  on('weapon:expire', () => sfx.tone(500, 0.25, 'triangle', 0.1, -300));
+  on('effect:add', () => sfx.tone(660, 0.25, 'triangle', 0.12, 660));
+  on('enemy:damage', ({ entity }) => { if (entity.kind === 'boss') sfx.tone(200, 0.08, 'square', 0.08, -100); });
+  on('boss:start', () => [196, 185, 175, 165].forEach((f, i) => setTimeout(() => sfx.tone(f, 0.3, 'sawtooth', 0.15), i * 180)));
+  on('boss:defeated', () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => sfx.tone(f, 0.2, 'square', 0.14), i * 110)));
+  on('game:over', ({ reason }) => { if (reason === 'caught') sfx.click(); sfx.over(); sfx.skid(false); });
+  on('state', ({ state }) => { if (state !== 'playing') sfx.skid(false); });
 }
