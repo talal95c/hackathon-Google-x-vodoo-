@@ -86,3 +86,18 @@ MusicThemes.define('metal', {
   density: [0.6, 1], brightness: [0.5, 0.9],
   synth: { wave: 'sawtooth', scale: [0, 1, 5, 7, 8], root: 40 },
 });
+
+MusicThemes.define('bnw', {
+  name: 'BNW Smash', price: 0, consumable: false,
+  core: 'Street Food Hip Hop, Funk, Boom Bap, Funky Bass, Sizzling Grill Percussion, Brass Stabs, Wah Guitar, Greasy Groove, Late Night Burger Joint',
+  vocals: 'Hype Rap Ad-libs, Funky Call and Response, Crowd Chants',
+  levels: [
+    'Laid Back, Smoky Grill, Jazzy Keys, Head Nodding, Smash Patty Snare',
+    'Funky Bassline, Punchy Drums, Brass Hits, Confident Swagger, Crispy Hi-hats',
+    'Big Funk Horns, Clavinet, Fast Rap Cadence, Sizzling Hot, Hype',
+    'Full Kitchen Rush, Heavy 808 Bass, Brass Fanfare, Relentless Groove, Peak Energy',
+  ],
+  bpm: 100, scale: 'E_FLAT_MAJOR_C_MINOR',
+  density: [0.4, 0.95], brightness: [0.45, 0.85],
+  synth: { wave: 'square', scale: [0, 3, 5, 7, 10], root: 39, hook: [0, 0, 3, 5, 0, 0, 7, 5, 3, 0, 3, 5, 10, 7, 5, 3] },
+});
