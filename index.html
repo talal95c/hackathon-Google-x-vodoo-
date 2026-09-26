@@ -71,24 +71,51 @@
     <div class="grid" id="shopGrid"></div>
   </div>
 
-  <div class="panel hidden" id="mpPanel">
-    <div class="panel-head"><h2>⚔ Multiplayer</h2><button data-action="close">✕</button></div>
-    <p>Create a game and share the code: everyone runs on the same road. Slap your rivals (<span class="key">E</span> or <span class="key">F</span>) to knock them off. Last one standing wins.</p>
-    <label class="small">Your name <input id="mpName" maxlength="14" /></label>
-    <div id="mpJoin">
-      <div class="buttons"><button class="primary" data-mp="create">Create a game</button></div>
-      <div class="mp-input"><input id="mpCode" placeholder="Game code (e.g. K7QXP)" autocomplete="off" /><button data-mp="join">Join</button></div>
+  <div class="panel hidden mp-panel" id="mpPanel">
+    <div class="panel-head">
+      <div><h2>⚔ Multiplayer</h2><p class="mp-sub">Same road, same beat. Slap your rivals off the page.</p></div>
+      <button data-action="close">✕</button>
     </div>
+
+    <!-- Avant d'entrer dans un salon : identité + créer / rejoindre -->
+    <div id="mpJoin">
+      <div class="mp-you">
+        <div class="mp-avatar"><img id="mpMyPortrait" alt="" /></div>
+        <label>Your name <input id="mpName" maxlength="14" autocomplete="off" spellcheck="false" /></label>
+        <div class="mp-you-skin"><span class="small">Riding</span><b id="mpMySkin">Classic</b><button data-action="shop">Change dino</button></div>
+      </div>
+      <div class="mp-choices">
+        <button class="mp-choice primary" data-mp="create"><span class="mp-choice-icon">✦</span><b>Create a game</b><span>Get a code to share with friends</span></button>
+        <div class="mp-choice">
+          <span class="mp-choice-icon">#</span><b>Join a game</b>
+          <div class="mp-input"><input id="mpCode" placeholder="CODE" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" /><button data-mp="join">Join</button></div>
+        </div>
+      </div>
+      <ul class="mp-rules">
+        <li><span>🛣</span>Everyone runs the same road</li>
+        <li><span>✋</span><span class="key">E</span>/<span class="key">F</span> slaps the rival next to you</li>
+        <li><span>👑</span>Last dino standing wins</li>
+      </ul>
+    </div>
+
+    <!-- Dans le salon : code à partager, joueurs, lancement -->
     <div id="mpRoom" class="hidden">
-      <div class="mp-code">Code: <b id="mpCodeShow"></b> <button data-mp="copy">Copy link</button></div>
+      <div class="mp-ticket">
+        <div>
+          <div class="mp-ticket-label">Game code</div>
+          <div class="mp-ticket-code" id="mpCodeShow"></div>
+        </div>
+        <div class="mp-ticket-actions"><button class="primary" data-mp="copy">🔗 Copy invite link</button><button data-mp="copycode">Copy code</button></div>
+      </div>
+      <div class="mp-lobby-head"><b id="mpCount">1 player</b><span class="small" id="mpHint"></span></div>
       <ul id="mpPlayers" class="mp-players"></ul>
-      <div class="buttons">
+      <div class="mp-room-actions">
         <button id="mpLaunch" class="primary" data-mp="launch">⚔ Start the race</button>
-        <span id="mpWait" class="small">Waiting for the host to start…</span>
-        <button data-mp="leave">Leave game</button>
+        <span id="mpWait" class="mp-wait"><i></i>Waiting for the host to start…</span>
+        <button class="ghost" data-mp="leave">Leave game</button>
       </div>
     </div>
-    <p class="small" id="mpStatus"></p>
+    <p class="small mp-status" id="mpStatus"></p>
   </div>
 
   <div class="panel hidden" id="musicPanel">
@@ -101,6 +128,7 @@
     <p class="small" id="lyriaStatus"></p>
     <label class="small" id="hapticsRow"><input id="haptics" type="checkbox" style="width:auto" /> Vibration (mobile)</label>
     <label class="small"><input id="vocals" type="checkbox" style="width:auto" /> Vocals (Lyria vocal mode)</label>
+    <label class="small"><input id="skinVoices" type="checkbox" style="width:auto" /> Skin voices (each dino taunts when it slaps)</label>
     <label class="small">Music ↔ game sync: <b id="audioOffsetVal">0 ms</b>
       <input id="audioOffset" type="range" min="-200" max="200" step="5" />
     </label>

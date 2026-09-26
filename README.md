@@ -54,6 +54,10 @@ To try it, open **Music**, paste your **Gemini API key with access to Lyria Real
 
 You can also play without a key using the built-in synthesized soundtrack.
 
+## Skin voices
+
+Every skin has **its own voice**: when a dino slaps, it shouts a one-to-three-word line from its own inventory (a deep menacing Vader, a cheerful Mario plumber, a chill reggae Riddim, an offline Classic robot...). The clips are **generated ahead of time** with Gemini TTS (`npm run voices:gen`, key in `.env`) into `public/voices/` and shipped with the game, so players need no key and no API call. Turn them off with the **Skin voices** checkbox in the Music panel.
+
 ## Run the game locally
 
 ```sh

@@ -28,7 +28,7 @@ les animations ou la musique **sans jamais toucher au gameplay**, et inversement
 | `meta/` | `Profile` (sauvegarde), `Shop` (achats + loadout), `Storage` | non |
 | `content/` | les définitions de contenu (un fichier par famille) + `index.js` | non |
 | `view/` | `World`, `CameraRig`, `TrackView`, `EntityViews`, `RunnerView`, `Particles`, `PortalView`, `TransitionFx`, `PostProcessing`, `ModelRegistry`, `models/` | oui |
-| `audio/` | `Sfx` + `bindSfx`, `music/` (`LyriaEngine`, `SynthEngine`, `MusicDirector`) | non |
+| `audio/` | `Sfx` + `bindSfx`, `SkinVoices` + `bindVoices` (répliques des skins à la claque, clips pré-générés dans `public/voices/`), `music/` (`LyriaEngine`, `SynthEngine`, `MusicDirector`) | non |
 | `ui/` | `Hud`, `Menus`, `style.css` | non (DOM) |
 | `input/` | `Input` (clavier AZERTY/QWERTY + tactile → intent) | non |
 
@@ -69,6 +69,7 @@ S'abonner : `game.on('type', (payload) => …)`, ou `game.on('*', (type, payload
 | `effect:add` / `effect:expire` | `{ effect }` |
 | `boss:start` · `boss:phase` · `boss:attack` · `boss:damage` · `boss:defeated` · `boss:escaped` | `{ boss, … }` |
 | `shop:purchase` | `{ item, price }` |
+| `mp:shove` · `bot:shove` · `bots:start` | `{ hit, dir }` (ma claque) · `{ bot, id, skin, s, d }` (claque d'un PNJ) · `{ skins }` (départ des PNJ) |
 
 ## Recettes
 
@@ -220,3 +221,14 @@ La musique Lyria a besoin d'une clé Gemini. Elle est **saisie par le joueur** d
 et stockée seulement dans son navigateur. `VITE_GEMINI_API_KEY` (fichier `.env`) n'est lu **qu'en dev** :
 un build public ne doit jamais contenir de clé. Sans clé, `SynthEngine` joue une musique procédurale
 qui suit aussi le tempo du jeu.
+
+### Donner une voix à un skin
+```js
+// content/voices.js : voix Gemini TTS + style + inventaire de répliques (en anglais), coordonnés avec le skin
+VOICES.pirate = { voiceName: 'Algenib', style: 'Say in a gruff pirate voice', lines: ['Arrr, walk the plank!', 'Yo ho, off ye go!'] };
+```
+Puis `npm run voices:gen` (clé Gemini dans `.env`) synthétise les clips manquants dans `public/voices/<skin>/` et met
+à jour `public/voices/index.json` ; `npm run voices` les fait écouter. Ces fichiers sont livrés avec le jeu : aucun appel
+API en jeu. Quand ce dino lance une claque (`mp:shove` pour le joueur, `bot:shove` pour un PNJ, `combat:impact` avec
+`sourceId` pour un joueur en ligne), `SkinVoices.say(skin)` joue une réplique de son inventaire (jamais la même deux
+fois de suite), accélérée pour tenir en ~1 s. Répliques d'1 à 3 mots : le jeu est ultra dynamique.
