@@ -51,6 +51,7 @@ export class WorldDecorView extends View {
   }
 
   build(chunk) {
+    if (ZONES[chunk.zone]?.site) { const empty = new THREE.Group(); empty.userData.fans = []; this.chunks.set(chunk.index, empty); return; } // monde généré : SiteDecorView
     const group = new THREE.Group(), buckets = new Map(), fans = [], track = this.track;
     const put = (key, geo, f, x, y, z, yaw = 0) => {
       geo.rotateY(yaw).translate(x, y, z).rotateY(f.th).translate(f.x, f.y, f.z);

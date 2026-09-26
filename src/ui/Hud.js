@@ -20,7 +20,7 @@ export class Hud {
     const on = (t, fn) => game.on(t, fn);
     on('game:start', () => { this.#lives(false); this.el.boss.classList.add('hidden'); });
     on('tempo', ({ level }) => { if (level > 0) this.banner(`VITESSE ×${game.tempo.ratio.toFixed(1)}`, 1.4); });
-    on('zone', ({ number, zone }) => { this.banner(`MONDE ${Math.min(number + 1, 5)} — ${zone.name}`); this.el.hud.style.color = zone.palette.text; this.el.banner.style.color = zone.palette.text; });
+    on('zone', ({ number, zone }) => { this.banner(zone.site ? `🌐 ${zone.name}` : `MONDE ${Math.min(number + 1, 5)} — ${zone.name}`); this.el.hud.style.color = zone.palette.text; this.el.banner.style.color = zone.palette.text; });
     on('world:jump', ({ to }) => this.banner(`ÉVASION → ${to.name}`, 1.8));
     on('world:land', ({ zone }) => this.banner(zone.subtitle, 2.2));
     on('life:lost', () => this.#lives(true));
@@ -67,8 +67,8 @@ export class Hud {
     this.#set('coins', (v) => { el.coins.textContent = v; }, `★ ${g.coins}`);
     this.#set('speed', (v) => { el.speed.innerHTML = `${v} <small>km/h</small>`; }, Math.round(Math.max(0, r.speed) * 3.6));
 
-    this.#set('worldName', v => { el.worldName.textContent = v; }, `${String(g.zoneIndex + 1).padStart(2, '0')} / 05 · ${g.zone.name}`);
-    el.worldProgress.style.width = `${g.zoneIndex === ZONES.length - 1 ? 100 : (g.distance % TRACK.zoneLength) / TRACK.zoneLength * 100}%`;
+    this.#set('worldName', v => { el.worldName.textContent = v; }, g.zone.site ? `🌐 ${g.zone.site.host} · ${g.zone.name}` : `${String(g.zoneIndex + 1).padStart(2, '0')} / 05 · ${g.zone.name}`);
+    el.worldProgress.style.width = `${g.zone.site || g.zoneIndex === ZONES.length - 1 ? 100 : (g.distance % TRACK.zoneLength) / TRACK.zoneLength * 100}%`;
     const gap = g.chaser.gap(g.sMax), danger = g.chaser.danger(g.sMax);
     this.#set('gap', (v) => { el.dangerTxt.textContent = `CURSEUR : ${v} m`; }, Math.max(0, Math.ceil(gap)));
     el.dangerFill.style.width = `${danger * 100}%`;

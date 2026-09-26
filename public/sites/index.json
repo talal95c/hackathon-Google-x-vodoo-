@@ -1,0 +1,52 @@
+[
+ {
+  "host": "youtube.com",
+  "emoji": "▶️",
+  "name": "LE FLUX INFINI"
+ },
+ {
+  "host": "wikipedia.org",
+  "emoji": "📚",
+  "name": "L'ENCYCLOPÉDIE SANS FIN"
+ },
+ {
+  "host": "google.com",
+  "emoji": "🔍",
+  "name": "LA PAGE D ACCUEIL INFINIE"
+ },
+ {
+  "host": "voodoo.io",
+  "emoji": "🎮",
+  "name": "L'USINE À HYPERCASUAL"
+ },
+ {
+  "host": "deepmind.google",
+  "emoji": "🧠",
+  "name": "LABORATOIRE DE L'AGI"
+ },
+ {
+  "host": "amazon.fr",
+  "emoji": "📦",
+  "name": "L'ENTREPÔT DU SOURIRE"
+ },
+ {
+  "host": "netflix.com",
+  "emoji": "🍿",
+  "name": "LE TUDUM INFINI"
+ },
+ {
+  "host": "instagram.com",
+  "emoji": "📸",
+  "name": "LA VALLÉE DU FEED"
+ },
+ {
+  "host": "reddit.com",
+  "emoji": "👽",
+  "name": "L'ABÎME DU SCROLL INFINI"
+ },
+ {
+  "host": "itch.io",
+  "emoji": "🕹️",
+  "name": "L'ARCHIPEL DES JAMS"
+ }
+]

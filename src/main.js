@@ -9,6 +9,7 @@ import './view/models/decor.js';
 import './view/models/blockDino.js';
 import './view/models/reggaeDino.js';
 import './view/models/weapons.js';
+import { registerSiteModels, setSiteImage } from './view/models/site.js';
 
 import { Game } from './kernel/Game.js';
 import { LocalStorage } from './meta/Storage.js';
@@ -18,6 +19,7 @@ import { World } from './view/World.js';
 import { TrackView } from './view/TrackView.js';
 import { SideLightShow } from './view/SideLightShow.js';
 import { WorldDecorView } from './view/WorldDecorView.js';
+import { SiteDecorView } from './view/SiteDecorView.js';
 import { EntityViews } from './view/EntityViews.js';
 import { RunnerView } from './view/RunnerView.js';
 import { ChaserView } from './view/ChaserView.js';
@@ -31,6 +33,8 @@ import { SynthEngine } from './audio/music/SynthEngine.js';
 import { MusicDirector } from './audio/music/MusicDirector.js';
 import { Hud } from './ui/Hud.js';
 import { Menus } from './ui/Menus.js';
+import { SitePanel } from './ui/SitePanel.js';
+import { installSite, activateSite, restoreWorlds } from './ai/SiteWorld.js';
 import { MusicThemes } from './kernel/Registry.js';
 
 // --- Logique
@@ -46,6 +50,7 @@ const views = [
   new BeatFx(ctx),      // en premier : fournit ctx.fx et ctx.beatMaterials
   new TrackView(ctx),
   new WorldDecorView(ctx),
+  new SiteDecorView(ctx), // monde généré depuis un site
   new SideLightShow(ctx),
   new EntityViews(ctx),
   new RunnerView(ctx),
@@ -68,13 +73,28 @@ const hud = new Hud(game, profile);
 const input = new Input();
 const menus = new Menus({ game, profile, shop, lyria, music, onPlay: play });
 let overAt = 0;
+let site = null; // monde généré en cours : { spec, theme }
 
 function play() {
   sfx.init(); // l'audio ne peut démarrer qu'après une action du joueur
   if (lyria.hasKey() && !lyria.ready && lyria.status !== 'connecting') lyria.connect();
   menus.show(null);
-  game.start(shop.prepareRun());
+  game.start(shop.prepareRun(site ? { theme: site.theme } : {}));
 }
+
+// --- Killer feature : n'importe quel site devient un monde
+new SitePanel({
+  menus, lyria,
+  onReady(spec) {
+    const { zone, theme } = installSite(spec);
+    registerSiteModels(spec);
+    activateSite(zone);
+    site = { spec, theme };
+    play();
+  },
+  onImage: (spec, id, img) => setSiteImage(spec, id, img),
+  onExit() { site = null; restoreWorlds(); menus.show('start'); },
+});
 
 input.onAction((a) => {
   if (a !== 'confirm' || menus.panelOpen) return;

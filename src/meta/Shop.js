@@ -36,11 +36,12 @@ export class Shop {
   }
 
   // Loadout pour Game.start() : skin, musique (consommée ici), modificateurs de stats
-  prepareRun() {
+  // theme : impose un thème (ex. musique d'un monde généré) sans consommer les musiques achetées
+  prepareRun({ theme: forcedTheme } = {}) {
     const p = this.profile;
     const skin = Skins.get(p.data.skin);
-    let theme = p.data.theme;
-    if (!MusicThemes.has(theme) || !p.consumeMusic(theme)) theme = 'techno';
+    let theme = forcedTheme ?? p.data.theme;
+    if (!forcedTheme && (!MusicThemes.has(theme) || !p.consumeMusic(theme))) theme = 'techno';
     if (p.data.theme !== 'techno' && p.musicCount(p.data.theme) <= 0) p.selectTheme('techno');
 
     const modifiers = [];
