@@ -2,20 +2,32 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { Models, box, cube, lambert } from '../ModelRegistry.js';
 import * as TX from '../textures.js';
+import { GAME } from '../../kernel/config.js';
 
 // Modèles des entités : volumes arrondis low-poly (même rendu que le décor et le dino),
-// textures dessinées au canvas. Remplacer un modèle : Models.register('<type>', ...).
+// textures dessinées au canvas. Remplacer un modèle : Models.register('<type>', ...) depuis un autre fichier.
 // update(entity, dt, time, fx) : fx.pulse (0..1) suit les temps de la musique.
 
 const lazy = (make) => { let v; return () => v ?? (v = make()); };
 const cache = new Map();
 const cached = (key, make) => { if (!cache.has(key)) cache.set(key, make()); return cache.get(key); };
 
+// Matériaux propres à une instance : libérés quand l'entité disparaît (les matériaux en cache restent partagés).
+let owned = null;
+const own = (mat) => { owned?.push(mat); return mat; };
+const register = (type, factory) => Models.register(type, (params) => {
+  owned = [];
+  const res = factory(params), mats = owned;
+  owned = null;
+  const model = res instanceof THREE.Object3D ? { object: res } : res;
+  return { ...model, dispose() { model.dispose?.(); for (const m of mats) m.dispose(); } };
+});
+
 const rbox = (w, h, d, r = 0.14) => cached(`rb:${w}:${h}:${d}:${r}`,
   () => new RoundedBoxGeometry(w, h, d, 2, Math.min(r, w / 2 - 0.01, h / 2 - 0.01, d / 2 - 0.01)));
 const std = (color, o = {}) => cached(`m:${color}:${JSON.stringify(o)}`,
   () => new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.04, flatShading: true, ...o }));
-const glowMat = (color, intensity = 1.6) => new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: intensity, roughness: 0.5, flatShading: true });
+const glowMat = (color, intensity = 1.6) => own(new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: intensity, roughness: 0.5, flatShading: true }));
 
 function mesh(parent, geo, mat, x = 0, y = 0, z = 0, shadow = true) {
   const m = new THREE.Mesh(geo, mat);
@@ -44,7 +56,7 @@ function contactShadow(parent, size) {
 }
 const glowSpriteTex = lazy(() => TX.glowTex());
 function halo(parent, color, size, opacity = 0.5) {
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowSpriteTex(), color, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending }));
+  const s = new THREE.Sprite(own(new THREE.SpriteMaterial({ map: glowSpriteTex(), color, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending })));
   s.scale.setScalar(size);
   parent.add(s);
   return s;
@@ -116,7 +128,7 @@ const coin = (type) => () => {
   let glow = null;
   if (type === 'goldCoin') {
     glow = halo(float, 0xffc233, 3.4, 0.45);
-    for (let i = 0; i < 3; i++) twinkles.push(mesh(float, G().twinkle, new THREE.MeshBasicMaterial({ color: 0xffffff }), 0, 0, 0, false));
+    for (let i = 0; i < 3; i++) twinkles.push(mesh(float, G().twinkle, own(new THREE.MeshBasicMaterial({ color: 0xffffff })), 0, 0, 0, false));
   }
   return {
     object: root,
@@ -136,19 +148,19 @@ const coin = (type) => () => {
     },
   };
 };
-Models.register('coin', coin('coin'));
-Models.register('goldCoin', coin('goldCoin'));
+register('coin', coin('coin'));
+register('goldCoin', coin('goldCoin'));
 
 // --- Plaque d'accélération : chevrons qui s'allument en vague vers l'avant, s'éteint une fois utilisée
-Models.register('boostPad', () => {
+register('boostPad', () => {
   const g = G(), root = new THREE.Group();
   mesh(root, rbox(3.3, 0.22, 5.3, 0.1), std(0x193d47), 0, 0.11, 0);
-  const plateM = new THREE.MeshStandardMaterial({ color: 0x1f9d57, emissive: 0x0f7a3f, emissiveIntensity: 0.5, roughness: 0.45, flatShading: true });
+  const plateM = own(new THREE.MeshStandardMaterial({ color: 0x1f9d57, emissive: 0x0f7a3f, emissiveIntensity: 0.5, roughness: 0.45, flatShading: true }));
   mesh(root, rbox(2.9, 0.08, 4.9, 0.04), plateM, 0, 0.24, 0);
   const railM = glowMat(0x3ddc84, 2);
   for (const x of [-1.52, 1.52]) { const r = mesh(root, g.thin, railM, x, 0.26, 0, false); r.scale.set(0.12, 0.08, 5.1); }
   const chevrons = [-1.45, 0, 1.45].map((z) => {
-    const m = new THREE.MeshStandardMaterial({ color: 0xeafff1, emissive: 0xb6ffd3, emissiveIntensity: 0.3, roughness: 0.4, flatShading: true });
+    const m = own(new THREE.MeshStandardMaterial({ color: 0xeafff1, emissive: 0xb6ffd3, emissiveIntensity: 0.3, roughness: 0.4, flatShading: true }));
     return mesh(root, g.chevron, m, 0, 0.3, z, false);
   });
   let usedAt = null;
@@ -194,9 +206,9 @@ const pickup = (type) => () => {
   const g = G(), color = PICKUP_COLORS[type], root = new THREE.Group(), float = new THREE.Group();
   root.add(float);
   const shadow = contactShadow(root, 2.2);
-  const ringM = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.6, depthWrite: false });
+  const ringM = own(new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.6, depthWrite: false }));
   const ring = mesh(root, g.ring, ringM, 0, 0.06, 0, false);
-  const bubbleM = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.25, transparent: true, opacity: 0.24, roughness: 0.1, metalness: 0.1, depthWrite: false });
+  const bubbleM = own(new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.25, transparent: true, opacity: 0.24, roughness: 0.1, metalness: 0.1, depthWrite: false }));
   const bubble = mesh(float, g.bubble, bubbleM, 0, 0, 0, false);
   const orbit = mesh(float, g.orbit, glowMat(color, 1.4), 0, 0, 0, false);
   const icon = new THREE.Group(); float.add(icon);
@@ -218,7 +230,7 @@ const pickup = (type) => () => {
     },
   };
 };
-for (const type of Object.keys(PICKUP_COLORS)) Models.register(type, pickup(type));
+for (const type of Object.keys(PICKUP_COLORS)) register(type, pickup(type));
 
 // --- Obstacles
 const INK = 0x193d47, GREY = 0x535353;
@@ -233,7 +245,7 @@ const cross = (parent, mat, x, y, z, size = 0.36) => {
 const frontGroup = (root) => { const f = new THREE.Group(); f.rotation.y = Math.PI; root.add(f); return f; };
 
 const TAB_LABELS = ['Nouvel onglet', 'Sans titre', 'Chargement…', 'Erreur 404'];
-Models.register('tabWall', () => {
+register('tabWall', () => {
   const root = new THREE.Group(), f = frontGroup(root);
   const label = TAB_LABELS[Math.floor(Math.random() * TAB_LABELS.length)];
   mesh(f, rbox(5.2, 0.3, 0.7, 0.1), std(INK), 0, 0.15, 0);
@@ -252,7 +264,7 @@ Models.register('tabWall', () => {
   };
 });
 
-Models.register('cookieBanner', () => {
+register('cookieBanner', () => {
   const root = new THREE.Group(), f = frontGroup(root);
   for (const x of [-2.7, 2.7]) mesh(f, rbox(0.24, 0.4, 0.24, 0.06), std(INK), x, 0.2, 0);
   mesh(f, rbox(6.5, 1.34, 0.34, 0.16), std(0xfffbeb, { roughness: 0.55 }), 0, 0.95, 0);
@@ -301,14 +313,14 @@ const popupModel = ({ bar, barAt, arrows }) => () => {
     },
   };
 };
-Models.register('popup', popupModel({}));
-Models.register('popupSlider', popupModel({ bar: 0xea4335, barAt: -1.42, arrows: true }));
-Models.register('popupCharger', popupModel({ bar: 0xff9100, barAt: 1.42 }));
+register('popup', popupModel({}));
+register('popupSlider', popupModel({ bar: 0xea4335, barAt: -1.42, arrows: true }));
+register('popupCharger', popupModel({ bar: 0xff9100, barAt: 1.42 }));
 
 // Cactus du jeu Chrome, en volumes arrondis gris
 const CACTUS = 0x5f6368, CACTUS_LIGHT = 0x80868b;
 const cactusArm = (g, x, h, y) => mesh(g, rbox(0.6, h, 0.6, 0.18), std(CACTUS), x, y, 0);
-Models.register('cactus', () => {
+register('cactus', () => {
   const g = new THREE.Group();
   mesh(g, rbox(0.92, 2.15, 0.92, 0.26), std(CACTUS), 0, 1.07, 0);
   cactusArm(g, -0.9, 1.0, 1.35); cactusArm(g, -0.6, 0.42, 1.0);
@@ -318,14 +330,14 @@ Models.register('cactus', () => {
   }
   return g;
 });
-Models.register('cactusBig', () => {
+register('cactusBig', () => {
   const g = new THREE.Group();
   for (let i = -1; i <= 1; i++) { const h = i === 0 ? 2.4 : 1.6; mesh(g, rbox(0.82, h, 0.82, 0.24), std(CACTUS), i * 1.2, h / 2, 0); }
   return g;
 });
 
 // Bloc à parer : cadre néon qui pulse au rythme, brille fort quand il est à portée de parade
-Models.register('parryBlock', () => {
+register('parryBlock', () => {
   const root = new THREE.Group(), f = frontGroup(root);
   mesh(f, rbox(2.1, 2.1, 0.9, 0.2), std(0x6b34d6, { roughness: 0.45 }), 0, 1.05, 0);
   const neon = glowMat(0xc9a6ff, 1.2);
@@ -335,17 +347,20 @@ Models.register('parryBlock', () => {
   const icon = new THREE.Group(); icon.position.set(0, 1.08, 0.5); f.add(icon);
   mesh(icon, G().shield, std(0xffffff, { emissive: 0xe4d4ff, emissiveIntensity: 0.4 }), 0, 0, 0, false);
   icon.scale.setScalar(1.35);
+  let ready = 0;
   return {
     object: root,
     update(e, dt, t, fx) {
-      const gap = e.s - e.game.runner.z, ready = gap > 0 && gap < 14 ? 1 - gap / 14 : 0;
+      const r = e.game.runner, gap = e.s - r.z, reach = Math.max(4, r.speed * GAME.parryWindow);
+      const aligned = Math.abs(e.d - r.x) < e.hitbox.hx + r.stats.get('radius');
+      ready += ((aligned && gap >= -0.6 && gap <= reach ? 1 : 0) - ready) * Math.min(1, dt * 20);
       neon.emissiveIntensity = 1 + (fx?.pulse ?? 0) * 1.5 + ready * 2.5;
       icon.scale.setScalar(1.35 * (1 + ready * 0.18 + (fx?.pulse ?? 0) * 0.08));
     },
   };
 });
 
-Models.register('rollingCookie', () => {
+register('rollingCookie', () => {
   // disque de profil (axe = latéral) qui tourne sur lui-même en roulant vers le dino
   const g = new THREE.Group(), side = new THREE.Group(), wheel = new THREE.Group();
   side.position.y = 1.6; side.rotation.y = Math.PI / 2;
@@ -359,14 +374,14 @@ Models.register('rollingCookie', () => {
 });
 
 
-Models.register('laserBolt', () => {
-  const m = new THREE.Mesh(box, new THREE.MeshBasicMaterial({ color: 0xff1744 }));
+register('laserBolt', () => {
+  const m = new THREE.Mesh(box, own(new THREE.MeshBasicMaterial({ color: 0xff1744 })));
   m.scale.set(0.25, 0.25, 2.2);
   return m;
 });
 
 // Ptérodactyle pixel (jeu Chrome) : ailes qui battent
-Models.register('ptero', () => {
+register('ptero', () => {
   const g = new THREE.Group(), body = new THREE.Group();
   g.add(body);
   cube(body, GREY, 0.6, 0.5, 2.2, 0, 0, 0);          // corps
@@ -384,7 +399,7 @@ Models.register('ptero', () => {
 });
 
 // Roue de chargement qui roule vers le dino
-Models.register('spinner', () => {
+register('spinner', () => {
   const g = new THREE.Group(), side = new THREE.Group(), wheel = new THREE.Group();
   side.position.y = 1.6; side.rotation.y = Math.PI / 2;
   g.add(side); side.add(wheel);
