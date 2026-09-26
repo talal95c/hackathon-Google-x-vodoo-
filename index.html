@@ -41,6 +41,7 @@
       <p class="hero-detail">Du désert hors ligne jusqu’au cloud.<br />Traverse les cinq mondes pour semer le curseur.</p>
       <div class="buttons hero-actions">
         <button class="primary" data-action="play"><span>▶</span> Lancer la session <span>↗</span></button>
+        <button class="site-button" data-site="open">🌐 Cours sur n'importe quel site</button>
         <button class="reggae-button" data-action="reggae" aria-label="Équiper le dino reggae"><span class="reggae-stripes"></span> Dino reggae</button>
       </div>
       <p class="small" id="wallet"></p>
@@ -59,6 +60,7 @@
     <p id="overDetails"></p>
     <div class="buttons">
       <button class="primary" data-action="play">↻ REJOUER</button>
+      <button data-site="open">🌐 AUTRE SITE</button>
       <button data-action="shop">🛒 BOUTIQUE</button>
     </div>
   </div>
@@ -71,6 +73,23 @@
       <button data-tab="upgrade">Améliorations</button>
     </div>
     <div class="grid" id="shopGrid"></div>
+  </div>
+
+  <div class="panel hidden" id="sitePanel">
+    <div class="panel-head"><h2>🌐 Cours sur n'importe quel site</h2><button data-action="close">✕</button></div>
+    <p>Entre l'adresse d'un site : l'IA de Google le lit et le transforme en monde, avec ses obstacles, ses panneaux et sa musique. Le dino s'en échappe.</p>
+    <div class="browser">
+      <div class="browser-bar"><span class="dots"><i></i><i></i><i></i></span><span id="siteAddress">https://</span></div>
+      <div class="browser-body">
+        <div class="site-input"><input id="siteUrl" type="text" placeholder="youtube.com, wikipedia.org, ton-site.fr…" autocomplete="off" spellcheck="false" /><button id="siteGo" class="primary" data-site="go">Générer ▶</button></div>
+        <div class="bar"><div class="fill" id="siteBar"></div></div>
+        <p class="small" id="siteStatus"></p>
+      </div>
+    </div>
+    <p class="small" id="siteHint"></p>
+    <h3>Mondes déjà prêts</h3>
+    <div class="chips" id="sitePresets"></div>
+    <div class="buttons"><button data-site="classic">↩ Revenir aux mondes classiques</button></div>
   </div>
 
   <div class="panel hidden" id="musicPanel">

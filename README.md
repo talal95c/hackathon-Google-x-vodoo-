@@ -36,6 +36,11 @@ boss, boutique (skins, musiques, améliorations) et musique générée en direct
 Sur itch.io : Kind of project = HTML, uploader le zip, cocher « This file will be played in the browser »,
 viewport 1280×720, activer « Fullscreen button » et « Mobile friendly ».
 
+## 🌐 Cours sur n'importe quel site (killer feature)
+Menu → « Cours sur n'importe quel site » → tape une adresse : Gemini lit le site et le transforme en monde
+(obstacles, panneaux, palette, musique Lyria). 10 mondes pré-générés sont jouables sans clé.
+Ajouter des mondes livrés avec le jeu : `node scripts/generate-sites.mjs lemonde.fr twitch.tv`.
+
 ## Tests
     npm test           # tests du kernel (sans navigateur)
 

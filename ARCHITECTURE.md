@@ -183,6 +183,21 @@ Ajoute une entrée dans `content/zones.js` : `palette`, `decor` (clé `decor:<no
   de route, le curseur et, légèrement, la caméra (`ctx.fx.pulse` / `ctx.fx.down`).
 - Latence audio : réglage « Synchro musique ↔ jeu » dans le menu Musique (`music.offsetMs`).
 
+## Killer feature : n'importe quel site devient un monde (`src/ai/`)
+1. `WorldGenerator.spec(url)` : **Gemini 3.8 Flash** (réflexion basse, outil `urlContext`) lit le site et renvoie un JSON :
+   nom, palette, 4 obstacles (comportement `jump` / `dodge` / `charge` / `zigzag`), slogans, prompts Lyria. Il met environ
+   5 à 10 s. `normalizeSpec` valide tout, avec des valeurs de secours : une réponse farfelue ne casse jamais le jeu.
+2. **La partie démarre tout de suite.** `WorldGenerator.images()` demande en parallèle à **Gemini 3.1 Flash Lite Image**
+   une texture par obstacle et une affiche (environ 2,5 s chacune, avec une nouvelle tentative en cas d'échec). Elles
+   s'appliquent en direct : en attendant, chaque obstacle montre son nom sur sa couleur.
+3. `SiteWorld.installSite(spec)` enregistre les types d'entités, la zone et le thème musical dans les registres ;
+   `activateSite(zone)` remplace les 5 mondes par ce monde unique et infini ; `restoreWorlds()` les remet.
+   **Aucune modification du kernel.**
+4. Vues : `view/models/site.js` (une forme par comportement, textures mises à jour en direct) et
+   `SiteDecorView` (panneaux parodiques et blocs aux couleurs du site). La musique Lyria utilise les prompts du site.
+5. Cache : `ai/siteCache.js` (images réduites à 256 px en JPEG, environ 60 Ko par site). Mondes livrés avec le jeu :
+   `public/sites/`, générés par `node scripts/generate-sites.mjs [site…]`, jouables sans clé.
+
 ## Règles
 1. **Le kernel ne dépend pas de Three.js ni du DOM** : `npm test` le fait tourner sous Node.
 2. **Les vues ne modifient jamais l'état du kernel** : elles lisent et elles écoutent.
