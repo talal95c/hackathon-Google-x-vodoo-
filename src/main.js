@@ -115,11 +115,11 @@ new SitePanel({
 });
 
 const lobby = new Lobby({ mp, menus, hud, onLaunch: () => play() });
-mp.on('start', ({ seed, delay, world }) => {
+mp.on('start', ({ seed, delay, lane, world }) => {
   sfx.init();
   if (world) enterSite(world); else if (site) exitSite();
   menus.show(null);
-  lobby.countdown(delay, () => game.start({ ...shop.prepareRun(site ? { theme: site.theme } : {}), seed }));
+  lobby.countdown(delay, () => { game.start({ ...shop.prepareRun(site ? { theme: site.theme } : {}), seed }); game.runner.x = lane; });
 });
 document.getElementById('shoveBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); input.shove(); });
 game.on('mp:shove', ({ hit }) => sfx.tone(hit ? 180 : 420, 0.18, 'square', 0.15, hit ? -80 : -200));
