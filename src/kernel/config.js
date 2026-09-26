@@ -30,6 +30,7 @@ export const RUNNER = {
   hitSpeedFactor: 0.65,  // vitesse conservée après un choc
   invulAfterHit: 1.1,
   radius: 0.85,          // demi-largeur du dino pour les collisions
+  knockDecay: 4,         // amortissement des coups latéraux (multijoueur)
   height: 3.2,           // hauteur du dino pour les collisions
   // Stats modifiables par skins / effets / améliorations (voir Stats.js)
   magnetRange: 0,        // rayon d'attraction des pièces

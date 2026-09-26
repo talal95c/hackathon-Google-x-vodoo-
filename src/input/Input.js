@@ -6,6 +6,7 @@ export class Input {
   #touches = new Map();
   #swipe = new Map();
   #jump = false;
+  #shove = false;
   #listeners = new Set();
   steer = 0;
   enabled = true; // false quand un menu a le focus
@@ -17,6 +18,7 @@ export class Input {
       if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code)) e.preventDefault();
       this.#keys.add(e.code);
       if (!e.repeat && JUMP.includes(e.code)) this.#jump = true;
+      if (!e.repeat && (e.code === 'KeyE' || e.code === 'KeyF')) this.#shove = true;
       if (!e.repeat && (e.code === 'Space' || e.code === 'Enter')) this.#fire('confirm');
     });
     target.addEventListener('keyup', (e) => this.#keys.delete(e.code));
@@ -36,6 +38,8 @@ export class Input {
     for (const ev of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) target.addEventListener(ev, onTouch, { passive: false });
   }
 
+  shove() { this.#shove = true; } // bouton tactile
+
   onAction(fn) { this.#listeners.add(fn); return () => this.#listeners.delete(fn); }
   #fire(a) { if (this.enabled) this.#listeners.forEach((fn) => fn(a)); }
 
@@ -53,7 +57,8 @@ export class Input {
     }
     this.steer += (target - this.steer) * Math.min(1, dt * 10);
     const jump = this.#jump && this.enabled;
-    this.#jump = false;
-    return { steer: this.steer, drift, brake: k.has('ArrowDown') || k.has('KeyS'), jump };
+    const shove = this.#shove && this.enabled;
+    this.#jump = false; this.#shove = false;
+    return { steer: this.steer, drift, brake: k.has('ArrowDown') || k.has('KeyS'), jump, shove };
   }
 }

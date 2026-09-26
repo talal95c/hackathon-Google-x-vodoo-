@@ -1,37 +1,137 @@
 import * as THREE from 'three';
-import { Models, cube, lambert } from '../ModelRegistry.js';
+import { Models } from '../ModelRegistry.js';
 import { entityType, siteKey } from '../../ai/SiteWorld.js';
 
-// Modèles des obstacles générés : une forme par comportement, habillée de la texture générée.
-// La texture démarre en "secours" (couleur + nom) et est remplacée dès que l'image arrive.
-const textures = new Map(); // `${type}` ou `${key}:billboard:${i}` → CanvasTexture
+// Obstacles générés en SPRITES DÉCOUPÉS (style "papier") : image détourée sur un plan, tranche
+// sombre derrière pour le relief, ombre au sol, et une animation par comportement.
+// En attendant l'image, une carte arrondie avec le nom. Tout se met à jour en direct quand elle arrive.
+const sprites = new Map();   // type → { mat, back, aspect }
+const posters = new Map();   // `${key}:billboard:${i}` → CanvasTexture
 
-function canvasTexture(w, h) {
-  const c = document.createElement('canvas'); c.width = w; c.height = h;
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 4;
+const loadImage = (src) => new Promise((res) => { if (!src) return res(null); const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+const css = (n) => `#${n.toString(16).padStart(6, '0')}`;
+
+function placeholderCard({ color, label }) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.beginPath(); g.roundRect(8, 40, 240, 176, 36); g.fill();
+  g.fillStyle = css(color); g.beginPath(); g.roundRect(20, 52, 216, 152, 28); g.fill();
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  let size = 40; g.font = `900 ${size}px sans-serif`;
+  while (g.measureText(label).width > 200 && size > 14) g.font = `900 ${--size}px sans-serif`;
+  g.fillText(label, 128, 128);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
 
-// Dessine : image (si dispo) ou fond coloré, + bandeau avec le nom
-function paintObstacle(tex, { color, label }, img) {
-  const c = tex.image, g = c.getContext('2d'), W = c.width, H = c.height;
-  g.fillStyle = `#${color.toString(16).padStart(6, '0')}`; g.fillRect(0, 0, W, H);
-  if (img) g.drawImage(img, 0, 0, W, H);
-  else { g.fillStyle = 'rgba(255,255,255,.25)'; for (let i = 0; i < 6; i++) g.fillRect(0, i * H / 6, W, H / 24); }
-  g.fillStyle = 'rgba(0,0,0,.72)'; g.fillRect(0, H * 0.78, W, H * 0.22);
-  g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
-  let size = 34; g.font = `bold ${size}px sans-serif`;
-  while (g.measureText(label).width > W * 0.92 && size > 14) g.font = `bold ${--size}px sans-serif`;
-  g.fillText(label, W / 2, H * 0.89);
-  tex.needsUpdate = true;
+function spriteFor(spec, o) {
+  const type = entityType(spec, o);
+  if (!sprites.has(type)) {
+    const map = placeholderCard(o);
+    const mat = new THREE.MeshBasicMaterial({ map, alphaTest: 0.35, side: THREE.DoubleSide });
+    const back = new THREE.MeshBasicMaterial({ map, color: 0x2a2a2a, alphaTest: 0.35, side: THREE.DoubleSide });
+    sprites.set(type, { mat, back, aspect: 1 });
+  }
+  return sprites.get(type);
 }
 
-function paintBillboard(tex, { text, edge, accent }, img) {
+const plane = new THREE.PlaneGeometry(1, 1).translate(0, 0.5, 0); // pivot en bas
+const shadowGeo = new THREE.CircleGeometry(1, 20).rotateX(-Math.PI / 2);
+const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false });
+
+// Un sprite "carton" : face + tranche + ombre. height = hauteur en mètres
+function standee(sp, height) {
+  const root = new THREE.Group(), card = new THREE.Group();
+  root.add(card);
+  const face = new THREE.Mesh(plane, sp.mat);
+  face.rotation.y = Math.PI; // face au dino qui arrive (sinon image en miroir)
+  const back = new THREE.Mesh(plane, sp.back);
+  back.rotation.y = Math.PI; back.position.z = 0.07;
+  card.add(face, back);
+  const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+  shadow.position.y = 0.03;
+  root.add(shadow);
+  const fit = () => {
+    const w = Math.min(4.2, height * sp.aspect);
+    const h = w / sp.aspect;
+    card.scale.set(w, h, 1);
+    shadow.scale.set(w * 0.45, 1, 0.9);
+  };
+  fit();
+  return { root, card, shadow, fit };
+}
+
+// Animations par comportement
+const SHAPES = {
+  // bas : on saute par-dessus. Se tortille sur place
+  jump: (sp) => () => {
+    const s = standee(sp, 1.7);
+    return { object: s.root, update(e, dt, t) { s.fit(); s.card.rotation.z = Math.sin(t * 6 + e.id) * 0.08; s.card.scale.y *= 1 + Math.sin(t * 12 + e.id) * 0.04; } };
+  },
+  // grand et flottant : on l'esquive. Flotte et oscille
+  dodge: (sp) => () => {
+    const s = standee(sp, 3.4);
+    return { object: s.root, update(e, dt, t) { s.fit(); s.card.position.y = 0.3 + Math.sin(t * 2.2 + e.id) * 0.25; s.card.rotation.z = Math.sin(t * 1.4 + e.id) * 0.06; } };
+  },
+  // fonce vers le dino en bondissant (écrasement / étirement)
+  charge: (sp) => () => {
+    const s = standee(sp, 2.8);
+    return {
+      object: s.root,
+      update(e, dt, t) {
+        s.fit();
+        const hop = e.charging ? Math.abs(Math.sin(t * 9 + e.id)) : Math.abs(Math.sin(t * 3 + e.id)) * 0.3;
+        s.card.position.y = hop * 0.9;
+        const squash = e.charging && hop < 0.25 ? 0.85 : 1.05;
+        s.card.scale.y *= squash; s.card.scale.x /= Math.sqrt(squash);
+        s.card.rotation.x = e.charging ? -0.18 : 0;
+        s.shadow.scale.multiplyScalar(1 - hop * 0.35);
+      },
+    };
+  },
+  // glisse de gauche à droite en se penchant dans ses virages
+  zigzag: (sp) => () => {
+    const s = standee(sp, 2.8);
+    let lastD = null;
+    return {
+      object: s.root,
+      update(e, dt, t) {
+        s.fit();
+        const v = lastD === null || dt === 0 ? 0 : (e.d - lastD) / dt;
+        lastD = e.d;
+        s.card.rotation.z += (-v * 0.12 - s.card.rotation.z) * Math.min(1, dt * 10);
+        s.card.position.y = Math.abs(Math.sin(t * 7 + e.id)) * 0.3;
+      },
+    };
+  },
+};
+
+// Enregistre les modèles d'un site (idempotent) et applique les images déjà connues
+export function registerSiteModels(spec) {
+  const key = siteKey(spec);
+  for (const o of spec.obstacles) {
+    const type = entityType(spec, o);
+    const sp = spriteFor(spec, o);
+    if (!Models.has(type)) Models.register(type, SHAPES[o.behavior](sp));
+    if (!Models.has(`${type}:giant`)) Models.register(`${type}:giant`, () => { const s = standee(sp, 14); return { object: s.root, update() { s.fit(); } }; });
+    if (o.texture) setSiteImage(spec, o.id);
+  }
+  for (let i = 0; i < Math.max(1, spec.billboards.length); i++) {
+    const k = `${key}:billboard:${i}`;
+    if (!posters.has(k)) {
+      const c = document.createElement('canvas'); c.width = 512; c.height = 288;
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+      posters.set(k, t);
+      paintPoster(t, spec.billboards[i] || spec.name, spec, null);
+    }
+  }
+  if (spec.billboardTexture) setSiteImage(spec, 'billboard');
+}
+
+function paintPoster(tex, text, spec, img) {
   const c = tex.image, g = c.getContext('2d'), W = c.width, H = c.height;
   const grad = g.createLinearGradient(0, 0, W, H);
-  grad.addColorStop(0, `#${accent.toString(16).padStart(6, '0')}`); grad.addColorStop(1, `#${edge.toString(16).padStart(6, '0')}`);
+  grad.addColorStop(0, css(spec.palette.accent)); grad.addColorStop(1, css(spec.palette.edge));
   g.fillStyle = grad; g.fillRect(0, 0, W, H);
   if (img) { const k = Math.max(W / img.width, H / img.height); g.drawImage(img, (W - img.width * k) / 2, (H - img.height * k) / 2, img.width * k, img.height * k); }
   g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, H * 0.7, W, H * 0.3);
@@ -42,64 +142,25 @@ function paintBillboard(tex, { text, edge, accent }, img) {
   tex.needsUpdate = true;
 }
 
-const loadImage = (src) => new Promise((res) => { if (!src) return res(null); const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
-
-// Enregistre les modèles d'un site (idempotent) et applique les textures déjà connues
-export function registerSiteModels(spec) {
-  const key = siteKey(spec);
-  for (const o of spec.obstacles) {
-    const type = entityType(spec, o);
-    if (!textures.has(type)) { const t = canvasTexture(256, 256); paintObstacle(t, o, null); textures.set(type, t); }
-    const tex = textures.get(type);
-    const mat = new THREE.MeshLambertMaterial({ map: tex });
-    const side = lambert(o.color);
-    const faced = [side, side, side, side, mat, mat];
-    if (!Models.has(type)) Models.register(type, SHAPES[o.behavior](faced, mat, o));
-    if (o.texture) setSiteImage(spec, o.id, o.texture);
-  }
-  for (let i = 0; i < Math.max(1, spec.billboards.length); i++) {
-    const k = `${key}:billboard:${i}`;
-    if (!textures.has(k)) { const t = canvasTexture(512, 288); paintBillboard(t, { text: spec.billboards[i] || spec.name, edge: spec.palette.edge, accent: spec.palette.accent }, null); textures.set(k, t); }
-  }
-  if (spec.billboardTexture) setSiteImage(spec, 'billboard', spec.billboardTexture);
-}
-
-// Une image générée arrive (ou vient du cache) → mise à jour en direct des textures
-export async function setSiteImage(spec, id, dataURL) {
-  const img = await loadImage(dataURL);
-  if (!img) return;
+// Une image arrive (génération ou cache) → mise à jour en direct
+export async function setSiteImage(spec, id) {
   const key = siteKey(spec);
   if (id === 'billboard') {
-    spec.billboards.forEach((text, i) => { const t = textures.get(`${key}:billboard:${i}`); if (t) paintBillboard(t, { text, edge: spec.palette.edge, accent: spec.palette.accent }, img); });
-  } else {
-    const o = spec.obstacles.find((x) => x.id === id), t = o && textures.get(entityType(spec, o));
-    if (t) paintObstacle(t, o, img);
+    const img = await loadImage(spec.billboardTexture);
+    if (img) spec.billboards.forEach((text, i) => { const t = posters.get(`${key}:billboard:${i}`); if (t) paintPoster(t, text, spec, img); });
+    return;
   }
+  const o = spec.obstacles.find((x) => x.id === id);
+  if (!o?.texture) return;
+  const img = await loadImage(o.texture);
+  if (!img) return;
+  const sp = spriteFor(spec, o);
+  const tex = new THREE.Texture(img);
+  tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4; tex.needsUpdate = true;
+  sp.mat.map?.dispose();
+  sp.mat.map = tex; sp.back.map = tex;
+  sp.mat.needsUpdate = true; sp.back.needsUpdate = true;
+  sp.aspect = o.aspect || img.width / img.height;
 }
 
-export const billboardTexture = (spec, i) => textures.get(`${siteKey(spec)}:billboard:${i % Math.max(1, spec.billboards.length)}`);
-
-// Formes par comportement
-const discGeo = new THREE.CylinderGeometry(1.5, 1.5, 0.4, 28).rotateX(Math.PI / 2);
-const SHAPES = {
-  // bas et large : on saute dessus
-  jump: (faced) => () => { const g = new THREE.Group(); cube(g, faced, 3.6, 1.5, 0.8, 0, 0.75, 0); return g; },
-  // grand panneau flottant : on l'esquive
-  dodge: (faced, mat, o) => () => {
-    const g = new THREE.Group();
-    const p = cube(g, faced, 4, 3, 0.35, 0, 2.1, 0);
-    cube(g, o.color, 0.25, 0.6, 0.25, -1.6, 0.3, 0); cube(g, o.color, 0.25, 0.6, 0.25, 1.6, 0.3, 0);
-    return { object: g, update(e, dt, t) { p.position.y = 2.1 + Math.sin(t * 2 + e.id) * 0.2; } };
-  },
-  // disque face au joueur qui fonce en tournoyant
-  charge: (faced, mat, o) => () => {
-    const g = new THREE.Group(), disc = new THREE.Mesh(discGeo, [lambert(o.color), mat, mat]);
-    disc.castShadow = true; disc.position.y = 1.7; g.add(disc);
-    return { object: g, update(e, dt, t) { disc.rotation.z = e.charging ? -t * 6 : Math.sin(t * 2) * 0.2; g.rotation.x = e.charging ? -0.2 : 0; } };
-  },
-  // cube flottant qui tourne en zigzaguant
-  zigzag: (faced, mat) => () => {
-    const g = new THREE.Group(), c = cube(g, mat, 2.4, 2.4, 2.4, 0, 1.7, 0);
-    return { object: g, update(e, dt, t) { c.rotation.y = t * 1.5; c.position.y = 1.7 + Math.sin(t * 3 + e.id) * 0.25; } };
-  },
-};
+export const billboardTexture = (spec, i) => posters.get(`${siteKey(spec)}:billboard:${i % Math.max(1, spec.billboards.length)}`);

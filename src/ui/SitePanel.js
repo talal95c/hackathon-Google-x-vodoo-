@@ -1,5 +1,6 @@
 import { WorldGenerator, hostOf } from '../ai/WorldGenerator.js';
 import { listCached, loadCached, saveCached, shrink, loadBuiltinIndex, loadBuiltin } from '../ai/siteCache.js';
+import { toSprite } from '../ai/sprite.js';
 
 // Écran "Cours sur n'importe quel site" : URL → monde généré par l'IA → partie.
 // La partie démarre dès que le monde est inventé (~5 s) ; les images arrivent pendant qu'on court.
@@ -74,11 +75,16 @@ export class SitePanel {
       this.menus.closePanels();
       this.onReady(spec);
       // Textures en arrière-plan : réduites, appliquées en direct, mises en cache
+      // Textures en arrière-plan : obstacles détourés en sprites, affiche réduite ; appliquées en direct et mises en cache
       gen.images(spec, async (id, img) => {
-        const small = await shrink(img);
-        if (id === 'billboard') spec.billboardTexture = small;
-        else { const o = spec.obstacles.find((x) => x.id === id); if (o) o.texture = small; }
-        this.onImage(spec, id, small);
+        if (id === 'billboard') spec.billboardTexture = await shrink(img, 512);
+        else {
+          const o = spec.obstacles.find((x) => x.id === id);
+          if (!o) return;
+          const sprite = await toSprite(img);
+          o.texture = sprite.src; o.aspect = sprite.aspect;
+        }
+        this.onImage(spec, id);
         saveCached(spec);
       });
     } catch (e) {

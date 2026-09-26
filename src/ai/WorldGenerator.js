@@ -1,3 +1,4 @@
+import { SPRITE_STYLE } from "./cutout.js";
 // Transforme un site web en monde jouable, avec les modèles Google (via @google/genai) :
 //   1. Gemini lit la page (outil urlContext) et invente un monde : nom, palette, obstacles
 //      inspirés du contenu du site, textes de panneaux, prompts musicaux pour Lyria.
@@ -26,7 +27,7 @@ Réponds UNIQUEMENT avec un objet JSON (pas de markdown) :
       "label": "nom affiché, 1 à 3 mots, 20 caractères max, français",
       "behavior": "jump" (bas, on saute dessus) | "dodge" (haut, on l'esquive) | "charge" (fonce vers le joueur) | "zigzag" (glisse de gauche à droite),
       "color": "#hex",
-      "image": "description visuelle en anglais d'une icône de jeu simple de cet élément du site (objet unique, formes nettes)"
+      "image": "description anglaise d'un PERSONNAGE cartoon expressif incarnant cet élément du site, avec une émotion et des petites jambes ou des bras (ex. 'a furious blue thumbs up with tiny legs')"
   } ] — utilise au moins 3 comportements différents, dont un "charge",
   "billboards": [ 3 slogans parodiques très courts (max 4 mots, français) détournant le site ],
   "billboardImage": "description en anglais d'une affiche publicitaire parodique du site, style flat design",
@@ -111,9 +112,8 @@ export class WorldGenerator {
   // Étape 2 (en parallèle, pendant que le joueur court) : les textures.
   // onImage(clé, dataURL) : clé = id d'obstacle ou 'billboard'. Les échecs sont ignorés (texture de secours).
   images(spec, onImage) {
-    const hexOf = (n) => '#' + n.toString(16).padStart(6, '0');
     const jobs = [
-      ...spec.obstacles.map((o) => [o.id, `${o.image}. Video game object icon, single centered subject, bold flat colors, thick outlines, plain solid ${hexOf(o.color)} background, no text, square.`]),
+      ...spec.obstacles.map((o) => [o.id, `${o.image}. ${SPRITE_STYLE}.`]), // détouré ensuite (cutout.js)
       ['billboard', `${spec.billboardImage}. Wide flat design poster, bold colors, big shapes, no small text.`],
     ];
     return Promise.all(jobs.map(([key, prompt]) => this.#image(prompt)

@@ -6,6 +6,7 @@ import fs from 'fs';
 import sharp from 'sharp';
 import { GoogleGenAI } from '@google/genai';
 import { WorldGenerator, hostOf } from '../src/ai/WorldGenerator.js';
+import { cutout } from '../src/ai/cutout.js';
 
 const DEFAULT = [
   ['youtube.com', '▶️'], ['wikipedia.org', '📚'], ['google.com', '🔍'], ['voodoo.io', '🎮'], ['deepmind.google', '🧠'],
@@ -19,10 +20,19 @@ fs.mkdirSync(OUT, { recursive: true });
 const indexPath = `${OUT}/index.json`;
 const index = fs.existsSync(indexPath) ? JSON.parse(fs.readFileSync(indexPath, 'utf8')) : [];
 
+const bufOf = (dataURL) => Buffer.from(dataURL.split(',')[1], 'base64');
+// affiche : réduite en JPEG
 const shrink = async (dataURL) => {
-  const buf = Buffer.from(dataURL.split(',')[1], 'base64');
-  const out = await sharp(buf).resize(256, 256, { fit: 'inside' }).jpeg({ quality: 82 }).toBuffer();
+  const out = await sharp(bufOf(dataURL)).resize(512, 512, { fit: 'inside' }).jpeg({ quality: 80 }).toBuffer();
   return `data:image/jpeg;base64,${out.toString('base64')}`;
+};
+// obstacle : détouré (fond vert → transparent), recadré, en webp
+const toSprite = async (dataURL) => {
+  const { data, info } = await sharp(bufOf(dataURL)).resize(512, 512, { fit: 'inside' }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const box = cutout(data, info.width, info.height);
+  const out = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
+    .extract({ left: box.x, top: box.y, width: box.w, height: box.h }).webp({ quality: 85 }).toBuffer();
+  return { src: `data:image/webp;base64,${out.toString('base64')}`, aspect: box.w / box.h };
 };
 
 const targets = process.argv.slice(2).length ? process.argv.slice(2).map((h) => [h, '🌐']) : DEFAULT;
@@ -31,9 +41,9 @@ for (const [site, emoji] of targets) {
   try {
     const spec = await gen.spec(`https://${site}`);
     await gen.images(spec, async (id, img) => {
-      const small = await shrink(img);
-      if (id === 'billboard') spec.billboardTexture = small;
-      else spec.obstacles.find((o) => o.id === id).texture = small;
+      if (id === 'billboard') { spec.billboardTexture = await shrink(img); return; }
+      const o = spec.obstacles.find((x) => x.id === id), sprite = await toSprite(img);
+      o.texture = sprite.src; o.aspect = sprite.aspect;
     });
     const host = hostOf(site);
     fs.writeFileSync(`${OUT}/${host}.json`, JSON.stringify(spec));

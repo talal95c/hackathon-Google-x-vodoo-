@@ -26,6 +26,8 @@
       <div id="driftbox"><div class="label" id="driftLabel">GLISSADE</div><div class="bar"><div class="fill" id="driftFill"></div></div></div>
     </div>
     <div id="music" class="small"></div>
+    <ol id="mpBoard" class="hidden"></ol>
+    <div id="shoveBox" class="hidden"><button id="shoveBtn">💥 E · COUP D'ÉPAULE</button><div class="bar"><div class="fill" id="shoveFill"></div></div></div>
   </div>
   <div id="vignette"></div>
   <div id="flash"></div>
@@ -42,6 +44,7 @@
       <div class="buttons hero-actions">
         <button class="primary" data-action="play"><span>▶</span> Lancer la session <span>↗</span></button>
         <button class="site-button" data-site="open">🌐 Cours sur n'importe quel site</button>
+        <button class="mp-button" data-mp="open">⚔ Multijoueur</button>
         <button class="reggae-button" data-action="reggae" aria-label="Équiper le dino reggae"><span class="reggae-stripes"></span> Dino reggae</button>
       </div>
       <p class="small" id="wallet"></p>
@@ -61,6 +64,7 @@
     <div class="buttons">
       <button class="primary" data-action="play">↻ REJOUER</button>
       <button data-site="open">🌐 AUTRE SITE</button>
+      <button data-mp="open">⚔ MULTIJOUEUR</button>
       <button data-action="shop">🛒 BOUTIQUE</button>
     </div>
   </div>
@@ -73,6 +77,26 @@
       <button data-tab="upgrade">Améliorations</button>
     </div>
     <div class="grid" id="shopGrid"></div>
+  </div>
+
+  <div class="panel hidden" id="mpPanel">
+    <div class="panel-head"><h2>⚔ Multijoueur</h2><button data-action="close">✕</button></div>
+    <p>Crée une partie, partage le code : tout le monde court sur la même route. Bouscule tes rivaux (<span class="key">E</span> = coup d'épaule) pour les faire tomber. Le dernier en vie gagne.</p>
+    <label class="small">Ton pseudo <input id="mpName" maxlength="14" /></label>
+    <div id="mpJoin">
+      <div class="buttons"><button class="primary" data-mp="create">Créer une partie</button></div>
+      <div class="site-input"><input id="mpCode" placeholder="Code de la partie (ex. K7QXP)" autocomplete="off" /><button data-mp="join">Rejoindre</button></div>
+    </div>
+    <div id="mpRoom" class="hidden">
+      <div class="mp-code">Code : <b id="mpCodeShow"></b> <button data-mp="copy">Copier le lien</button></div>
+      <ul id="mpPlayers" class="mp-players"></ul>
+      <div class="buttons">
+        <button id="mpLaunch" class="primary" data-mp="launch">⚔ Lancer la course</button>
+        <span id="mpWait" class="small">En attente du lancement par l'hôte…</span>
+        <button data-mp="leave">Quitter la partie</button>
+      </div>
+    </div>
+    <p class="small" id="mpStatus"></p>
   </div>
 
   <div class="panel hidden" id="sitePanel">

@@ -11,7 +11,7 @@ export class World {
     this.pixelRatio = Math.min(window.devicePixelRatio, window.matchMedia('(pointer: coarse)').matches ? 1.25 : 1.5);
     r.setPixelRatio(this.pixelRatio);
     r.toneMapping = THREE.ACESFilmicToneMapping;
-    r.toneMappingExposure = .86;
+    r.toneMappingExposure = .96;
     r.outputColorSpace = THREE.SRGBColorSpace;
     r.domElement.setAttribute('aria-label', 'Dino Escape — scène 3D');
     r.setSize(window.innerWidth, window.innerHeight);
@@ -36,7 +36,7 @@ export class World {
     const room = new RoomEnvironment(), pmrem = new THREE.PMREMGenerator(r);
     this.environmentTarget = pmrem.fromScene(room, .04);
     this.scene.environment = this.environmentTarget.texture;
-    this.scene.environmentIntensity = .22;
+    this.scene.environmentIntensity = .28;
     room.dispose(); pmrem.dispose();
     this.post = new PostProcessing(r, this.scene, this.camera);
     this.post.resize(window.innerWidth, window.innerHeight, this.pixelRatio);
@@ -87,12 +87,15 @@ export class World {
   }
 
   #buildLights() {
-    this.scene.add(new THREE.HemisphereLight(0xb5d7f5, 0x7c7078, .7));
-    const sun = this.sun = new THREE.DirectionalLight(this.colors.sun, 1.85);
+    this.ambient = new THREE.HemisphereLight(0xb6c7ef, 0x987259, .92);
+    this.scene.add(this.ambient);
+    const sun = this.sun = new THREE.DirectionalLight(this.colors.sun, 2.65);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.bias = -0.0005;
-    Object.assign(sun.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 120 });
+    sun.shadow.bias = -0.0003;
+    sun.shadow.normalBias = .045;
+    sun.shadow.radius = 3;
+    Object.assign(sun.shadow.camera, { left: -38, right: 38, top: 38, bottom: -38, near: 1, far: 120 });
     this.scene.add(sun, sun.target);
   }
 
@@ -116,7 +119,11 @@ export class World {
       cl.g.position.set(cam.x + Math.cos(cl.a) * cl.r, cl.y, cam.z + Math.sin(cl.a) * cl.r);
       cl.g.lookAt(cam.x, cl.y, cam.z);
     }
-    this.sun.position.set(focus.x + 25, focus.y + 22, focus.z - 18);
+    const inside = this.enclosure ?? 0;
+    this.ambient.intensity = .92 - inside * .53;
+    this.sun.intensity = 2.65 - inside * 2.1;
+    this.scene.environmentIntensity = .28 - inside * .13;
+    this.sun.position.set(focus.x + 25, focus.y + 32, focus.z - 18);
     this.sun.target.position.copy(focus);
   }
 
