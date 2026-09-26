@@ -1,0 +1,40 @@
+body.in-fight-club #hud, body.in-fight-club #banner, body.in-fight-club #flash, body.in-fight-club #vignette { visibility: hidden; }
+.fight-club { position: fixed; inset: 0; z-index: 15; color: #fff4da; font-family: Arial, sans-serif; pointer-events: none; background: linear-gradient(#11172c88, transparent 33%, transparent 66%, #11172cbb); }
+.fc-heading { position: absolute; top: max(18px, env(safe-area-inset-top)); left: 0; right: 0; text-align: center; }
+.fc-kicker { font-size: 9px; letter-spacing: 4px; color: #80f9e0; font-weight: 900; }
+.fc-heading h1 { margin: 5px 0; font: italic 1000 clamp(27px, 5vw, 42px)/1 Arial, sans-serif; letter-spacing: -1.8px; text-shadow: 0 3px #111827; }
+.fc-heading h1 i { color: #ffe273; }
+.fc-rule { font-size: 11px; opacity: .85; }
+.fc-scoreboard { position: absolute; top: 112px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 14px; width: min(450px, 90vw); }
+.fc-player { flex: 1; min-width: 0; background: #202840cf; border: 1px solid #fff3; border-radius: 14px; padding: 9px 10px 7px; text-align: center; box-shadow: 0 5px 20px #0002; }
+.fc-player:first-child { border-top: 3px solid #74f6d6; } .fc-player:last-child { border-top: 3px solid #ff87b1; }
+.fc-name { display: block; font-size: 11px; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fc-count { display: block; font-size: 34px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.fc-bank { font-size: 9px; letter-spacing: .8px; opacity: .65; }
+.fc-ahead { background: #3c4b4fd9; box-shadow: 0 0 20px #ffe57d22; }
+.fc-vs { font-style: italic; color: #ffdf77; font-weight: 1000; }
+.fc-callout { position: absolute; top: 30%; left: 0; right: 0; text-align: center; filter: drop-shadow(0 3px #182033); }
+.fc-callout strong { display: block; font: italic 1000 clamp(27px, 5vw, 43px)/1 Arial; color: #ffe070; }
+.fc-callout span { display: inline-block; margin-top: 7px; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
+.fc-callout.counting strong { font-size: clamp(50px, 10vw, 90px); color: #fff4d1; }
+.fc-pulse { position: absolute; inset: 18px; border: 2px solid #ffe58a; border-radius: 24px; opacity: 0; box-shadow: inset 0 0 40px #ffde8533; }
+.fc-controls { position: absolute; bottom: max(19px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: min(430px, calc(100vw - 32px)); }
+.fc-time { display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: 900; letter-spacing: 1px; }.fc-time b { font-size: 23px; font-variant-numeric: tabular-nums; }
+.fc-meter { height: 7px; border-radius: 8px; overflow: hidden; background: #fff2; margin: 7px 0 13px; }.fc-meter div { height: 100%; background: linear-gradient(90deg,#ff76a7,#ffe574); transform-origin: left; }
+button.fc-tap { pointer-events: auto; touch-action: none; -webkit-tap-highlight-color: transparent; display: flex; width: 100%; min-height: 105px; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 2px solid #fff2ae; border-radius: 23px; background: linear-gradient(135deg,#fff097,#ffd452); color: #222740; box-shadow: 0 6px 0 #a87a2e, 0 0 30px #ffdc7133; cursor: pointer; }
+button.fc-tap:disabled { opacity: .55; cursor: default; } .fc-tap .fc-hand { position: absolute; left: 24px; font-size: 38px; transform: rotate(-13deg); }.fc-tap strong { font: italic 1000 33px/1 Arial; letter-spacing: -.8px; }.fc-tap small { font-size: 10px; font-weight: 700; margin-top: 3px; }
+button.fc-hot { background: linear-gradient(135deg,#ffb774,#ff6b91); box-shadow: 0 6px 0 #a34755, 0 0 40px #ff779377; }
+.fc-footnote { font-size: 9px; text-align: center; margin-top: 15px; opacity: .6; }
+.fc-result { position: absolute; bottom: max(38px, env(safe-area-inset-bottom)); left: 50%; width: min(450px, 92vw); transform: translateX(-50%) translateY(30px); text-align: center; opacity: 0; transition: opacity .25s, transform .25s; }.fc-result.visible { opacity: 1; transform: translateX(-50%); }
+.fc-result-label { display: block; font-size: 10px; letter-spacing: 2px; font-weight: 900; }.fc-result strong { display: block; font: italic 1000 clamp(38px, 8vw, 65px)/1.1 Arial; color: #ffe17e; margin: 8px 0; }.fc-result p { font-size: 11px; background: #1b223de6; border: 1px solid #fff2; padding: 12px; border-radius: 12px; }.fc-result small { display: block; font-size: 10px; margin-top: 12px; opacity: .7; }.fc-result.lost strong { color: #ff93b1; }
+.fc-teaser { position: absolute; top: 82px; left: 50%; transform: translateX(-50%); padding: 7px 11px; border-radius: 20px; color: #fff1c5; background: #282a42d9; font: 800 9px Arial; letter-spacing: .9px; }
+@media(max-height: 650px) { .fc-heading { top: 10px; }.fc-heading h1 { font-size: 27px; }.fc-rule { display: none; }.fc-scoreboard { top: 72px; width: 350px; max-width: 90vw; }.fc-count { font-size: 25px; }.fc-callout { top: 31%; }.fc-controls { bottom: 12px; width: min(360px,90vw); }button.fc-tap { min-height: 77px; }.fc-footnote { margin-top: 10px; }.fc-result { bottom: 20px; } }
+@media(prefers-reduced-motion: reduce) { .fc-result { transition: none; } }
+
+.fc-callout.fc-hit { top: 208px; }
+.fc-callout.fc-hit strong { display: none; }
+.fc-callout.fc-hit span { margin-top: 0; background: #ffe37b; color: #20263d; border-radius: 20px; padding: 6px 12px; letter-spacing: 1.5px; }
+.fc-callout.counting { top: 37%; }
+.fight-club::after { content: ''; position: absolute; inset: 0; background: #161a2c; animation: fc-arrive .4s ease-out both; pointer-events: none; }
+@keyframes fc-arrive { from { clip-path: polygon(0 0,100% 0,100% 100%,0 100%); } to { clip-path: polygon(0 0,100% 0,100% 0,0 0); } }
+@media(max-height:650px) { .fc-callout.fc-hit { top: 161px; } }

@@ -170,7 +170,7 @@ Models.register('costumeDino', ({ costume = 'alligator' } = {}) => {
 
   let squash=0;
   return {
-    object:root, head,
+    object:root, head, rig: { body, head, arms, legs, tail },
     update(p,dt,time=0) {
       const idle=p.state==='idle',beat=Math.sin(p.gait),energy=Math.min(1.35,p.speed/26);
       body.position.y=p.grounded?Math.abs(Math.cos(p.gait))*(idle?.065:.14):0;

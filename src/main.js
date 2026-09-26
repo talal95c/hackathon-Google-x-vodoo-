@@ -42,6 +42,9 @@ import { RivalView } from './view/RivalView.js';
 import { Bots } from './bots/Bots.js';
 import { CombatView } from './view/CombatView.js';
 import { CombatHud } from './ui/CombatHud.js';
+import { FightClub } from './fight/FightClub.js';
+import { FightClubView } from './view/FightClubView.js';
+import { FightClubHud } from './ui/FightClubHud.js';
 import { Skins } from './kernel/Registry.js';
 import { MusicThemes } from './kernel/Registry.js';
 
@@ -66,7 +69,7 @@ const views = [
   // (RivalView ajoutée plus bas, une fois le multijoueur créé)
   new RunnerView(ctx),
   new Particles(ctx),
-  new AtmosphereFx(ctx), // particules d'ambiance propres à chaque monde
+  new AtmosphereFx(ctx), // particules d'ambiance par monde + traînées de vitesse
   new TransitionFx(ctx), // lignes de vitesse, flou, flash : fournit ctx.transition
   new CameraRig(ctx),
 ];
@@ -105,6 +108,11 @@ function play() {
 
 const lobby = new Lobby({ mp, bots, menus, hud, onLaunch: () => play() });
 views.push(new CombatView(ctx, [mp, bots]), new CombatHud(ctx, () => lobby.race));
+const club = new FightClub(game, { mp, bots, profile });
+const clubView = new FightClubView(ctx, club), clubHud = new FightClubHud(ctx, club);
+game.on('club:open', () => { input.reset(); input.enabled = false; });
+game.on('club:close', () => { input.reset(); views.find(v => v instanceof CameraRig).snap = true; });
+game.on('club:cancel', ({ reason }) => hud.banner(reason, 2));
 
 // Retour depuis l'écran de fin : le menu en solo, le salon en multijoueur
 function back() {
@@ -124,7 +132,7 @@ document.getElementById('shoveBtn').addEventListener('pointerdown', (e) => { e.p
 
 
 input.onAction((a) => {
-  if (a !== 'confirm' || menus.panelOpen) return;
+  if (a !== 'confirm' || menus.panelOpen || club.active) return;
   if (game.state === 'menu') play();
   else if (game.state === 'over' && performance.now() - overAt > 900) { if (menus.screens.start.classList.contains('hidden')) back(); else play(); } // ESPACE : quitter l'écran de fin, puis relancer
 });
@@ -150,7 +158,8 @@ function frame(now) {
   const dt = Math.min(1 / 20, (now - last) / 1000);
   last = now;
   time += dt;
-  input.enabled = !menus.panelOpen;
+  club.update();
+  input.enabled = !menus.panelOpen && !club.active;
   const intent = input.read(dt);
   game.update(dt, intent);
   mp.update(dt, intent);
@@ -160,7 +169,9 @@ function frame(now) {
   music.update(dt);
   hud.update(dt);
   world.update(dt, ctx.focus);
-  world.render(ctx.fx?.pulse ?? 0, ctx.transition);
+  clubView.update(dt, time);
+  clubHud.update();
+  world.render(club.active ? clubView.hitKick : (ctx.fx?.pulse ?? 0), club.active ? clubView.postFx : ctx.transition);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

@@ -83,6 +83,7 @@ export class Game {
     this.acc = 0;
     this.pendingJump = false;
     this.fall = null;
+    this.pausedRaceState = null;
     this.worldJump = null;
     this.nextWorld = 1;
     this.track.update(this.runner.z);
@@ -92,6 +93,21 @@ export class Game {
     const prev = this.state;
     this.state = state;
     this.emit('state', { state, prev });
+  }
+
+  pauseForDuel() {
+    if (this.worldJump || !['playing', 'falling'].includes(this.state)) return false;
+    this.pausedRaceState = this.state; this.pendingJump = false; this.acc = 0;
+    this.#setState('duel'); return true;
+  }
+
+  resumeFromDuel() {
+    if (this.state !== 'duel') return;
+    const state = this.pausedRaceState || 'playing'; this.pausedRaceState = null;
+    this.pendingJump = false; this.runner.jumpBuf = 0;
+    this.runner.invul = Math.max(this.runner.invul, 1);
+    this.runner.knockV = 0; this.runner.stumble = 0;
+    this.#setState(state);
   }
 
   // --- API pour les entités / armes / Director

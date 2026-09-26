@@ -28,7 +28,8 @@ export class PostProcessing {
     const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
     target.samples = Math.min(4, renderer.capabilities.maxSamples);
     this.composer = new EffectComposer(renderer, target);
-    this.composer.addPass(new RenderPass(scene, camera));
+    this.renderPass = new RenderPass(scene, camera);
+    this.composer.addPass(this.renderPass);
     if (!window.matchMedia('(pointer: coarse)').matches) {
       this.ao = new SceneAO(scene, camera, 512, 512);
       this.ao.updateGtaoMaterial({ radius: 2.1, thickness: 1.5, distanceExponent: 1.6, scale: 1, samples: 8 });
@@ -94,6 +95,7 @@ export class PostProcessing {
     });
     this.composer.addPass(this.grade);
   }
+  setScene(scene) { this.renderPass.scene = scene; if (this.ao) this.ao.scene = scene; }
   resize(w,h,dpr){this.composer.setPixelRatio(dpr);this.composer.setSize(w,h);this.grade.uniforms.aspect.value=w/h;}
   // fx : { rush, lines, blur, flash, flashColor } (voir view/TransitionFx.js)
   render(pulse=0,fx=NONE){

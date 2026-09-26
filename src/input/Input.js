@@ -38,6 +38,11 @@ export class Input {
     for (const ev of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) target.addEventListener(ev, onTouch, { passive: false });
   }
 
+  reset() {
+    this.#keys.clear(); this.#touches.clear(); this.#swipe.clear();
+    this.#jump = this.#shove = false; this.steer = 0;
+  }
+
   shove() { this.#shove = true; } // bouton tactile
 
   onAction(fn) { this.#listeners.add(fn); return () => this.#listeners.delete(fn); }
@@ -45,6 +50,7 @@ export class Input {
 
   // À appeler une fois par frame
   read(dt) {
+    if (!this.enabled) { this.reset(); return { steer: 0, throttle: 0, drift: false, brake: false, jump: false, shove: false }; }
     const k = this.#keys;
     let target = 0;
     if (k.has('ArrowLeft') || k.has('KeyA') || k.has('KeyQ')) target += 1;
