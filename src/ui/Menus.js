@@ -1,5 +1,7 @@
 import { Skins, MusicThemes } from '../kernel/Registry.js';
 import { GAME } from '../kernel/config.js';
+import { skinPortraits } from './SkinPortraits.js';
+import './skins.css';
 
 // Écrans (titre, fin de partie) et panneaux (boutique, musique Lyria).
 // Ne connaît le jeu qu'à travers des callbacks : onPlay().
@@ -57,7 +59,6 @@ export class Menus {
     const TXT = {
       fall: ['ERR_404 — le dino est tombé hors de la page', 'Page introuvable.'],
       dead: ['ERR_TOO_MANY_HITS — plus de vies', 'Le dino a planté.'],
-      caught: ['ERR_DINO_CAPTURED — le curseur a cliqué sur ✕', 'Onglet fermé.'],
     }[result.reason];
     $('overErr').textContent = TXT[0];
     $('overTitle').textContent = TXT[1];
@@ -80,13 +81,16 @@ export class Menus {
     document.querySelectorAll('#shop [data-tab]').forEach((b) => b.classList.toggle('active', b.dataset.tab === this.tab));
     let cards = '';
     if (this.tab === 'skin') {
+      // Generate portraits only when the collection is actually opened.
+      const portraits = this.panels.shop.classList.contains('hidden') ? null : skinPortraits();
       for (const s of Skins.all()) {
         const owned = p.ownsSkin(s.id), sel = p.data.skin === s.id;
         const btn = sel ? '<button disabled>Équipé</button>'
           : owned ? `<button data-skin="${s.id}">Équiper</button>`
             : this.#buyButton(`skin:${s.id}`);
-        cards += `<div class="card ${sel ? 'selected' : ''}"><div class="swatch" style="background:${hex(s.view.color)}"></div>
-          <div class="name">${s.name}</div><div class="desc rarity-${s.rarity}">${s.description || s.rarity}${s.modifiers ? ' · bonus' : ''}</div>${btn}</div>`;
+        const portrait = portraits?.get(s.id);
+        cards += `<div class="card skin-card ${sel ? 'selected' : ''}" aria-label="${s.name}"><div class="skin-art">${portrait ? `<img class="skin-portrait" src="${portrait}" alt=""/>` : `<div class="swatch" style="background:${hex(s.view.color)}"></div>`}</div>
+          <div class="name">${s.name}</div><div class="desc rarity-${s.rarity}">${s.description || s.rarity}${s.modifiers ? ' · bonus' : ''}</div>${s.starter ? '<span class="skin-included">Inclus dans ta collection</span>' : ''}${btn}</div>`;
       }
     } else {
       for (const item of shop.items(this.tab)) {

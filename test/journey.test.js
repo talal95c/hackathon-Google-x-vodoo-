@@ -22,7 +22,7 @@ for (let next = 1; next < 5; next++) test(`portail ${next} : saut guidé, change
   const boundary = next * TRACK.zoneLength, r = g.runner;
   r.z = boundary - WORLD_JUMP.lead + .01; r.x = 3;
   g.track.update(r.z); r.Y = g.track.frame(r.z).y;
-  g.zoneIndex = next - 1; g.nextWorld = next; g.sMax = r.z; g.chaser.reset(r.z);
+  g.zoneIndex = next - 1; g.nextWorld = next; g.sMax = r.z;
   let launched = 0, landed = 0, changed = 0, maxHeight = 0;
   g.on('world:jump', () => launched++); g.on('world:land', () => landed++);
   g.on('zone', () => changed++);

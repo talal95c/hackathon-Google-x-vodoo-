@@ -8,6 +8,7 @@ import { MusicThemes } from '../kernel/Registry.js';
 //   levels → énergie croissante, mélangée au core ; suit les paliers de tempo du jeu (GAME.tempoLevels)
 //   bpm    → tempo au palier 0 ; multiplié par le ratio du palier (le dino accélère d'autant)
 //   scale  → tonalité fixe (enchaînements harmonieux)
+//   moods  → tags ajoutés selon l'ambiance du match (bagarre, danger, triomphe), mélangés en douceur
 //   vocals → tags de voix, utilisés en mode voix (VOCALIZATION) ; sinon "Instrumental" est ajouté
 //   density / brightness → plages parcourues en continu avec l'intensité
 // consumable : true = acheté à l'unité, consommé au lancement d'une partie.
@@ -16,6 +17,7 @@ MusicThemes.define('techno', {
   name: 'Techno', price: 0, consumable: false,
   core: 'Uptempo Techno, Electro House, Punchy Four-on-the-floor Kick, Bouncy Offbeat Bassline, Catchy Synth Hook, Euphoric, Energetic, Danceable, Retro 8-bit Arpeggios, Video Game Chase Music',
   vocals: 'Catchy Vocal Chops, Energetic Hype Vocals, Rave Chants',
+  moods: { fight: 'Aggressive Distorted Bass, Pounding Drums, Battle Energy, Tense Stabs', danger: 'Dark, Tense, Suspenseful Pads, Heartbeat Kick', triumph: 'Euphoric Drop, Triumphant Synth Lead, Uplifting' },
   levels: [
     'Upbeat, Groovy, Hand Claps, Crisp 16th Hi-hats, Catchy Riff, Head Nodding',
     'Driving, Rolling Bass, Rising Synth Lead, Party Energy, Irresistible Groove',
@@ -31,6 +33,7 @@ MusicThemes.define('reggae', {
   name: 'Reggae', price: 80, consumable: true,
   core: 'Reggae, Dub, One Drop Drums, Offbeat Skank Guitar, Deep Round Bass, Hammond Organ, Sunny, Warm',
   vocals: 'Soulful Reggae Vocals, Warm Harmonies, Call and Response',
+  moods: { fight: 'Heavy Dub Bass, Rapid Snare Rolls, Rebel Energy', danger: 'Dark Dub, Echoing Sirens, Tense', triumph: 'Joyful Horns, Celebration, Uplifting Skank' },
   levels: [
     'Laid Back, Minimal, Dub Echoes, Relaxed Groove',
     'Steppers Rhythm, Horn Section, Uplifting, Bouncy',
@@ -46,6 +49,7 @@ MusicThemes.define('rap', {
   name: 'Rap', price: 80, consumable: true,
   core: 'Hip Hop, Boom Bap, Dusty Drums, Vinyl Crackle, Deep Bass, Head Nodding Groove',
   vocals: 'Rap Vocals, Hype Ad-libs, Confident Flow',
+  moods: { fight: 'Hard 808s, Aggressive Drill Drums, Battle Rap Energy', danger: 'Dark Menacing Strings, Tense, Sparse', triumph: 'Victory Anthem, Triumphant Brass, Hype' },
   levels: [
     'Lo-fi, Chill, Jazzy Piano, Mellow',
     'Hard Hitting Drums, Dark Piano Loop, Confident',
@@ -61,6 +65,7 @@ MusicThemes.define('chiptune', {
   name: '8-bit', price: 60, consumable: true,
   core: 'Chiptune, 8-bit, NES Video Game Music, Square Wave Lead, Retro Arcade, Catchy Melody',
   vocals: 'Robotic Vocoder Vocals, Cute Vocal Chops',
+  moods: { fight: 'Boss Battle, Fast Arpeggios, Intense 8-bit Drums', danger: 'Low Health Alarm, Tense Chiptune, Minor Key', triumph: 'Victory Fanfare, Level Clear Jingle, Cheerful' },
   levels: [
     'Cheerful, Simple Arpeggios, Light Percussion, Playful',
     'Upbeat Adventure Theme, Driving Bassline, Bouncy',
@@ -76,6 +81,7 @@ MusicThemes.define('metal', {
   name: 'Metal', price: 100, consumable: true,
   core: 'Heavy Metal, Distorted Electric Guitars, Palm-muted Riffs, Powerful Drums, Bass Guitar, Epic',
   vocals: 'Powerful Rock Vocals, Epic Choir',
+  moods: { fight: 'Blast Beats, Shredding Riffs, Brutal Energy', danger: 'Dark Doom Riffs, Tense, Heavy', triumph: 'Epic Guitar Solo, Triumphant Choir' },
   levels: [
     'Heavy Groove, Chugging Riffs, Steady Drums, Brooding',
     'Galloping Riffs, Double Kick Drums, Driving, Aggressive',

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { View } from './View.js';
 import { Models } from './ModelRegistry.js';
 import { Skins } from '../kernel/Registry.js';
+import { FightFx } from './fightFx.js';
 
 // Met en scène le dino : choisit le modèle du skin, le place sur la route,
 // calcule la "pose" (état d'animation) et attache les visuels d'armes.
@@ -24,6 +25,9 @@ export class RunnerView extends View {
     this.blob.rotation.order = 'YXZ';
     this.scene.add(this.blob);
     this.setSkin(ctx.skin ?? 'classic');
+    this.fx = new FightFx(this.root);
+    this.listen('mp:shove', ({ dir }) => this.fx.shove(dir ?? 1));
+    this.listen('runner:knocked', ({ lateral, source }) => { if (source !== 'bump' || Math.abs(lateral) > 12) this.fx.hit(lateral); });
 
     this.listen('game:start', ({ loadout }) => { if (loadout.skin) this.setSkin(loadout.skin); this.#clearWeapon(); });
     this.listen('skin:preview', ({ skin }) => this.setSkin(skin));
@@ -90,6 +94,7 @@ export class RunnerView extends View {
     this.root.visible = !!g.worldJump || r.invul <= 0 || g.state !== 'playing' || Math.floor(r.invul * 16) % 2 === 0;
 
     this.model.update?.(this.pose(), dt, time);
+    if (g.state === 'playing') this.fx.apply(dt, r.stumble > 0, time);
     if (this.weaponModel && this.weapon) this.weaponModel.update?.(this.weapon, dt, time);
     this.focus.copy(this.root.position);
   }

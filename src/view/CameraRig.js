@@ -15,6 +15,7 @@ export class CameraRig extends View {
     this.camera = ctx.world.camera;
     this.focus = ctx.focus; // position monde du dino (Vector3 partagé)
     this.listen('game:start', () => { this.snap = true; });
+    this.listen('runner:respawn', () => { this.snap = true; }); // réapparition (multijoueur)
     this.listen('runner:hit', () => this.addShake(1));
     this.listen('runner:land', ({ impact }) => this.addShake(impact * 0.4));
     this.listen('runner:boost', () => this.addShake(0.25));

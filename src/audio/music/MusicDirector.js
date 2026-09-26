@@ -1,11 +1,12 @@
 import { MusicThemes } from '../../kernel/Registry.js';
 import { BeatTracker } from './BeatTracker.js';
+import { MatchMood } from './MatchMood.js';
 
 const OFFSET_KEY = 'dino-escape-audio-offset';
 const MIN_CONFIDENCE = 2.5; // bruit sans rythme ≈ 2.2 max, Lyria rythmé ≈ 3 à 5
 
 // Relie le jeu à la musique :
-// - choisit le thème du loadout, calcule une intensité (0 → 1) : vitesse, progression, danger, boss ;
+// - choisit le thème du loadout, calcule une intensité (0 → 1) : paliers de vitesse, boss ;
 // - SYNCHRO : impose le tempo à l'horloge du jeu (game.beat) et la recale sur la musique
 //   via une boucle à verrouillage de phase (petites corrections successives) :
 //     synthé → heures exactes de ses kicks ;
@@ -33,6 +34,10 @@ export class MusicDirector {
     // si Lyria se connecte en pleine partie, on bascule dessus
     lyria.onStatus((status) => { if (status === 'ready' && this.engine === synth && this.theme) this.play(this.theme); });
     this.tracker = new BeatTracker();
+    // ambiance du match (bagarre, danger, triomphe) → Lyria en douceur, synthé en couches
+    this.mood = new MatchMood(game, () => this.race?.());
+    game.on('runner:knocked', ({ lateral }) => { if (Math.abs(lateral) > 12) this.lyria.duck(0.7); });
+    game.on('runner:hit', () => this.lyria.duck(0.9));
     lyria.onPcm = (samples, rate, t) => this.tracker.analyze(samples, rate, t);
     lyria.onRestart = () => { this.lockKicks = 4; this.tracker.reset(); };
     synth.onKick = (t) => { if (this.engine === synth) this.#sync(t, 1); };
@@ -99,6 +104,9 @@ export class MusicDirector {
 
   stop() { this.engine?.stop(); this.engine = null; }
 
+  // Source des rivaux pour l'ambiance du match (multijoueur ou PNJ), fournie par main.js
+  setRaceSource(fn) { this.race = fn; }
+
   #layers() { return 0.35 + (this.game.tempo?.level ?? 0) * 0.17; } // dès le départ : groove complet
 
   update(dt) {
@@ -108,8 +116,10 @@ export class MusicDirector {
       if (this.engine === this.lyria && this.lyria.status === 'playing') this.#trackLyria(dt);
     }
     if (g.state !== 'playing' && g.state !== 'falling') return;
-    // Mode DJ : l'intensité ne dépend QUE du palier de tempo (pas des chocs, du danger ou du sprint)
-    this.intensity += (this.#layers() - this.intensity) * Math.min(1, dt * 0.5);
-    this.engine?.setIntensity(this.intensity);
+    // Palier de tempo + ambiance du match (bagarre / danger / triomphe), toujours lissés
+    const m = this.mood.update(dt);
+    this.intensity += (Math.min(1, this.#layers() + m.fight * 0.25) - this.intensity) * Math.min(1, dt * 0.8);
+    this.engine?.setIntensity(this.intensity);   // synthé : couches supplémentaires en pleine bagarre
+    this.lyria.setMood?.(m);
   }
 }
