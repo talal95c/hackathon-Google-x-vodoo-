@@ -11,6 +11,9 @@ const WORLD_TEMPLATES = [
   (p) => ({ sky: '#ffd9c2', skyTop: p.alt, cloud: '#ffeee4', sun: p.accent, road: '#fff8ef', edge: p.primary, dash: p.accent, text: p.primary }),
 ];
 const slug = (s) => (s || 'brand').toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24) || 'brand';
+const siteHost = (url) => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; } };
+const isObject = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+const text = (v) => (typeof v === 'string' ? v : undefined);
 
 function loadDraft() {
   try { const d = JSON.parse(localStorage.getItem(DRAFT_KEY)); if (!validatePack(d).length) return d; } catch { /* none */ }
@@ -24,9 +27,13 @@ const studioToken = new URLSearchParams(location.search).get('token') ?? localSt
 if (studioToken) localStorage.setItem('dino-studio-token', studioToken);
 
 function save({ reload = true } = {}) {
-  // Leaving the BNW example (another website) starts a new brand with its own id and save slot.
-  if (!pack.id || (pack.id === bnw.id && pack.url && pack.url !== bnw.url)) pack.id = slug(pack.name || pack.url.replace(/^https?:\/\//, ''));
-  pack.id = slug(pack.id);
+  // Each website gets its own id and save slot; edits to the same website keep it.
+  const host = siteHost(pack.url);
+  if (host && pack.site !== host) {
+    pack.site = host;
+    pack.id = host === siteHost(bnw.url) ? bnw.id : slug(host);
+  }
+  pack.id = slug(pack.id || pack.name);
   localStorage.setItem(DRAFT_KEY, JSON.stringify(pack));
   if (reload) { clearTimeout(reloadTimer); reloadTimer = setTimeout(reloadPreview, 500); }
 }
@@ -99,9 +106,15 @@ function render() {
 }
 
 function merge(update) {
-  if (!update || typeof update !== 'object') return;
-  const { notes, ...rest } = update;
-  const worlds = Array.isArray(rest.worlds) ? rest.worlds.map((wld, i) => ({ ...(pack.worlds?.[i] ?? {}), ...wld })) : pack.worlds;
+  if (!isObject(update)) return;
+  const notes = text(update.notes);
+  const rest = {};
+  for (const key of ['name', 'tagline', 'logo', 'kit']) if (text(update[key])?.trim()) rest[key] = update[key];
+  for (const key of ['palette', 'copy', 'skin', 'music']) if (isObject(update[key])) rest[key] = update[key];
+  if (Array.isArray(update.ads)) rest.ads = update.ads.filter(isObject);
+  const worlds = Array.isArray(update.worlds)
+    ? update.worlds.filter(isObject).map((wld, i) => ({ ...(pack.worlds?.[i] ?? {}), ...wld }))
+    : pack.worlds;
   const logo = pack.logo;
   pack = { ...pack, ...rest, logo, palette: { ...pack.palette, ...rest.palette }, copy: { ...pack.copy, ...rest.copy }, skin: { ...pack.skin, ...rest.skin }, music: { ...pack.music, ...rest.music }, worlds };
   if (rest.logo && rest.logo !== logo) adoptLogo(rest.logo);
@@ -164,7 +177,9 @@ async function poll() {
   clearTimeout(pollTimer);
   if (!session) return;
   try {
-    const s = await api(`session/${session.id}`);
+    const id = session.id;
+    const s = await api(`session/${id}`);
+    if (session?.id !== id) return;
     const key = JSON.stringify(s.pack ?? null);
     if (s.pack && key !== lastPack) { lastPack = key; merge(s.pack); }
     const idle = ['exit', 'error', 'suspended'].includes(s.status) || ['waiting_for_user', 'finished'].includes(s.status_detail);

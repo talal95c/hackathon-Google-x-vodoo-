@@ -24,7 +24,7 @@ export class Input {
     target.addEventListener('keyup', (e) => this.#keys.delete(e.code));
     target.addEventListener('blur', () => this.#keys.clear());
     const onTouch = (e) => {
-      if (e.target.closest?.('button, input, .panel')) return;
+      if (e.target.closest?.('a, button, input, .panel')) return;
       const inStartMenu = !!e.target.closest?.('#start');
       if (!inStartMenu) e.preventDefault();
       this.#touches.clear();

@@ -36,7 +36,7 @@ function brandDom(pack) {
   document.body.classList.add('branded');
   const c = pack.copy ?? {};
   const $ = (sel) => document.querySelector(sel);
-  const logo = pack.logo ? `<img class="brand-logo" src="${encodeURI(pack.logo)}" alt="" />` : '';
+  const logo = pack.logo ? `<img class="brand-logo" src="${encodeURI(pack.logo).replace(/"/g, '%22').replace(/'/g, '%27')}" alt="" />` : '';
   $('#start .menu-brand').innerHTML = `${logo}<span>${lines(pack.name.toUpperCase())}</span><span class="edition">DINO ESCAPE · ÉDITION ${lines(pack.name.toUpperCase())}</span>`;
   const [a, b] = (c.title ?? `${pack.name}|ESCAPE.`).split('|');
   $('#start h1').innerHTML = `${lines(a)}<br /><span>${lines(b ?? '')}</span>`;

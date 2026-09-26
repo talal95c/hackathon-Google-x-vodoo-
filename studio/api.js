@@ -158,10 +158,12 @@ function authorize(req) {
 async function handle(req) {
   const path = req.url.split('?')[0];
   if (req.method === 'POST' && path === '/api/studio/scan') {
+    authorize(req);
     const { res, url } = await fetchPublic((await readJson(req)).url);
     return scanHtml((await readLimited(res, 3e6)).toString('utf8'), url);
   }
   if (req.method === 'POST' && path === '/api/studio/image') {
+    authorize(req);
     // Remote logos are proxied so the studio can store them as data URLs (canvas textures need same-origin pixels).
     const { res } = await fetchPublic((await readJson(req)).url);
     const type = res.headers.get('content-type') ?? '';
