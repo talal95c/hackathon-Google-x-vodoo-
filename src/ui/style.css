@@ -156,3 +156,6 @@ body:not(.in-game) #hud { opacity: 0; }
   #feverGauge { top: 119px; width: 42vw; font-size: 7px; }
   #challengeHud { top: 161px; font-size: 8px; }
 }
+
+/* BNW brand override */
+#start h1 span { color: #ffcc40; }
