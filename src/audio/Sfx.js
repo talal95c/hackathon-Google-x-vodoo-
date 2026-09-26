@@ -17,6 +17,17 @@ export class Sfx {
     const d = buf.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
     this.noiseBuf = buf;
+    // Claque : claquement large bande très court + résonance de paume amortie.
+    this.slapBuf = this.ctx.createBuffer(1, Math.ceil(this.ctx.sampleRate * .18), this.ctx.sampleRate);
+    const slap = this.slapBuf.getChannelData(0);
+    let previous = 0;
+    for (let i = 0; i < slap.length; i++) {
+      const t = i / this.ctx.sampleRate, white = Math.random() * 2 - 1;
+      const crack = (white - previous * .65) * (Math.exp(-t * 130) + .4 * Math.exp(-Math.abs(t - .008) * 300));
+      const palm = Math.sin(2 * Math.PI * (190 * t - 220 * t * t)) * Math.exp(-t * 48) * .5;
+      slap[i] = Math.tanh((crack + palm) * 1.3) * Math.min(1, t * 8000);
+      previous = white;
+    }
     const src = this.ctx.createBufferSource(); src.buffer = buf; src.loop = true;
     const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2200; bp.Q.value = 3;
     this.skidGain = this.ctx.createGain(); this.skidGain.gain.value = 0;
@@ -54,6 +65,17 @@ export class Sfx {
     src.start(t); src.stop(t + dur);
   }
 
+  slap(dir = 0, volume = 1) {
+    if (!this.ctx) return;
+    const src = this.ctx.createBufferSource(); src.buffer = this.slapBuf;
+    src.playbackRate.value = .96 + Math.random() * .08;
+    const gain = this.ctx.createGain(); gain.gain.value = .85 * volume;
+    const pan = this.ctx.createStereoPanner(); pan.pan.value = Math.max(-.45, Math.min(.45, -dir * .3));
+    src.connect(gain).connect(pan).connect(this.master);
+    src.onended = () => { src.disconnect(); gain.disconnect(); pan.disconnect(); };
+    src.start();
+  }
+
   coin() { this.tone(988, 0.08, 'square', 0.1); setTimeout(() => this.tone(1319, 0.12, 'square', 0.1), 60); }
   boost(big) { this.tone(big ? 300 : 220, 0.45, 'sawtooth', 0.12, big ? 900 : 500); this.noise(0.4, 0.15, 3000); }
   crash() { this.noise(0.5, 0.5, 600); this.tone(120, 0.4, 'square', 0.2, -80); }
@@ -66,6 +88,12 @@ export class Sfx {
 
 export function bindSfx(game, sfx) {
   const on = (t, fn) => game.on(t, fn);
+  on('mp:shove', () => sfx.noise(.09, .13, 3200));
+  on('combat:impact', e => {
+    if (Math.abs(e.s - game.runner.z) > 40) return;
+    if (e.kind === 'shove') sfx.slap(e.dir, e.local ? 1 : .4);
+    else if (e.local) sfx.noise(.05, .12, 650);
+  });
   on('runner:jump', () => sfx.jump());
   on('runner:land', ({ impact }) => sfx.step(impact > 0.3));
   on('runner:step', () => sfx.step(false));

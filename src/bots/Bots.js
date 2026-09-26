@@ -31,6 +31,7 @@ export class Bots {
       aggression: rng.range(0.35, 0.8),       // envie de se battre
       lane: rng.range(-2.5, 2.5),
     }));
+    this.shoveCd = 0;
     this.active = true;
   }
 
@@ -112,8 +113,8 @@ export class Bots {
         const t = shoveTarget(b, targets);
         if (t && Math.random() < b.aggression) {
           b.shoveAnim = 0.35; b.shoveDir = t.dir;
-          if (t.id === 'me') { if (!r.isInvulnerable) { r.knock(t.dir * FIGHT.shovePower, { stumble: FIGHT.shoveStumble, source: 'bot' }); g.emit('mp:shoved', { from: b.name }); } }
-          else { const o = this.list.find((x) => x.id === t.id); o.knockV += t.dir * FIGHT.shovePower; o.latV = 0; o.stumble = FIGHT.shoveStumble; }
+          if (t.id === 'me') { if (!r.isInvulnerable) { r.knock(t.dir * FIGHT.shovePower, { stumble: FIGHT.shoveStumble, source: 'bot' }); g.emit('mp:shoved', { from: b.name }); this.#impact('me', t.dir, 'received', 'shove'); } }
+          else { const o = this.list.find((x) => x.id === t.id); o.knockV += t.dir * FIGHT.shovePower; o.latV = 0; o.stumble = FIGHT.shoveStumble; this.#impact(o.id, t.dir, null, 'shove'); }
           g.emit('bot:shove', { bot: b.name });
         }
         b.shoveCd = 2.5 + Math.random() * 2;
@@ -132,6 +133,7 @@ export class Bots {
         r.knock(onMe, { source: 'bump' });
         b.knockV += bumpImpulse(bot, me, -1);
         b.bumpCd = FIGHT.bumpCooldown;
+        this.#impact('me', Math.sign(onMe), 'received', 'bump');
         g.emit('mp:bump', {});
       }
       for (const o of this.list) {
@@ -145,13 +147,19 @@ export class Bots {
     if (intent?.shove && (this.shoveCd ?? 0) <= 0) {
       this.shoveCd = FIGHT.shoveCooldown;
       const t = shoveTarget(me, this.list.filter((b) => b.alive).map((b) => ({ id: b.id, s: b.s, d: b.d, alive: true })));
-      if (t) { const b = this.list.find((x) => x.id === t.id); b.knockV += t.dir * FIGHT.shovePower; b.latV = 0; b.stumble = FIGHT.shoveStumble; }
+      if (t) { const b = this.list.find((x) => x.id === t.id); b.knockV += t.dir * FIGHT.shovePower; b.latV = 0; b.stumble = FIGHT.shoveStumble; this.#impact(b.id, t.dir, 'dealt', 'shove'); }
       g.emit('mp:shove', { hit: !!t, dir: t ? t.dir : (Math.sign(r.latV) || 1) });
     }
     this.shoveCd = Math.max(0, (this.shoveCd ?? 0) - dt);
   }
 
   get shoveCooldown() { return (this.shoveCd ?? 0) / FIGHT.shoveCooldown; }
+
+  #impact(targetId, dir, local, kind) {
+    const r = this.game.runner, b = this.list.find(b => b.id === targetId);
+    this.game.emit('combat:impact', { targetId, dir, local, kind,
+      s: b ? b.s : r.z, d: b ? b.d : r.x, y: b ? b.y : r.y });
+  }
 
   #eliminate(b, reason) {
     b.alive = false;

@@ -103,13 +103,13 @@ export class WorldDecorView extends View {
     for (let j = 0; j < 5; j++) {
       const s = chunk.s0 + 12 + j * 23;
       if (isWorldSafe(s)) continue;
-      const f = track.frame(s, {}), seed = chunk.index * 57 + j * 17;
+      const f = track.frame(s, {}), seed = (chunk.index + track.salt) * 57 + j * 17; // track.salt : décor différent à chaque partie
       for (const side of [-1, 1]) {
         const n = seed + (side > 0 ? 19 : 0), x = side * (f.w / 2 + 15 + noise(n) * 10);
         const wx = f.x + f.lx * x, wz = f.z + f.lz * x;
         if (track.clearance(wx, wz, s) < f.w / 2 + 13) continue;
         const h = 8 + noise(n + 1) * 13;
-        const variant = (j + chunk.index + (side > 0 ? 1 : 0)) % 3;
+        const variant = (j + chunk.index + track.salt + (side > 0 ? 1 : 0)) % 3;
         if (chunk.zone === 0) {
           // Three silhouettes: eroded arches, stepped mesas and an offline signal monument.
           if (variant === 0) {

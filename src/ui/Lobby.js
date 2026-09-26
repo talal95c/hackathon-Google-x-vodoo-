@@ -26,8 +26,6 @@ export class Lobby {
     mp.on('lobby', () => { this.render(); this.board(); });
     mp.on('status', (t) => this.status(t));
     mp.on('results', () => this.board());
-    mp.on('shoved', ({ from }) => hud.banner(`💥 ${from || 'Un rival'} t'a bousculé !`, 0.9));
-    mp.on('shove', ({ hit }) => { if (!hit) hud.banner('Raté ! Personne à portée', 0.7); });
 
     // Lien partagé : ?partie=CODE → rejoint directement
     const code = new URLSearchParams(location.search).get('partie');
