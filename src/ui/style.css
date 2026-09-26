@@ -73,13 +73,13 @@ body:not(.in-game) #hud { opacity: 0; }
 #journey .bar { height: 4px; }
 #worldProgress { background: #31bca6; }
 #feverGauge, #challengeHud { position: absolute; left: 50%; transform: translateX(-50%); }
-#feverGauge { top: 136px; width: 210px; color: #804700; font-size: 11px; font-weight: 850; }
+#feverGauge { top: 164px; width: 210px; color: #804700; font-size: 11px; font-weight: 850; }
 #feverText { float: right; }
 #feverGauge .fill { background: #ffb300; }
 #feverGauge.active { color: white; background: #dd7500; }
 #feverGauge.active .fill { background: white; }
-#challengeHud { top: 190px; width: min(350px, 80vw); color: var(--ink); font-size: 11px; font-weight: 800; text-align: center; }
-#boss { top: 244px; width: min(350px, 80vw); font-size: 13px; font-weight: 850; }
+#challengeHud { top: 228px; width: min(350px, 80vw); color: var(--ink); font-size: 11px; font-weight: 800; text-align: center; }
+#boss { top: 285px; width: min(350px, 80vw); font-size: 13px; font-weight: 850; }
 #boss .fill { background: var(--coral); }
 #buffs { position: absolute; top: 148px; left: 24px; display: grid; gap: 5px; }
 .buff { width: 146px; font-size: 11px; font-weight: 800; }
