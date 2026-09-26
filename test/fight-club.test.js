@@ -45,11 +45,11 @@ test('solo : pause des physiques, butin une seule fois, ralentissement du seul p
  clock(8000);club.update();assert.equal(g.state,'playing');assert.equal(g.runner.z,z);assert.equal(g.lives,hearts);
  assert.equal(g.runner.effects.has('fightSlow'),false);assert.equal(g.pendingJump,false);
 });
-test('solo : perdre ralentit 5 s, conserve les vies ; une égalité ne vole rien',()=>{
+test('solo : perdre ralentit après le ring ; la vie est retirée à la reprise',()=>{
  const {g,club,clock}=solo();club.startSolo();clock(5000);club.update();
  assert.equal(club.result.winner,1);assert.equal(g.coins,8);assert.equal(g.lives,3);
  const effect=g.runner.effects.get('fightSlow');assert.equal(effect.timeLeft,5);assert.equal(g.runner.stats.get('baseSpeed'),34*.65);
- clock(8000);club.update();for(let i=0;i<310;i++)g.runner.update(1/60,{steer:0,throttle:0},{y:0,vy:0,slope:0,k:0,hard:false});
+ clock(8000);club.update();assert.equal(g.lives,2);for(let i=0;i<380;i++)g.runner.update(1/60,{steer:0,throttle:0},{y:0,vy:0,slope:0,k:0,hard:false});
  assert.equal(g.runner.effects.has('fightSlow'),false);assert.equal(g.runner.stats.get('baseSpeed'),34);
 });
 
@@ -83,6 +83,7 @@ test('réseau retardé : deux participants, un spectateur, même résultat et m�
  const packet=log.find(m=>m.name==='fc'&&m.data.type==='result').data;inject('p2',packet);inject('p2',packet);assert.equal(b.g.coins,15);
  for(let i=0;i<300;i++)step();assert.ok(ps.every(p=>p.g.state==='playing'));assert.ok(ps.every(p=>!p.club.active));
  inject('p2',packet);assert.equal(b.g.coins,15);
+ assert.deepEqual(ps.map(p=>p.g.lives),[3,2,3]);
 });
 test('réseau : paquet étranger ignoré ; déconnexion avant résultat annule sans vol ni pénalité',async()=>{
  const {ps,step,inject,disconnect}=await network();const[a,b,c]=ps;a.club.startMultiplayer();for(let i=0;i<10;i++)step();
@@ -91,9 +92,15 @@ test('réseau : paquet étranger ignoré ; déconnexion avant résultat annule s
  assert.equal(a.club.active,false);assert.equal(a.g.coins,money);assert.equal(a.g.runner.effects.has('fightSlow'),false);assert.equal(a.g.state,'playing');
  assert.equal(c.club.active,false);
 });
-test('déclenchement à 140 m, pas dans un portail ; la course suivante repart avec un duel neuf',()=>{
- const {g,club,clock}=solo();g.sMax=140;g.worldJump={};club.update();assert.equal(club.active,false);g.worldJump=null;club.update();assert.equal(club.active,true);
- clock(20);g.start({seed:12});assert.equal(club.active,false);assert.equal(club.nextAt,140);assert.equal(g.state,'playing');
+test('duel à 1 km puis tous les kilomètres, hors des portails ; nouvelle course à zéro',()=>{
+ const {g,club,clock}=solo();g.sMax=999;club.update();assert.equal(club.active,false);
+ g.sMax=1000;g.worldJump={};club.update();assert.equal(club.active,false);
+ g.worldJump=null;club.update();assert.equal(club.active,true);
+ club.close();assert.equal(club.nextAt,2000);
+ g.sMax=1999;club.update();assert.equal(club.active,false);
+ g.sMax=2000;club.update();assert.equal(club.active,true);
+ club.close();assert.equal(club.nextAt,3000);
+ clock(20);g.start({seed:12});assert.equal(club.active,false);assert.equal(club.nextAt,1000);assert.equal(g.state,'playing');
 });
 test('cookies : davantage de vrais obstacles dans chaque monde, aucune confusion avec les pièces',()=>{
  for(const z of ZONES){const cookie=z.spawns.find(s=>s.type==='rollingCookie');assert.ok(cookie&&cookie.weight>=1.5,z.id);}
@@ -117,4 +124,55 @@ test('mobile/clavier : la saisie de course est vidée pendant le duel, aucun sau
  key('KeyW');key('ArrowLeft');key('Space');input.enabled=false;
  assert.deepEqual(input.read(.1),{steer:0,throttle:0,drift:false,brake:false,jump:false,shove:false});
  input.enabled=true;assert.deepEqual(input.read(.1),{steer:0,throttle:0,drift:false,brake:false,jump:false,shove:false});
+});
+
+
+test('annonce à 180 m du ring, une fois par passage, réarmée pour une nouvelle course',()=>{
+ const {g,club}=solo();let warnings=0;g.on('club:approach',()=>warnings++);
+ g.sMax=819;club.update();assert.equal(club.approachDistance,null);assert.equal(warnings,0);
+ g.sMax=820;club.update();assert.equal(club.approachDistance,180);assert.equal(warnings,1);
+ for(let i=0;i<50;i++)club.update();assert.equal(warnings,1);
+ g.worldJump={};assert.equal(club.approachDistance,null);g.worldJump=null;
+ g.sMax=940;club.update();assert.equal(club.approachDistance,60);assert.equal(warnings,1);
+ g.sMax=1000;club.update();assert.equal(club.active,true);assert.equal(club.approachDistance,null);
+ club.close();g.sMax=1820;club.update();assert.equal(warnings,2);
+ g.start({seed:12});g.sMax=820;club.update();assert.equal(warnings,3);
+});
+
+
+test('solo : les trois PNJ et le classement sont gelés pendant tout le Fight Club',()=>{
+ const {g,club,bots,clock}=solo();bots.count=3;bots.start();
+ const before=structuredClone(bots.list),rank=bots.ranking().map(p=>p.id),z=g.runner.z;
+ club.startSolo();
+ for(let i=0;i<180;i++){clock(i*16);club.update();g.update(1/60,{steer:1,throttle:1});bots.update(1/60,{shove:true});}
+ assert.deepEqual(bots.list,before);assert.equal(g.runner.z,z);assert.deepEqual(bots.ranking().map(p=>p.id),rank);
+ clock(5000);club.update();const afterResult=structuredClone(bots.list);
+ for(let i=0;i<100;i++){g.update(1/60,{steer:1,throttle:1});bots.update(1/60,{});}
+ assert.deepEqual(bots.list,afterResult);assert.equal(g.runner.z,z);assert.deepEqual(bots.ranking().map(p=>p.id),rank);
+ clock(8000);club.update();bots.update(1/60,{});assert.ok(bots.list.some((b,i)=>b.s>before[i].s));
+});
+test('défaite : bloqué 1 s malgré les commandes, puis 5 s ralenti ; les autres repartent',()=>{
+ const {g,club,bots,clock}=solo();club.startSolo();clock(5000);club.update();clock(8000);club.update();
+ const r=g.runner,x=r.x,z=r.z,bs=bots.list[0].s;
+ for(let i=0;i<59;i++){g.update(1/60,{steer:1,throttle:1,jump:true,drift:true});bots.update(1/60,{});}
+ assert.equal(r.z,z);assert.equal(r.x,x);assert.equal(r.grounded,true);assert.equal(r.speed,0);assert.equal(g.lives,2);
+ assert.equal(r.effects.get('fightSlow').timeLeft,5);assert.ok(bots.list[0].s>bs);
+ for(let i=0;i<10;i++)g.update(1/60,{steer:0,throttle:1,jump:false,drift:false});
+ assert.equal(r.effects.has('fightStun'),false);assert.ok(r.z>z);assert.ok(r.effects.get('fightSlow').timeLeft>4.8);
+});
+
+
+test('chaque défaite coûte exactement une vie, dernière vie perdue après la cinématique',()=>{
+ const {g,club,clock}=solo();g.lives=1;club.startSolo();clock(5000);club.update();
+ assert.equal(g.state,'duel');assert.equal(g.lives,1);club.settle(club.result);
+ clock(8000);club.update();assert.equal(g.lives,0);assert.equal(g.state,'over');
+ club.close();assert.equal(g.lives,0);
+});
+test('les bots perdent aussi une vie au duel, et rejouer ne pénalise pas la nouvelle course',()=>{
+ const {g,club,bots,clock}=solo();bots.list[0].lives=1;club.startSolo();
+ for(let t=1800;t<4800;t+=80){clock(t);club.update();club.tap();}
+ clock(5000);club.update();assert.equal(bots.list[0].alive,true);clock(8000);club.update();
+ assert.equal(bots.list[0].lives,0);assert.equal(bots.list[0].alive,false);assert.equal(g.lives,3);
+ g.start({seed:11});bots.start();club.startSolo();clock(14000);club.update();assert.equal(club.result.loser,0);
+ g.start({seed:12});assert.equal(g.lives,3);assert.equal(g.state,'playing');
 });

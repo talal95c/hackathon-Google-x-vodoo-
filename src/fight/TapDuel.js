@@ -1,7 +1,7 @@
 export const CLUB = Object.freeze({
-  firstAt: 140, every: 360, introMs: 1800, tapMs: 3000, minTapMs: 50,
+  firstAt: 1000, every: 1000, approachAt: 180, introMs: 1800, tapMs: 3000, minTapMs: 50,
   resultMs: 2800, networkGraceMs: 2500, timeoutMs: 15000,
-  stealMax: 20, stealShare: .5, slowSeconds: 5, slowFactor: .65,
+  stealMax: 20, stealShare: .5, stunSeconds: 1, slowSeconds: 5, slowFactor: .65,
 });
 
 // Horloge monotone, indépendante du framerate : un onglet ralenti ne rallonge pas le duel.

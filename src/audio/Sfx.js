@@ -113,6 +113,7 @@ export class Sfx {
 
 export function bindSfx(game, sfx) {
   const on = (t, fn) => game.on(t, fn);
+  on('club:approach', () => { sfx.whoosh(); sfx.tone(440, .3, 'triangle', .1, 440); });
   on('club:countdown', ({ tick }) => sfx.tone(tick === 1 ? 880 : 440, .11, 'triangle', .15));
   on('club:phase', ({ phase }) => { if (phase === 'tapping') { sfx.tone(880, .2, 'triangle', .18, 440); } });
   on('club:hit', ({ index, count }) => { sfx.slap(index ? 1 : -1, .8); if (count > 0 && count % 10 === 0) sfx.cheer(); });
@@ -135,6 +136,7 @@ export function bindSfx(game, sfx) {
   on('runner:manual', ({ on: m }) => { if (m) sfx.tone(880, 0.12, 'square', 0.1, -300); });
   on('coins', ({ amount }) => { if (amount <= 2) sfx.coin(); });
   on('zone', () => sfx.zone());
+  on('world:soon', ({ seconds }) => sfx.tone(seconds === 1 ? 880 : 660, 0.12, 'triangle', 0.1));
   on('weapon:equip', () => { sfx.pickup(); sfx.tone(440, 0.3, 'sawtooth', 0.08, 440); });
   on('weapon:fire', () => sfx.tone(1400, 0.05, 'square', 0.04, -900));
   on('weapon:expire', () => sfx.tone(500, 0.25, 'triangle', 0.1, -300));

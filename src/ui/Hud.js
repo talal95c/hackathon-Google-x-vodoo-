@@ -23,6 +23,7 @@ export class Hud {
     on('tempo', ({ level }) => { if (level > 0) { this.banner(`SPEED ×${game.tempo.ratio.toFixed(1)}`, 1.4); this.#pop(this.el.speed); } });
     on('runner:boost', () => this.#pop(this.el.speed));
     on('zone', ({ number, zone }) => { this.banner(`WORLD ${Math.min(number + 1, 5)} — ${zone.name}`); this.el.hud.style.color = zone.palette.text; this.el.banner.style.color = zone.palette.text; });
+    on('world:soon', ({ to, seconds }) => this.banner(`⚠ NEW WORLD IN ${seconds}s — ${to.name}`, 1.2));
     on('world:jump', ({ to }) => this.banner(`ESCAPE → ${to.name}`, 1.8));
     on('world:land', ({ zone }) => this.banner(zone.subtitle, 2.2));
     on('life:lost', () => this.#lives(true));
