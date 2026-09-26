@@ -4,74 +4,81 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>Dino Escape</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: #f4f4f4; font-family: 'Courier New', monospace; user-select: none; -webkit-user-select: none; touch-action: none; }
-    canvas { display: block; }
-    #hud { position: fixed; inset: 0; pointer-events: none; color: #333; }
-    .row { position: absolute; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: flex-start; }
-    #top { top: 14px; font-size: 20px; font-weight: bold; text-shadow: 0 1px 0 #fff; }
-    #top .right { text-align: right; }
-    .small { font-size: 13px; opacity: .7; }
-    #lives { font-size: 24px; letter-spacing: 3px; margin-top: 4px; color: #e53935; text-shadow: 0 1px 0 #fff; }
-    #lives .lost { opacity: .2; }
-    #lives.hit { animation: hit .5s; }
-    @keyframes hit { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.5); } }
-    #danger { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: min(300px, 40vw); text-align: center; font-size: 12px; font-weight: bold; }
-    #danger .bar { height: 8px; background: rgba(0,0,0,.15); border-radius: 4px; overflow: hidden; margin-top: 4px; }
-    #danger .fill { height: 100%; width: 0%; background: #e53935; transition: width .1s; }
-    #bottom { bottom: 18px; align-items: flex-end; }
-    #speed { font-size: 34px; font-weight: bold; }
-    #speed small { font-size: 14px; }
-    #driftbox { width: min(220px, 40vw); }
-    #driftbox .label { font-size: 12px; font-weight: bold; text-align: right; }
-    #driftbox .bar { height: 10px; background: rgba(0,0,0,.15); border-radius: 5px; overflow: hidden; margin-top: 4px; }
-    #driftbox .fill { height: 100%; width: 0%; background: #1a73e8; }
-    #vignette { position: fixed; inset: 0; pointer-events: none; box-shadow: inset 0 0 160px 40px rgba(229,57,53,0); transition: box-shadow .15s; }
-    #flash { position: fixed; inset: 0; pointer-events: none; background: #fff; opacity: 0; }
-    #zone { position: fixed; top: 22%; left: 0; right: 0; text-align: center; font-size: clamp(22px, 5vw, 44px); font-weight: bold; letter-spacing: 4px; opacity: 0; pointer-events: none; transition: opacity .4s; text-shadow: 0 2px 0 rgba(255,255,255,.6); }
-    .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; padding: 16px; background: rgba(244,244,244,.82); color: #333; }
-    .screen.hidden { display: none; }
-    .screen h1 { font-size: clamp(34px, 8vw, 72px); letter-spacing: 3px; }
-    .screen h2 { font-size: clamp(20px, 4vw, 32px); color: #d32f2f; }
-    .screen p { font-size: clamp(13px, 2.4vw, 17px); max-width: 560px; line-height: 1.5; }
-    .key { display: inline-block; border: 2px solid #333; border-bottom-width: 4px; border-radius: 6px; padding: 0 7px; margin: 0 2px; font-weight: bold; background: #fff; }
-    .blink { animation: blink 1s steps(2) infinite; font-weight: bold; }
-    @keyframes blink { 50% { opacity: 0; } }
-    .err { font-size: 13px; opacity: .6; }
-  </style>
+  <link rel="stylesheet" href="/src/ui/style.css" />
 </head>
 <body>
+  <!-- HUD (piloté par src/ui/Hud.js) -->
   <div id="hud">
     <div class="row" id="top">
-      <div><div id="score">0 m</div><div class="small" id="coins">★ 0</div><div id="lives"></div></div>
-      <div class="right"><div class="small">RECORD</div><div id="best">0 m</div></div>
+      <div>
+        <div id="score">0 m</div>
+        <div class="small" id="coins">★ 0</div>
+        <div id="lives"></div>
+      </div>
+      <div class="right"><div class="small">RECORD</div><div id="best">0</div></div>
     </div>
-    <div id="danger"><div id="dangerTxt">CURSEUR : 40 m</div><div class="bar"><div class="fill" id="dangerFill"></div></div></div>
+    <div id="danger"><div id="dangerTxt">CURSEUR</div><div class="bar"><div class="fill" id="dangerFill"></div></div></div>
+    <div id="boss" class="hidden"><div id="bossName">BOSS</div><div class="bar"><div class="fill" id="bossFill"></div></div></div>
+    <div id="buffs"></div>
     <div class="row" id="bottom">
       <div id="speed">0 <small>km/h</small></div>
-      <div id="driftbox"><div class="label" id="driftLabel">DRIFT</div><div class="bar"><div class="fill" id="driftFill"></div></div></div>
+      <div id="driftbox"><div class="label" id="driftLabel">GLISSADE</div><div class="bar"><div class="fill" id="driftFill"></div></div></div>
     </div>
+    <div id="music" class="small"></div>
   </div>
   <div id="vignette"></div>
   <div id="flash"></div>
-  <div id="zone"></div>
+  <div id="banner"></div>
 
+  <!-- Écrans (pilotés par src/ui/Menus.js) -->
   <div class="screen" id="start">
     <p class="err">ERR_INTERNET_DISCONNECTED</p>
     <h1>DINO ESCAPE</h1>
-    <p>Le dino en a marre d'attendre la connexion. Il s'enfuit en courant.<br/>Échappe au <b>curseur</b> qui veut fermer l'onglet.</p>
-    <p><span class="key">←</span><span class="key">→</span> tourner &nbsp; · &nbsp; <span class="key">ESPACE</span> sauter &nbsp; · &nbsp; <span class="key">SHIFT</span> glissade (relâche = sprint) &nbsp; · &nbsp; <span class="key">↓</span> freiner</p>
-    <p class="small">Mobile : gauche / droite de l'écran, glisser vers le haut = saut, deux doigts = glissade</p>
-    <p class="blink">Appuie sur ESPACE pour démarrer</p>
+    <p>Le dino en a marre d'attendre la connexion. Il s'enfuit en courant.<br />Échappe au <b>curseur</b> qui veut fermer l'onglet.</p>
+    <p><span class="key">←</span><span class="key">→</span> tourner · <span class="key">ESPACE</span> sauter · <span class="key">SHIFT</span> glissade (relâche = sprint) · <span class="key">↓</span> freiner</p>
+    <div class="buttons">
+      <button class="primary" data-action="play">▶ JOUER</button>
+      <button data-action="shop">🛒 BOUTIQUE</button>
+      <button data-action="music">🎵 MUSIQUE</button>
+    </div>
+    <p class="small" id="wallet"></p>
   </div>
 
   <div class="screen hidden" id="over">
-    <p class="err" id="overErr">ERR_DINO_CAPTURED</p>
+    <p class="err" id="overErr">ERR</p>
     <h2 id="overTitle">Onglet fermé.</h2>
-    <h1 id="overScore">0 m</h1>
-    <p id="overBest"></p>
-    <p class="blink">ESPACE pour réessayer</p>
+    <h1 id="overScore">0</h1>
+    <p id="overDetails"></p>
+    <div class="buttons">
+      <button class="primary" data-action="play">↻ REJOUER</button>
+      <button data-action="shop">🛒 BOUTIQUE</button>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="shop">
+    <div class="panel-head"><h2>Boutique</h2><span id="shopCoins"></span><button data-action="close">✕</button></div>
+    <div class="tabs">
+      <button data-tab="skin" class="active">Skins</button>
+      <button data-tab="music">Musiques</button>
+      <button data-tab="upgrade">Améliorations</button>
+    </div>
+    <div class="grid" id="shopGrid"></div>
+  </div>
+
+  <div class="panel hidden" id="musicPanel">
+    <div class="panel-head"><h2>Musique Lyria</h2><button data-action="close">✕</button></div>
+    <p>La musique est générée en direct par <b>Google DeepMind Lyria RealTime</b> et accélère avec le jeu.
+      Il faut une clé API Gemini (<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a>), gardée uniquement dans ton navigateur.
+      Sans clé, une musique synthétisée prend le relais.</p>
+    <input id="apiKey" type="password" placeholder="Clé API Gemini" autocomplete="off" />
+    <div class="buttons"><button class="primary" data-action="connect">Connecter</button><button data-action="forget">Oublier la clé</button></div>
+    <p class="small" id="lyriaStatus"></p>
+    <label class="small">Synchro musique ↔ jeu : <b id="audioOffsetVal">0 ms</b>
+      <input id="audioOffset" type="range" min="-200" max="200" step="5" />
+    </label>
+    <p class="small">Si les obstacles tombent après le kick, baisse le réglage ; s’ils tombent avant, monte-le (casque Bluetooth : environ +150 ms).</p>
+    <h3>Thème de la prochaine partie</h3>
+    <div class="grid" id="themeGrid"></div>
   </div>
 
   <script type="module" src="/src/main.js"></script>
