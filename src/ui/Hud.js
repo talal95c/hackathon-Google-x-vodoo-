@@ -88,7 +88,7 @@ export class Hud {
     const flash = this.profile.flashStatus();
     el.flashHud.classList.toggle('hidden', flash.state !== 'active' || g.state !== 'playing');
     if (flash.state === 'active' && g.state === 'playing') {
-      el.flashHud.textContent = `ÉCLAIR · ${Math.min(g.coins, FLASH_CHALLENGE.target)}/${FLASH_CHALLENGE.target} ★ · ${Math.ceil(flash.remaining / 1000)} s · +${FLASH_CHALLENGE.reward} ★`;
+      el.flashHud.textContent = `ÉCLAIR · ${Math.min(g.coinPickups, FLASH_CHALLENGE.target)}/${FLASH_CHALLENGE.target} pièces · ${Math.ceil(flash.remaining / 1000)} s · +${FLASH_CHALLENGE.reward} ★`;
     }
     const gap = g.chaser.gap(g.sMax), danger = g.chaser.danger(g.sMax);
     this.#set('gap', (v) => { el.dangerTxt.textContent = `CURSEUR : ${v} m`; }, Math.max(0, Math.ceil(gap)));

@@ -107,8 +107,8 @@ export class Profile {
     return true;
   }
 
-  completeFlash(coins, now = Date.now()) {
-    if (coins < FLASH_CHALLENGE.target || this.flashStatus(now).state !== 'active') return 0;
+  completeFlash(pickups, now = Date.now()) {
+    if (pickups < FLASH_CHALLENGE.target || this.flashStatus(now).state !== 'active') return 0;
     this.data.flash.claimed = true;
     this.data.coins += FLASH_CHALLENGE.reward;
     this.save();

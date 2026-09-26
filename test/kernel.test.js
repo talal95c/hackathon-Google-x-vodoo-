@@ -164,6 +164,24 @@ test('défi éclair : inscription facultative, gain unique avant expiration et r
   assert.equal(restored.startFlash(now + 5 * 60000 + FLASH_CHALLENGE.durationMs), false);
 });
 
+test('défi éclair : seules les pièces ramassées comptent, indépendamment de leur valeur et des gains de combat', () => {
+  const profile = new Profile(new MemoryStorage());
+  const now = Date.UTC(2026, 8, 26);
+  const g = new Game({ seed: 15 });
+  profile.startFlash(now);
+  g.start({ seed: 15 });
+  g.on('coin:pickup', ({ total }) => profile.completeFlash(total, now + 1000));
+  g.addCoins(30);
+  assert.equal(g.coinPickups, 0);
+  for (let i = 0; i < 11; i++) g.spawn('goldCoin', g.runner.z, g.runner.x).onContact(g.runner);
+  assert.equal(g.coinPickups, 11);
+  assert.equal(profile.coins, 0);
+  g.spawn('coin', g.runner.z, g.runner.x).onContact(g.runner);
+  assert.equal(profile.coins, FLASH_CHALLENGE.reward);
+  g.start({ seed: 15 });
+  assert.equal(g.coinPickups, 0);
+});
+
 test('le choix de trajectoire propose une voie sûre et une voie dorée en bord de piste', () => {
   for (const seed of [14, 81]) {
     const g = new Game({ seed });

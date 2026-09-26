@@ -33,6 +33,11 @@ export class Game {
     this.beat = new BeatClock(this.bus);
     this.track.populate = (chunk) => this.director.populate(chunk);
     this.bus.on('chunk:remove', (c) => this.#despawnChunk(c));
+    this.bus.on('entity:destroy', ({ entity, reason }) => {
+      if (reason !== 'collected' || (entity.type !== 'coin' && entity.type !== 'goldCoin')) return;
+      this.coinPickups++;
+      this.emit('coin:pickup', { total: this.coinPickups });
+    });
     this.state = 'menu';
     this.entities = [];
     this.loadout = {};
@@ -81,6 +86,7 @@ export class Game {
     this.runner.Y = f.y;
     this.lives = this.runner.stats.get('maxLives');
     this.coins = 0;
+    this.coinPickups = 0;
     this.sMax = this.runner.z;
     this.zoneIndex = 0;
     this.tempo = this.tempoAt(0);
