@@ -166,3 +166,17 @@ test('ambiance du match : bagarre, danger et triomphe montent puis retombent en 
   g.emit('bot:out', { bot: 'Rex' }); step(0.8);
   assert.ok(mood.triumph > 0.6, 'élimination : triomphe');
 });
+
+test('PNJ : tous différents entre eux et différents du joueur, et ça change d\'une partie à l\'autre', () => {
+  const skins = ['classic', 'neon', 'gold', 'reggae', 'vader', 'drift', 'mario', 'alligator'];
+  const combos = new Set();
+  for (const seed of [1, 2, 3, 4, 5]) {
+    const g = new Game({ seed }); g.start({ seed });
+    const bots = new Bots(g, 3); bots.start(skins, 'reggae');
+    const used = bots.list.map((b) => b.skin);
+    assert.equal(new Set(used).size, 3, `skins en double : ${used}`);
+    assert.ok(!used.includes('reggae'), 'jamais le skin du joueur');
+    combos.add(used.join(','));
+  }
+  assert.ok(combos.size > 1, 'les PNJ changent d\'une partie à l\'autre');
+});

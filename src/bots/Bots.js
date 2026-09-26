@@ -19,12 +19,15 @@ export class Bots {
     game.on('game:over', () => { this.active = false; });
   }
 
-  // Au départ d'une partie solo : PNJ sur les lignes voisines du joueur
-  start(skins = SKINS) {
+  // Au départ d'une partie solo : PNJ sur les lignes voisines du joueur, chacun avec un skin
+  // DIFFÉRENT (et différent de celui du joueur), tirés au hasard à chaque partie
+  start(skins = SKINS, playerSkin = null) {
     const g = this.game, r = g.runner, rng = g.rng;
+    const pool = skins.filter((id) => id !== playerSkin);
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rng.next() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
     this.list = Array.from({ length: this.count }, (_, i) => ({
       id: `bot${i}`, name: NAMES[(i * 3 + (g.seed % NAMES.length)) % NAMES.length], color: COLORS[i % COLORS.length],
-      skin: skins[i % skins.length],
+      skin: pool.length ? pool[i % pool.length] : 'classic',
       s: r.z - 2 - i * 1.5, d: [-2.8, 2.8, -5.2, 5.2][i % 4], y: 0, vy: 0, speed: RUNNER.startSpeed, latV: 0, knockV: 0,
       stumble: 0, shoveCd: 2 + rng.range(0, 2), bumpCd: 0, alive: true, fall: 0, shoveAnim: 0, shoveDir: 1,
       pace: rng.range(0.93, 1.04),            // plus ou moins rapide
