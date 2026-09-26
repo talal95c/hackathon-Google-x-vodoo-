@@ -174,3 +174,91 @@ body:not(.in-game) #hud { opacity: 0; }
 .mp-input { display: flex; gap: 8px; margin-top: 8px; }
 .mp-input input { flex: 1; }
 #mpBoard .hearts { color: #e53935; letter-spacing: 1px; }
+
+/* --- Écran de lancement « No internet » (src/ui/Boot.js) --- */
+#boot { position: fixed; inset: 0; z-index: 100; color: #535353; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; overflow: hidden; }
+.boot-sheet, .boot-shard { position: absolute; inset: 0; }
+.boot-sheet { background: #fff; }
+.boot-shard { will-change: transform, opacity; filter: drop-shadow(0 0 1px #20212455); }
+.boot-cracks { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; fill: none; stroke: #202124; stroke-linecap: round; stroke-linejoin: round; }
+.boot-cracks polyline { stroke-dasharray: 3000; stroke-dashoffset: 3000; animation: boot-crack .3s cubic-bezier(.2, .8, .3, 1) forwards; }
+#boot.crack .boot-sheet { animation: boot-hit .3s steps(6); }
+.boot-page { position: absolute; left: 50%; top: 18vh; width: min(600px, 86vw); transform: translateX(-50%); }
+.boot-stage { position: relative; height: 80px; margin-bottom: 34px; }
+.boot-dino { position: absolute; left: 24px; bottom: 6px; width: 44px; height: 48px; z-index: 2; transform-origin: 50% 60%; will-change: transform; }
+.boot-dino .leg-b, .boot-dino.step .leg-a { opacity: 0; }
+.boot-dino.step .leg-b { opacity: 1; }
+.boot-dino.air .leg-b { opacity: 0; } .boot-dino.air .leg-a { opacity: 1; }
+.boot-cactus { position: absolute; left: 0; bottom: 6px; width: 20px; height: 28px; display: none; }
+.boot-cactus.live { display: block; }
+.boot-cactus.tall { width: 24px; height: 36px; }
+.boot-ground { position: absolute; left: 0; right: 0; bottom: 6px; height: 2px; background: repeating-linear-gradient(90deg, #535353 0 18px, transparent 18px 22px, #535353 22px 30px, transparent 30px 34px); background-size: 34px 2px; }
+.boot-score { position: absolute; right: 0; top: 0; font: 700 13px ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: 2px; color: #757575; opacity: 0; transition: opacity .3s; }
+#boot.run .boot-score { opacity: 1; }
+.boot-title { font-size: 24px; font-weight: 500; color: #202124; margin: 0 0 14px; }
+.boot-try { font-size: 15px; margin: 0 0 6px; color: #5f6368; }
+.boot-list { margin: 0 0 22px 22px; padding: 0; font-size: 15px; line-height: 1.7; color: #5f6368; }
+.boot-code { font-size: 12px; letter-spacing: .6px; color: #5f6368; margin: 0; }
+.boot-skip { position: absolute; left: 0; right: 0; bottom: 28px; text-align: center; font-size: 12px; color: #9aa0a6; letter-spacing: .4px; opacity: 0; animation: boot-fade .4s 1s forwards; }
+#boot .t-on { display: none; }
+#boot.mega .t-off { display: none; }
+#boot.mega .t-on { display: inline; animation: boot-pop .3s cubic-bezier(.3, 1.6, .5, 1); }
+#boot.mega .boot-code .t-on { color: #1a73e8; font-weight: 700; }
+#boot.mega .boot-page > :not(.boot-stage), #boot.mega .boot-skip { transition: opacity .35s .1s, transform .35s .1s; opacity: .35; transform: scale(.98); }
+.boot-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 3; }
+#boot.boom { pointer-events: none; }
+#boot.boom > .boot-sheet, #boot.boom > .boot-cracks { visibility: hidden; }
+#boot.boom .boot-flash { animation: boot-flash .22s ease-out forwards; }
+body.booted { animation: boot-shake .38s steps(8); }
+
+@keyframes boot-pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes boot-fade { to { opacity: 1; } }
+@keyframes boot-crack { to { stroke-dashoffset: 0; } }
+@keyframes boot-hit { 0%, 100% { translate: 0 0; } 25% { translate: -5px 3px; } 50% { translate: 4px -3px; } 75% { translate: -2px 2px; } }
+@keyframes boot-flash { 0% { opacity: .8; } 100% { opacity: 0; } }
+@keyframes boot-shake { 0%, 100% { translate: 0 0; } 20% { translate: -7px 4px; } 40% { translate: 6px -5px; } 60% { translate: -4px 3px; } 80% { translate: 2px -2px; } }
+
+/* entrée du menu après l'intro */
+body.booting #start .menu-brand, body.booting #start .hero-copy > *, body.booting #start .menu-footer { opacity: 0; }
+body.booted #start .menu-brand, body.booted #start .hero-copy > *, body.booted #start .menu-footer { animation: menu-in .55s cubic-bezier(.2, .9, .3, 1.15) both; }
+body.booted #start .hero-copy > :nth-child(1) { animation-delay: .05s; }
+body.booted #start .hero-copy > :nth-child(2) { animation-delay: .12s; }
+body.booted #start .hero-copy > :nth-child(3) { animation-delay: .19s; }
+body.booted #start .menu-footer { animation-delay: .26s; }
+@keyframes menu-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* --- Boutons --- */
+#start button, #over .buttons button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 46px; padding: 0 20px; border: 1px solid #2021241a; border-radius: 12px;
+  background: #fff; color: #202124; font-size: 14px; font-weight: 700; letter-spacing: .1px; box-shadow: 0 1px 2px #2021240f, 0 2px 8px #2021240a;
+  transition: transform .2s cubic-bezier(.3, 1.6, .5, 1), box-shadow .2s, background-color .15s, border-color .15s; }
+#start button:hover, #over .buttons button:hover { transform: translateY(-2px); border-color: #20212433; box-shadow: 0 2px 4px #20212414, 0 8px 20px #2021241a; background: #fff; }
+#start button:active, #over .buttons button:active { transform: translateY(0) scale(.97); box-shadow: 0 1px 2px #2021241a; transition-duration: .06s; }
+#start button.primary, #over .buttons button.primary { background: #202124; border-color: #202124; color: #fff; box-shadow: 0 1px 2px #20212433, 0 6px 16px #20212426; }
+#start button.primary:hover, #over .buttons button.primary:hover { background: #303134; }
+.hero-actions .primary { min-height: 52px; padding: 0 22px; gap: 10px; justify-content: flex-start; }
+.hero-actions .primary .i-go { margin-left: 18px; transition: transform .2s cubic-bezier(.3, 1.6, .5, 1); }
+.hero-actions .primary:hover .i-go { transform: translateX(4px); }
+#start .mp-button { background: #fff; color: #202124; border-color: #2021241a; min-height: 52px; }
+#start .mp-button .i { color: #ea4335; }
+#start .mp-button:hover .i { animation: icon-clash .4s cubic-bezier(.3, 1.6, .5, 1); }
+.menu-footer .buttons button, #start .menu-footer button { min-height: 38px; padding: 0 14px; font-size: 12px; border-radius: 10px; background: #ffffffd9; }
+button .i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.menu-footer button .i { width: 15px; height: 15px; }
+@keyframes icon-clash { 40% { transform: rotate(-12deg) scale(1.12); } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  #boot *, #boot.boom, body.booted { animation: none !important; }
+  body.booted #start .menu-brand, body.booted #start .hero-copy > *, body.booted #start .menu-footer { animation: none; }
+}
+
+/* sortie du menu au lancement d'une partie */
+#start.leaving { pointer-events: none; animation: menu-bg-out .5s ease-in forwards; }
+#start.leaving .menu-brand { animation: menu-out-up .35s cubic-bezier(.5, 0, .75, 0) forwards; }
+#start.leaving .hero-copy > * { animation: menu-out-left .42s cubic-bezier(.5, 0, .75, 0) forwards; }
+#start.leaving .hero-copy > :nth-child(2) { animation-delay: .04s; }
+#start.leaving .hero-copy > :nth-child(3) { animation-delay: .08s; }
+#start.leaving .menu-footer { animation: menu-out-down .35s cubic-bezier(.5, 0, .75, 0) forwards; }
+@keyframes menu-bg-out { to { opacity: 0; } }
+@keyframes menu-out-up { to { opacity: 0; transform: translateY(-16px); } }
+@keyframes menu-out-left { 0% { transform: none; } 25% { transform: translateX(8px); } 100% { opacity: 0; transform: translateX(-60px); } }
+@keyframes menu-out-down { to { opacity: 0; transform: translateY(16px); } }
+@media (prefers-reduced-motion: reduce) { #start.leaving, #start.leaving * { animation-duration: .01s !important; } }
