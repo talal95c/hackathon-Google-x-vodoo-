@@ -63,6 +63,7 @@ S'abonner : `game.on('type', (payload) => …)`, ou `game.on('*', (type, payload
 | `runner:hit` | `{ source }` |
 | `life:lost` | `{ reason, lives }` (chocs uniquement : une chute = game over direct) |
 | `coins` | `{ amount, total }` |
+| `coin:pickup` | `{ total }` : nombre de pièces ramassées pendant la course, sans les gains de combat ni multiplicateurs |
 | `beat` | `{ index, bar, downbeat }` : à chaque temps de la musique (effets visuels uniquement) |
 | `pad:used` | `{ entity }` |
 | `weapon:equip` / `weapon:fire` / `weapon:expire` | `{ weapon }` |

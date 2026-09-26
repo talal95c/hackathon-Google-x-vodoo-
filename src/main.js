@@ -86,7 +86,7 @@ game.on('game:start', ({ loadout }) => {
   runFlashReward = 0;
   hud.setMusicLabel(`🎵 ${MusicThemes.get(loadout.theme).name}${lyria.ready ? ' · Lyria' : ''}`);
 });
-game.on('coins', ({ total }) => {
+game.on('coin:pickup', ({ total }) => {
   if (game.state !== 'playing') return;
   const reward = profile.completeFlash(total);
   if (!reward) return;
