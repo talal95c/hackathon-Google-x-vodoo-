@@ -304,6 +304,18 @@ body:not(.in-game) #hud { opacity: 0; }
   #boss:not(.hidden) ~ #buffs { top: calc(max(12px, env(safe-area-inset-top)) + 235px); }
   #touchHint.active { bottom: calc(max(12px, env(safe-area-inset-bottom)) + 56px); }
 }
+@media (max-height: 430px) and (min-width: 431px) and (max-width: 759px) {
+  #banner {
+    top: calc(max(12px, env(safe-area-inset-top)) + 140px);
+    left: auto;
+    right: 12px;
+    width: 140px;
+    padding: 7px 9px;
+    transform: none;
+    font-size: 11px;
+    line-height: 14px;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
