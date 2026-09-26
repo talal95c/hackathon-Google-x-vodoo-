@@ -25,21 +25,25 @@ export class Input {
     target.addEventListener('blur', () => this.#keys.clear());
     const onTouch = (e) => {
       if (e.target.closest?.('button, input, .panel')) return;
-      e.preventDefault();
+      const inStartMenu = !!e.target.closest?.('#start');
+      if (!inStartMenu) e.preventDefault();
       this.#touches.clear();
-      for (const t of e.touches) this.#touches.set(t.identifier, t.clientX < window.innerWidth / 2 ? 1 : -1);
+      if (!inStartMenu) for (const t of e.touches) this.#touches.set(t.identifier, t.clientX < window.innerWidth / 2 ? 1 : -1);
       for (const t of e.changedTouches) {
         if (e.type === 'touchstart') this.#swipe.set(t.identifier, { y: t.clientY, x: t.clientX, at: performance.now(), tap: e.touches.length === 1 });
         else if (this.#swipe.has(t.identifier)) {
           const start = this.#swipe.get(t.identifier);
           if (Math.hypot(t.clientX - start.x, t.clientY - start.y) >= 25) start.tap = false;
-          if (e.type !== 'touchcancel' && start.y - t.clientY > 50) { this.#jump = true; this.#swipe.delete(t.identifier); }
-          else if (e.type === 'touchend' && start.tap && performance.now() - start.at < 300 && e.touches.length === 0) this.#attack = true;
+          if (!inStartMenu && e.type !== 'touchcancel' && start.y - t.clientY > 50) { this.#jump = true; this.#swipe.delete(t.identifier); }
+          else if (e.type === 'touchend' && start.tap && performance.now() - start.at < 300 && e.touches.length === 0) {
+            if (inStartMenu) this.#fire('confirm');
+            else this.#attack = true;
+          }
         }
         if (e.type === 'touchend' || e.type === 'touchcancel') this.#swipe.delete(t.identifier);
       }
       if (e.touches.length > 1) for (const start of this.#swipe.values()) start.tap = false;
-      if (e.type === 'touchstart') this.#fire('confirm');
+      if (e.type === 'touchstart' && !inStartMenu) this.#fire('confirm');
     };
     for (const ev of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) target.addEventListener(ev, onTouch, { passive: false });
   }
