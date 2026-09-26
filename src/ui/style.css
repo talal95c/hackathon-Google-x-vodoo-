@@ -147,3 +147,12 @@ body:not(.in-game) #hud { opacity: 0; }
 #journey { position: absolute; top: 87px; left: 50%; transform: translateX(-50%); width: min(250px, 38vw); padding: 7px 10px; border-radius: 9px; background: #ffffffda; color: #344657; text-align: center; font-size: 9px; font-weight: 800; letter-spacing: .6px; }
 #journey .bar { height: 3px; margin-top: 5px; } #worldProgress { background: #299dda; }
 @media (max-width: 600px) { #journey { top: 84px; font-size: 7px; width: 42vw; letter-spacing: .2px; } }
+#feverGauge { position: absolute; top: 128px; left: 50%; transform: translateX(-50%); width: min(250px, 38vw); padding: 7px 10px; border-radius: 9px; background: #ffffffda; color: #804700; font-size: 9px; font-weight: 800; letter-spacing: 1px; }
+#feverText { float: right; } #feverGauge .bar { height: 5px; margin-top: 6px; } #feverFill { background: #ffb300; transition: width .1s; }
+#feverGauge.active { color: #ffffff; background: #dd7500; box-shadow: 0 0 25px #ffb300aa; }
+#feverGauge.active #feverFill { background: #ffffff; }
+#challengeHud { position: absolute; top: 174px; left: 50%; transform: translateX(-50%); max-width: min(400px, 65vw); padding: 7px 12px; border-radius: 9px; background: #ffffffe6; font-size: 10px; font-weight: 750; text-align: center; }
+@media (max-width: 600px) {
+  #feverGauge { top: 119px; width: 42vw; font-size: 7px; }
+  #challengeHud { top: 161px; font-size: 8px; }
+}

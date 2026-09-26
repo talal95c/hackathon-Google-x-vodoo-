@@ -41,8 +41,8 @@ export class Runner {
     this.gait = 0; this.lastStep = 0;
   }
 
-  get isInvulnerable() { return !!this.game.worldJump || this.invul > 0 || !!this.weapon?.grantsInvulnerability; }
-  get smashes() { return !!this.weapon?.smashes; }
+  get isInvulnerable() { return !!this.game.worldJump || this.invul > 0 || this.game.feverTime > 0 || !!this.weapon?.grantsInvulnerability; }
+  get smashes() { return this.game.feverTime > 0 || !!this.weapon?.smashes; }
 
   // --- API utilisée par les entités / armes
   hurt(source) {

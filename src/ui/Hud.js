@@ -1,4 +1,4 @@
-import { TRACK } from '../kernel/config.js';
+import { GAME, TRACK } from '../kernel/config.js';
 import { ZONES } from '../content/zones.js';
 import { Weapons, Effects } from '../kernel/Registry.js';
 
@@ -14,11 +14,12 @@ export class Hud {
     this.game = game;
     this.profile = profile;
     this.el = Object.fromEntries(['hud', 'score', 'coins', 'lives', 'best', 'speed', 'dangerTxt', 'dangerFill', 'boss', 'bossName', 'bossFill',
-      'worldName', 'worldProgress', 'buffs', 'driftFill', 'driftLabel', 'vignette', 'flash', 'banner', 'music'].map((id) => [id, $(id)]));
+      'worldName', 'worldProgress', 'buffs', 'driftFill', 'driftLabel', 'vignette', 'flash', 'banner', 'music',
+      'feverGauge', 'feverText', 'feverFill', 'challengeHud'].map((id) => [id, $(id)]));
     this.setBest(profile.data.best);
 
     const on = (t, fn) => game.on(t, fn);
-    on('game:start', () => { this.#lives(false); this.el.boss.classList.add('hidden'); });
+    on('game:start', () => { this.#lives(false); this.el.boss.classList.add('hidden'); this.challengeAnnounced = false; });
     on('tempo', ({ level }) => { if (level > 0) this.banner(`VITESSE ×${game.tempo.ratio.toFixed(1)}`, 1.4); });
     on('zone', ({ number, zone }) => { this.banner(`MONDE ${Math.min(number + 1, 5)} — ${zone.name}`); this.el.hud.style.color = zone.palette.text; this.el.banner.style.color = zone.palette.text; });
     on('world:jump', ({ to }) => this.banner(`ÉVASION → ${to.name}`, 1.8));
@@ -26,6 +27,8 @@ export class Hud {
     on('life:lost', () => this.#lives(true));
     on('runner:manual', ({ on: m, dir }) => { if (m) this.banner(dir > 0 ? '⬅ TIENS À GAUCHE !' : 'TIENS À DROITE ! ➡', 1.2); });
     on('runner:hit', () => this.flash(0.6));
+    on('runner:parry', () => { this.banner('PARADE PARFAITE ! +25 FRÉNÉSIE', 1); this.flash(0.3); });
+    on('fever:start', () => { this.banner('FRÉNÉSIE ! DÉTRUIS LES OBSTACLES', 1.8); this.flash(0.4); });
     on('boss:start', ({ boss }) => { this.el.boss.classList.remove('hidden'); this.el.bossName.textContent = `⚠ ${boss.def.name}`; this.banner('BOSS !', 1.6); });
     on('boss:damage', ({ hp, max }) => { this.el.bossFill.style.width = `${(hp / max) * 100}%`; });
     on('boss:defeated', ({ reward }) => { this.el.boss.classList.add('hidden'); this.banner(`BOSS VAINCU ! +${reward} ★`, 2); this.flash(0.8); });
@@ -69,6 +72,18 @@ export class Hud {
 
     this.#set('worldName', v => { el.worldName.textContent = v; }, `${String(g.zoneIndex + 1).padStart(2, '0')} / 05 · ${g.zone.name}`);
     el.worldProgress.style.width = `${g.zoneIndex === ZONES.length - 1 ? 100 : (g.distance % TRACK.zoneLength) / TRACK.zoneLength * 100}%`;
+    el.feverGauge.classList.toggle('active', g.feverTime > 0);
+    el.feverText.textContent = g.feverTime > 0 ? `${g.feverTime.toFixed(1)} s` : `${Math.floor(g.fever)}%`;
+    el.feverFill.style.width = `${g.feverTime > 0 ? g.feverTime / GAME.feverDuration * 100 : g.fever}%`;
+    const challenge = g.challenge;
+    el.challengeHud.classList.toggle('hidden', !challenge || g.state !== 'playing');
+    if (challenge && g.state === 'playing') {
+      el.challengeHud.textContent = `${challenge.name} · ${g.challengeProgress}/${challenge.target} · +${challenge.reward} ★`;
+      if (!this.challengeAnnounced && g.challengeProgress >= challenge.target) {
+        this.challengeAnnounced = true;
+        this.banner('DÉFI RÉUSSI !', 1.5);
+      }
+    }
     const gap = g.chaser.gap(g.sMax), danger = g.chaser.danger(g.sMax);
     this.#set('gap', (v) => { el.dangerTxt.textContent = `CURSEUR : ${v} m`; }, Math.max(0, Math.ceil(gap)));
     el.dangerFill.style.width = `${danger * 100}%`;

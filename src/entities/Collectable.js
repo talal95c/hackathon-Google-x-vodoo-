@@ -27,7 +27,11 @@ export class CoinPickup extends Collectable {
     }
   }
 
-  collect() { this.game.addCoins(this.def.value ?? 1); }
+  collect() {
+    const value = this.def.value ?? 1;
+    this.game.addCoins(value);
+    this.game.addFever(Math.min(12, value * 6));
+  }
 }
 
 // Ramasser = équiper une arme (def.weapon)

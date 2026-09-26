@@ -5,6 +5,7 @@ import { LaserWeapon, ShieldWeapon } from '../weapons/Weapon.js';
 
 // --- Collectables
 Entities.define('coin', { class: CoinPickup, hitbox: { hx: 0.9, hz: 0.9, top: 3 }, value: 1 });
+Entities.define('goldCoin', { class: CoinPickup, hitbox: { hx: 0.9, hz: 0.9, top: 3 }, value: 3 });
 Entities.define('boostPad', { class: BoostPad, hitbox: { hx: 1.5, hz: 2.5, top: 0.5 }, boost: 1.5 });
 Entities.define('laserPickup', { class: WeaponPickup, hitbox: { hx: 1.2, hz: 1.2, top: 3.5 }, weapon: 'laser' });
 Entities.define('shieldPickup', { class: WeaponPickup, hitbox: { hx: 1.2, hz: 1.2, top: 3.5 }, weapon: 'shield' });
