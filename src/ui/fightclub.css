@@ -38,3 +38,33 @@ button.fc-hot { background: linear-gradient(135deg,#ffb774,#ff6b91); box-shadow:
 .fight-club::after { content: ''; position: absolute; inset: 0; background: #161a2c; animation: fc-arrive .4s ease-out both; pointer-events: none; }
 @keyframes fc-arrive { from { clip-path: polygon(0 0,100% 0,100% 100%,0 100%); } to { clip-path: polygon(0 0,100% 0,100% 0,0 0); } }
 @media(max-height:650px) { .fc-callout.fc-hit { top: 161px; } }
+
+
+/* Le panneau arrive avant le ring et laisse la route ainsi que les commandes libres. */
+.fc-approach { position: fixed; z-index: 12; top: max(103px, calc(env(safe-area-inset-top) + 84px)); left: 50%; width: min(460px, calc(100vw - 28px)); transform: translateX(-50%); pointer-events: none; color: #fff2d3; border: 1px solid #7af7e299; border-radius: 17px; overflow: hidden; background: linear-gradient(115deg,#18243bf2,#28223ef2); box-shadow: 0 12px 32px #07112655, 0 0 24px #6af3d522; font-family: Arial,sans-serif; animation: fc-incoming-enter .55s cubic-bezier(.2,.9,.2,1.18) both; }
+.fc-incoming-body { display: flex; align-items: center; gap: 15px; padding: 14px 17px; }
+.fc-incoming-icon { position: relative; width: 73px; height: 62px; flex-shrink: 0; }
+.fc-incoming-icon span { position: absolute; font-size: 39px; top: 6px; left: -4px; transform: rotate(-22deg); animation: fc-incoming-slap 1.1s ease-in-out infinite alternate; }
+.fc-incoming-icon span:nth-child(2) { left: auto; right: -4px; transform: scaleX(-1) rotate(-22deg); animation-name: fc-incoming-slap-right; }
+.fc-incoming-icon b { position: absolute; left: 25px; bottom: -1px; font: italic 1000 17px Arial; color: #80ffe5; text-shadow: 0 2px #151629; }
+.fc-incoming-copy { flex: 1; min-width: 0; }
+.fc-incoming-copy small { display: block; color: #87f6de; letter-spacing: 2px; font-size: 8px; font-weight: 900; }
+.fc-incoming-copy strong { display: block; font: italic 1000 27px/1.08 Arial; letter-spacing: -.8px; margin: 4px 0; white-space: nowrap; }
+.fc-incoming-message { display: block; font-size: 10px; font-weight: 800; color: #e0d7ef; }
+.fc-incoming-distance { min-width: 53px; text-align: right; border-left: 1px solid #fff2; padding-left: 15px; }
+.fc-incoming-distance b { display: block; font: italic 1000 33px/1 Arial; color: #ffe279; font-variant-numeric: tabular-nums; }
+.fc-incoming-distance small { font-size: 7px; letter-spacing: 1.5px; opacity: .7; }
+.fc-incoming-progress { height: 4px; background: #ffffff12; }
+.fc-incoming-progress i { display: block; height: 100%; transform-origin: left; background: linear-gradient(90deg,#7bffe3,#ffd974,#ff72a6); }
+.fc-approach.fc-imminent { border-color: #ffd974; animation: fc-incoming-enter .4s ease-out both, fc-incoming-glow .7s ease-in-out infinite alternate; }
+.fc-imminent .fc-incoming-copy small, .fc-imminent .fc-incoming-message { color: #ffe279; }
+.fc-imminent .fc-incoming-icon span { animation-duration: .4s; }
+@keyframes fc-incoming-enter { from { opacity: 0; transform: translateX(-50%) translateY(-35px) scale(.82) rotate(-4deg); } to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1) rotate(0); } }
+@keyframes fc-incoming-slap { to { transform: translateX(6px) rotate(9deg); } }
+@keyframes fc-incoming-slap-right { to { transform: translateX(-6px) scaleX(-1) rotate(9deg); } }
+@keyframes fc-incoming-glow { to { box-shadow: 0 12px 32px #07112655,0 0 28px #ffd97455; } }
+@media(max-width:480px) { .fc-incoming-body { padding: 11px 12px; gap: 10px; }.fc-incoming-icon { width: 54px; height: 51px; }.fc-incoming-icon span { font-size: 31px; }.fc-incoming-icon b { left: 16px; }.fc-incoming-copy strong { font-size: 23px; }.fc-incoming-distance { padding-left: 10px; min-width: 44px; }.fc-incoming-distance b { font-size: 28px; }.fc-incoming-message { font-size: 9px; } }
+@media(max-height:550px) { .fc-approach { top: 76px; width: 340px; }.fc-incoming-body { padding: 7px 12px; }.fc-incoming-icon { height: 44px; }.fc-incoming-copy strong { font-size: 23px; } }
+@media(prefers-reduced-motion:reduce) { .fc-approach, .fc-approach.fc-imminent, .fc-incoming-icon span { animation: none; } }
+
+.fc-teaser.fc-stunned { color: #ffe485; border: 1px solid #ffd974; box-shadow: 0 0 22px #ffd97444; }

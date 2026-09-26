@@ -77,7 +77,7 @@ export class FightClubView extends View {
   }
   buildGate() {
     this.routeGate = new THREE.Group(); this.scene.add(this.routeGate);
-    const dark = this.mat(0x242e49), glow = this.mat(0xff70a7, 1.4);
+    const dark = this.mat(0x242e49), glow = this.gateGlow = this.mat(0xff70a7, 1.4);
     this.gatePosts = [-1, 1].map(side => {
       const p = this.mesh(this.box, dark, [side * 8.5, 3.2, 0], [.5, 6.4, .5], this.routeGate);
       this.mesh(this.box, glow, [side * 8.5, 3.2, -.3], [.2, 5.8, .08], this.routeGate);
@@ -233,6 +233,8 @@ export class FightClubView extends View {
       const f = this.track.frame(this.club.nextAt, {});
       this.routeGate.position.set(f.x, f.y, f.z); this.routeGate.rotation.y = f.th;
       this.routeGate.scale.x = (f.w + 1.5) / 17;
+      this.gateGlow.emissiveIntensity = 1.5 + Math.max(0, Math.sin(time * 7)) * 1.5;
+      this.gateBeam.scale.y = .22 + Math.max(0, Math.sin(time * 7)) * .1;
     }
     if (!this.club.active) return;
     const result = this.club.result, age = result ? (this.club.now() - this.club.resultAt) / 1000 : 0;
