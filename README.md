@@ -36,6 +36,9 @@ Les pièces remplissent la jauge de Frénésie : pendant 6 secondes, le dino éc
 sur la route, mais peut toujours tomber. Certaines sections proposent une voie sûre avec des
 pièces normales et une voie en bord de piste avec des pièces dorées. Le menu Défis permet de
 sélectionner un objectif facultatif par course, sans limite de temps.
+Dans le même menu, la série quotidienne attribue 10 à 70 pièces selon les jours consécutifs
+(remise au jour 1 après une absence, calendrier UTC). Le défi éclair, à activer librement une fois
+par jour, donne 35 pièces dès que 12 pièces sont ramassées dans une partie avant la fin de ses 10 minutes.
 
 ## Publier sur itch.io
     npm run zip        # crée dino-escape-itch.zip

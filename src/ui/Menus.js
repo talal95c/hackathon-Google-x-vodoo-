@@ -1,11 +1,12 @@
 import { Skins, MusicThemes } from '../kernel/Registry.js';
 import { GAME } from '../kernel/config.js';
-import { CHALLENGES } from '../content/challenges.js';
+import { CHALLENGES, FLASH_CHALLENGE } from '../content/challenges.js';
 
 // Écrans (titre, fin de partie) et panneaux (boutique, musique Lyria).
 // Ne connaît le jeu qu'à travers des callbacks : onPlay().
 const $ = (id) => document.getElementById(id);
 const hex = (n) => `#${n.toString(16).padStart(6, '0')}`;
+const countdown = (ms) => `${String(Math.floor(Math.ceil(ms / 1000) / 60)).padStart(2, '0')}:${String(Math.ceil(ms / 1000) % 60).padStart(2, '0')}`;
 
 export class Menus {
   tab = 'skin';
@@ -24,6 +25,8 @@ export class Menus {
       else if (a === 'shop') this.open('shop');
       else if (a === 'music') this.open('music');
       else if (a === 'challenges') this.open('challenges');
+      else if (a === 'daily') { profile.claimDaily(); this.refresh(); }
+      else if (a === 'flash') { profile.startFlash(); this.refresh(); }
       else if (a === 'close') this.closePanels();
       else if (a === 'connect') this.#connect();
       else if (a === 'forget') { lyria.setApiKey(''); $('apiKey').value = ''; this.#renderMusic(); }
@@ -56,7 +59,7 @@ export class Menus {
   open(name) { this.closePanels(); this.panels[name].classList.remove('hidden'); this.refresh(); }
   closePanels() { for (const p of Object.values(this.panels)) p.classList.add('hidden'); }
 
-  showGameOver(result, { isBest, best, challengeReward }) {
+  showGameOver(result, { isBest, best, challengeReward, flashReward }) {
     const TXT = {
       fall: ['ERR_404 — le dino est tombé hors de la page', 'Page introuvable.'],
       dead: ['ERR_TOO_MANY_HITS — plus de vies', 'Le dino a planté.'],
@@ -65,7 +68,7 @@ export class Menus {
     $('overErr').textContent = TXT[0];
     $('overTitle').textContent = TXT[1];
     $('overScore').textContent = `${result.score} pts`;
-    $('overDetails').innerHTML = `${result.distance} m · +${result.coins} ★${challengeReward ? ` · Défi +${challengeReward} ★` : ''} (total ${this.profile.coins} ★)<br/>${isBest ? '🏆 NOUVEAU RECORD !' : `Record : ${best} pts`}`;
+    $('overDetails').innerHTML = `${result.distance} m · +${result.coins} ★${challengeReward ? ` · Défi +${challengeReward} ★` : ''}${flashReward ? ` · Éclair +${flashReward} ★` : ''} (total ${this.profile.coins} ★)<br/>${isBest ? '🏆 NOUVEAU RECORD !' : `Record : ${best} pts`}`;
     this.show('over');
   }
 
@@ -76,6 +79,31 @@ export class Menus {
     this.#renderShop();
     this.#renderMusic();
     this.#renderChallenges();
+    this.#renderDaily();
+    this.update();
+  }
+
+  update(now = Date.now()) {
+    const daily = this.profile.dailyStatus(now), flash = this.profile.flashStatus(now);
+    const key = `${daily.claimed}:${daily.day}:${flash.state}`;
+    if (key !== this.retentionKey) { this.#renderDaily(now); this.retentionKey = key; }
+    if (flash.state === 'active') {
+      const text = `${FLASH_CHALLENGE.target} pièces dans une partie · +${FLASH_CHALLENGE.reward} ★ · ${countdown(flash.remaining)} restantes`;
+      if ($('flashDetails').textContent !== text) $('flashDetails').textContent = text;
+    }
+  }
+
+  #renderDaily(now = Date.now()) {
+    const daily = this.profile.dailyStatus(now), flash = this.profile.flashStatus(now);
+    $('dailyDetails').textContent = daily.claimed
+      ? `Jour ${daily.day}/7 réclamé · retour demain (UTC) pour la suite.`
+      : `Jour ${daily.day}/7 · +${daily.reward} ★. Une journée manquée recommence la série.`;
+    $('dailyButton').textContent = daily.claimed ? 'Réclamé aujourd’hui' : `Réclamer +${daily.reward} ★`;
+    $('dailyButton').disabled = daily.claimed;
+    $('flashDetails').textContent = { available: `${FLASH_CHALLENGE.target} pièces dans une partie en ${FLASH_CHALLENGE.durationMs / 60000} min · +${FLASH_CHALLENGE.reward} ★. À activer aujourd’hui.`, active: '', won: `Bonus de ${FLASH_CHALLENGE.reward} ★ obtenu aujourd’hui.`, expired: 'Temps écoulé · prochain essai demain (UTC).' }[flash.state];
+    $('flashButton').textContent = { available: 'Activer le défi', active: 'Défi en cours', won: 'Récompense obtenue', expired: 'Terminé aujourd’hui' }[flash.state];
+    $('flashButton').disabled = flash.state !== 'available';
+    this.retentionKey = `${daily.claimed}:${daily.day}:${flash.state}`;
   }
 
   #renderChallenges() {

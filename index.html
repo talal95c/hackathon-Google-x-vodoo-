@@ -21,6 +21,7 @@
     <div id="journey"><span id="worldName">01 / 05 · DÉSERT HORS LIGNE</span><div class="bar"><div class="fill" id="worldProgress"></div></div></div>
     <div id="feverGauge">FRÉNÉSIE <span id="feverText">0%</span><div class="bar"><div class="fill" id="feverFill"></div></div></div>
     <div id="challengeHud" class="hidden"></div>
+    <div id="flashHud" class="hidden"></div>
     <div id="boss" class="hidden"><div id="bossName">BOSS</div><div class="bar"><div class="fill" id="bossFill"></div></div></div>
     <div id="buffs"></div>
     <div class="row" id="bottom">
@@ -77,6 +78,12 @@
 
   <div class="panel hidden" id="challengesPanel">
     <div class="panel-head"><h2>Défis facultatifs</h2><button data-action="close">✕</button></div>
+    <h3>Bonus du jour (UTC)</h3>
+    <div class="grid">
+      <div class="card"><div class="name">Série quotidienne</div><div class="desc" id="dailyDetails"></div><button data-action="daily" id="dailyButton"></button></div>
+      <div class="card"><div class="name">Défi éclair</div><div class="desc" id="flashDetails"></div><button data-action="flash" id="flashButton"></button></div>
+    </div>
+    <h3>Défis par course</h3>
     <p>Choisis un objectif pour tes prochaines courses. Sans minuteur : tu peux le retenter autant de fois que tu veux.</p>
     <div class="grid" id="challengeGrid"></div>
   </div>
