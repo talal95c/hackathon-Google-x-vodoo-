@@ -55,7 +55,10 @@ export class Hud {
     this.#bannerTimer = seconds;
   }
 
-  #pop(el) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+  #pop(el) {
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+    el.addEventListener('animationend', (e) => { if (e.animationName === 'speed-pop') el.classList.remove('pop'); }, { once: true });
+  }
 
   #lives(hit) {
     const g = this.game, max = g.runner.stats.get('maxLives');
