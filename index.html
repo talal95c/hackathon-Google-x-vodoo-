@@ -19,9 +19,11 @@
     </div>
     <div id="danger"><div id="dangerTxt">CURSEUR</div><div class="bar"><div class="fill" id="dangerFill"></div></div></div>
     <div id="journey"><span id="worldName">01 / 05 · DÉSERT HORS LIGNE</span><div class="bar"><div class="fill" id="worldProgress"></div></div></div>
+    <div id="feverGauge">FRÉNÉSIE <span id="feverText">0%</span><div class="bar"><div class="fill" id="feverFill"></div></div></div>
+    <div id="challengeHud" class="hidden"></div>
     <div id="boss" class="hidden"><div id="bossName">BOSS</div><div class="bar"><div class="fill" id="bossFill"></div></div></div>
     <div id="buffs"></div>
-    <div id="touchHint">Maintiens gauche / droite · balaie ↑ pour sauter · 2 doigts pour glisser</div>
+    <div id="touchHint">Gauche / droite : tourner · ↑ sauter · 2 doigts glisser · tap parer</div>
     <div class="row" id="bottom">
       <div id="speed">0 <small>km/h</small></div>
       <div id="driftbox"><div class="label" id="driftLabel">GLISSADE</div><div class="bar"><div class="fill" id="driftFill"></div></div></div>
@@ -48,8 +50,8 @@
     </div>
     <div class="hero-tag"><span class="tag-dot"></span><div><b id="heroName">RIDDIM</b><span id="heroTheme">REGGAE DINO · VOL. 01</span></div><span class="equalizer"><i></i><i></i><i></i><i></i></span></div>
     <div class="menu-footer">
-      <div class="controls"><span class="desktop-controls"><b>← →</b> tourner &nbsp; <b>ESPACE</b> sauter &nbsp; <b>SHIFT</b> glisser</span><span class="touch-controls">Maintiens un côté pour tourner · glisse vers le haut pour sauter · 2 doigts pour glisser</span></div>
-      <div class="buttons"><button data-action="shop">Collection</button><button data-action="music">♫ Musique</button></div>
+      <div class="controls"><span class="desktop-controls"><b>← →</b> tourner &nbsp; <b>ESPACE</b> sauter &nbsp; <b>SHIFT</b> glisser &nbsp; <b>F</b> parer</span><span class="touch-controls">Maintiens un côté pour tourner · ↑ sauter · 2 doigts glisser · tap parer</span></div>
+      <div class="buttons"><button data-action="challenges">Défis</button><button data-action="shop">Collection</button><button data-action="music">♫ Musique</button></div>
     </div>
   </div>
 
@@ -72,6 +74,12 @@
       <button data-tab="upgrade">Améliorations</button>
     </div>
     <div class="grid" id="shopGrid"></div>
+  </div>
+
+  <div class="panel hidden" id="challengesPanel">
+    <div class="panel-head"><h2>Défis facultatifs</h2><button data-action="close">✕</button></div>
+    <p>Choisis un objectif pour tes prochaines courses. Sans minuteur : tu peux le retenter autant de fois que tu veux.</p>
+    <div class="grid" id="challengeGrid"></div>
   </div>
 
   <div class="panel hidden" id="musicPanel">

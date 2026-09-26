@@ -37,6 +37,7 @@ export class RunnerView extends View {
     this.listen('skin:preview', ({ skin }) => this.setSkin(skin));
     this.listen('weapon:equip', ({ weapon }) => this.#setWeapon(weapon));
     this.listen('weapon:expire', () => this.#clearWeapon());
+    this.listen('runner:parry', () => { this.impact = 0.14; });
     this.listen('*', (type, payload) => { if (type.startsWith('runner:')) this.model.onEvent?.(type, payload); });
   }
 
@@ -97,6 +98,9 @@ export class RunnerView extends View {
     this.root.visible = !!g.worldJump || r.invul <= 0 || g.state !== 'playing' || Math.floor(r.invul * 16) % 2 === 0;
 
     this.model.update?.(this.pose(), dt, time);
+    this.impact = Math.max(0, (this.impact ?? 0) - dt);
+    const stretch = this.impact > 0 ? 1 + this.impact * 1.2 : 1;
+    this.root.scale.set(1 / Math.sqrt(stretch), 1 / Math.sqrt(stretch), stretch);
     if (this.weaponModel && this.weapon) this.weaponModel.update?.(this.weapon, dt, time);
     this.focus.copy(this.root.position);
   }

@@ -58,6 +58,9 @@ export const GAME = {
   fallDuration: 1.3,     // durée de la chute avant l'écran de fin (tomber = game over)
   coinValue: 25,
   startS: 5,
+  parryWindow: 0.14,
+  parryCooldown: 0.5,
+  feverDuration: 6,
 };
 
 // Génération de la route
