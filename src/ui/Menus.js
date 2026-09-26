@@ -8,6 +8,8 @@ import './skins.css';
 const $ = (id) => document.getElementById(id);
 const hex = (n) => `#${n.toString(16).padStart(6, '0')}`;
 
+const LEAVE_MS = 520; // durée de la sortie animée du menu au lancement d'une partie
+
 export class Menus {
   tab = 'skin';
 
@@ -23,7 +25,8 @@ export class Menus {
       if (a === 'play') this.onPlay();
       else if (a === 'back') this.onBack?.();
       else if (a === 'shop') this.open('shop');
-      else if (a === 'music') this.open('music');
+      else if (a === 'music') { this.#nudge(false); this.open('music'); if (!lyria.hasKey()) $('apiKey').focus(); }
+      else if (a === 'nudge-later') this.#nudge(false, true);
       else if (a === 'close') this.closePanels();
       else if (a === 'connect') this.#connect();
       else if (a === 'forget') { lyria.setApiKey(''); $('apiKey').value = ''; this.#renderMusic(); }
@@ -43,13 +46,33 @@ export class Menus {
     $('audioOffsetVal').textContent = `${music.offsetMs} ms`;
     off.addEventListener('input', () => { music.setOffset(+off.value); $('audioOffsetVal').textContent = `${off.value} ms`; });
     this.refresh();
+    // Pas de clé : petite carte « full experience » qui s'ouvre sur l'accueil (une fois par session)
+    let dismissed = false;
+    try { dismissed = !!sessionStorage.getItem('dino-nudge'); } catch { /* */ }
+    if (!lyria.hasKey() && !dismissed) setTimeout(() => this.#nudge(true), 1200);
+  }
+
+  #nudge(show, remember = false) {
+    const n = $('keyNudge');
+    if (!n) return;
+    if (show && this.lyria.hasKey()) return;
+    n.hidden = !show;
+    if (remember) { try { sessionStorage.setItem('dino-nudge', '1'); } catch { /* */ } }
   }
 
   get panelOpen() { return Object.values(this.panels).some((p) => !p.classList.contains('hidden')); }
 
   show(name) {
     document.body.classList.toggle('in-game', !name);
-    for (const [k, el] of Object.entries(this.screens)) el.classList.toggle('hidden', k !== name);
+    const start = this.screens.start;
+    clearTimeout(this.leaving);
+    start.classList.remove('leaving');
+    const leave = !name && !start.classList.contains('hidden');
+    for (const [k, el] of Object.entries(this.screens)) if (!(leave && el === start)) el.classList.toggle('hidden', k !== name);
+    if (leave) {
+      start.classList.add('leaving');
+      this.leaving = setTimeout(() => start.classList.replace('leaving', 'hidden'), LEAVE_MS);
+    }
     if (!name) this.closePanels();
     this.refresh();
   }
@@ -59,7 +82,7 @@ export class Menus {
 
   // multi : le bouton de retour ramène au salon plutôt qu'au menu
   showGameOver(result, { isBest, best }, { multiplayer = false } = {}) {
-    $('overBack').textContent = multiplayer ? '⚔ BACK TO LOBBY' : '↩ BACK TO MENU';
+    $('overBack').querySelector('span').textContent = multiplayer ? 'Back to lobby' : 'Back to menu';
     const TXT = {
       fall: ['ERR_404 — the dino fell off the page', 'Page not found.'],
       dead: ['ERR_TOO_MANY_HITS — out of lives', 'The dino crashed.'],
@@ -117,7 +140,15 @@ export class Menus {
     const l = this.lyria, p = this.profile;
     const input = $('apiKey');
     if (document.activeElement !== input) input.value = l.apiKey ? '••••••••••••' : '';
-    $('lyriaStatus').textContent = l.message || (l.hasKey() ? 'Key saved' : 'No key: synthesized music');
+    const state = l.hasKey() ? l.status : 'nokey';
+    $('lyriaCard').dataset.state = state;
+    $('lyriaStatus').textContent = {
+      nokey: 'Synth track · no key yet', off: l.message || 'Key saved · not connected', connecting: 'Connecting to Lyria…',
+      ready: 'Lyria live · ready', playing: 'Lyria live · playing', error: l.message || 'Connection failed',
+    }[state];
+    $('lyriaConnect').textContent = state === 'error' || state === 'off' ? 'Reconnect' : 'Connect';
+    $('lyriaConnect').disabled = state === 'connecting';
+    if (l.hasKey()) this.#nudge(false);
     $('themeGrid').innerHTML = MusicThemes.all().map((t) => {
       const count = p.musicCount(t.id), sel = p.data.theme === t.id;
       const label = count === Infinity ? (t.consumable ? 'Included with your dino' : 'Free') : `${count} run(s)`;

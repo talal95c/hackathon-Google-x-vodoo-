@@ -3,6 +3,8 @@ import { View } from './View.js';
 
 // Caméra accrochée à la route : derrière le dino, elle regarde la route devant
 // (on voit arriver les virages et les descentes). Tremblements sur les chocs.
+const INTRO_S = 1.1; // durée du travelling menu → course
+
 export class CameraRig extends View {
   pos = new THREE.Vector3();
   look = new THREE.Vector3();
@@ -10,12 +12,20 @@ export class CameraRig extends View {
   combatKick = 0;
   snap = true;
   #fc = {}; #fl = {}; #t = new THREE.Vector3(); #l = new THREE.Vector3();
+  #intro = 0; #from = new THREE.Vector3(); #fromLook = new THREE.Vector3(); #fromFov = 44; #fromOffset = 0; #fromOffsetY = 0; #menuLook = new THREE.Vector3();
 
   constructor(ctx) {
     super(ctx);
     this.camera = ctx.world.camera;
     this.focus = ctx.focus; // position monde du dino (Vector3 partagé)
-    this.listen('game:start', () => { this.snap = true; this.combatKick = 0; this.shake = 0; });
+    this.listen('game:start', () => {
+      if (this.camera.view?.enabled) { // on part du plan du menu : la caméra glisse jusque derrière le dino
+        this.#intro = 1;
+        this.#from.copy(this.camera.position); this.#fromLook.copy(this.#menuLook);
+        this.#fromFov = this.camera.fov; this.#fromOffset = this.camera.view.offsetX; this.#fromOffsetY = this.camera.view.offsetY;
+      }
+      this.snap = true; this.combatKick = 0; this.shake = 0;
+    });
     this.listen('runner:respawn', () => { this.snap = true; this.combatKick = 0; this.shake = 0; }); // réapparition (multijoueur)
     this.listen('combat:impact', e => {
       if (!e.local || e.kind !== 'shove') return;
@@ -29,6 +39,8 @@ export class CameraRig extends View {
     this.listen('world:jump', () => this.addShake(0.45));
     this.listen('world:land', () => this.addShake(0.8));
     this.listen('boss:damage', () => this.addShake(0.08));
+    this.listen('effect:add', () => this.addShake(0.12));
+    this.listen('weapon:equip', () => this.addShake(0.12));
   }
 
   addShake(v) { this.shake = Math.max(this.shake, v); }
@@ -44,11 +56,11 @@ export class CameraRig extends View {
       cam.fov = 44;
       cam.setViewOffset(window.innerWidth, window.innerHeight, narrow ? 0 : -window.innerWidth * .2, narrow ? window.innerHeight * .18 : 0, window.innerWidth, window.innerHeight);
       cam.position.set(P.x + Math.sin(a) * radius, P.y + 4.5, P.z + Math.cos(a) * radius);
-      cam.lookAt(P.x, P.y + 2.1, P.z);
+      cam.lookAt(this.#menuLook.set(P.x, P.y + 2.1, P.z));
       cam.updateProjectionMatrix();
       return;
     }
-    if (cam.view?.enabled) cam.clearViewOffset();
+    if (cam.view?.enabled && this.#intro <= 0) cam.clearViewOffset();
     if (g.state === 'playing') {
       const flight = g.worldJump ? Math.sin(g.worldJump.progress * Math.PI) : 0;
       const back = 11 + speed * 0.04 + flight * 7;
@@ -74,6 +86,18 @@ export class CameraRig extends View {
     const fov = 57 - this.combatKick * 4 + (g.worldJump ? Math.sin(g.worldJump.progress * Math.PI) * 18 : 0) + Math.max(0, speed - 30) * 0.32 + (r.boost > 0 ? 8 : 0);
     cam.fov += (fov - cam.fov) * Math.min(1, dt * 4);
     cam.fov += (this.ctx.fx?.down ?? 0) * 0.35; // "kick" de caméra sur le temps fort
+    if (this.#intro > 0) this.#blendIntro(dt);
     cam.updateProjectionMatrix();
+  }
+
+  #blendIntro(dt) {
+    const cam = this.camera;
+    this.#intro = Math.max(0, this.#intro - dt / INTRO_S);
+    const k = 1 - this.#intro, e = k < .5 ? 4 * k ** 3 : 1 - (-2 * k + 2) ** 3 / 2;
+    cam.position.lerpVectors(this.#from, cam.position, e);
+    cam.lookAt(this.#l.lerpVectors(this.#fromLook, this.look, e));
+    cam.fov = this.#fromFov + (cam.fov - this.#fromFov) * e;
+    if (this.#intro > 0) cam.setViewOffset(innerWidth, innerHeight, this.#fromOffset * (1 - e), this.#fromOffsetY * (1 - e), innerWidth, innerHeight);
+    else cam.clearViewOffset();
   }
 }
