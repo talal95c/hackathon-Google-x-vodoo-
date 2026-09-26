@@ -26,6 +26,7 @@ import { CameraRig } from './view/CameraRig.js';
 import { BeatFx } from './view/BeatFx.js';
 import { Input } from './input/Input.js';
 import { Sfx, bindSfx } from './audio/Sfx.js';
+import { bindHaptics } from './input/Haptics.js';
 import { LyriaEngine } from './audio/music/LyriaEngine.js';
 import { SynthEngine } from './audio/music/SynthEngine.js';
 import { MusicDirector } from './audio/music/MusicDirector.js';
@@ -57,6 +58,7 @@ const views = [
 // --- Son et musique
 const sfx = new Sfx();
 bindSfx(game, sfx);
+bindHaptics(game);
 const lyria = new LyriaEngine();
 const music = new MusicDirector(game, { lyria, synth: new SynthEngine() });
 sfx.onInit = (audioCtx) => music.setAudioContext(audioCtx);

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { View } from './View.js';
+import { PICKUP_COLORS } from './models/entities.js';
 
 // Particules (pool de petits cubes) déclenchées par les événements du jeu.
 export class Particles extends View {
@@ -26,8 +27,21 @@ export class Particles extends View {
     this.listen('runner:parry', () => this.emit(P.x, P.y + 1.4, P.z + 2, 0xc066ff, 24, 11, 9, 0.3, 0.5));
     this.listen('fever:start', () => this.emit(P.x, P.y + 1, P.z, 0xffc400, 40, 16, 14, 0.3, 0.7));
     this.listen('weapon:fire', () => this.emit(P.x, P.y + 2.6, P.z, 0xff1744, 2, 3, 2, 0.15, 0.2));
+    this.listen('pad:used', ({ entity: e }) => {
+      for (const side of [-1.5, 1.5]) { const q = this.track.point(e.s, e.d + side, 0.3, this.#p); this.emit(q.x, q.y, q.z, 0x3ddc84, 6, 4, 7, 0.22, 0.45); }
+    });
     this.listen('entity:destroy', ({ entity: e, reason }) => {
-      if (reason === 'collected') { const q = at(e, 1.2); this.emit(q.x, q.y, q.z, e.type === 'goldCoin' ? 0xffb300 : e.type === 'coin' ? 0xfbbc04 : 0xffffff, 6, 6, 6, 0.25, 0.4); }
+      if (reason === 'collected') {
+        if (e.type === 'coin' || e.type === 'goldCoin') {
+          const q = at(e, 1.25), gold = e.type === 'goldCoin';
+          this.emit(q.x, q.y, q.z, gold ? 0xffa000 : 0xfbbc04, gold ? 12 : 7, 7, 7, 0.22, 0.4);
+          this.emit(q.x, q.y, q.z, 0xfff6d5, gold ? 6 : 3, 5, 9, 0.14, 0.5);
+        } else {
+          const q = at(e, 1.9), c = PICKUP_COLORS[e.type] ?? 0xffffff;
+          this.emit(q.x, q.y, q.z, c, 18, 12, 10, 0.3, 0.6);
+          this.emit(q.x, q.y, q.z, 0xffffff, 8, 8, 12, 0.18, 0.5);
+        }
+      }
       else if (reason === 'killed' || reason === 'smashed') { const q = at(e); this.emit(q.x, q.y, q.z, edge(), 14, 14, 10, 0.3, 0.8); }
       else if (reason === 'hit' && e.kind === 'projectile') { const q = at(e, 0); this.emit(q.x, q.y, q.z, 0xff8a80, 4, 5, 4, 0.15, 0.3); }
     });

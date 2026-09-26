@@ -58,7 +58,8 @@ export class Sfx {
     const freq = 660 * 2 ** (Math.min(step, 10) / 12);
     this.tone(freq, 0.09, 'triangle', gold ? 0.16 : 0.1, freq * 0.2);
   }
-  boost(big) { this.tone(big ? 300 : 220, 0.45, 'sawtooth', 0.12, big ? 900 : 500); this.noise(0.4, 0.15, 3000); }
+  pickup() { [784, 988, 1319].forEach((f, i) => setTimeout(() => this.tone(f, 0.12, 'triangle', 0.1, f * 0.05), i * 55)); }
+    boost(big) { this.tone(big ? 300 : 220, 0.45, 'sawtooth', 0.12, big ? 900 : 500); this.noise(0.4, 0.15, 3000); }
   crash() { this.noise(0.5, 0.5, 600); this.tone(120, 0.4, 'square', 0.2, -80); }
   zone() { [523, 659, 784].forEach((f, i) => setTimeout(() => this.tone(f, 0.15, 'triangle', 0.15), i * 90)); }
   over() { [392, 330, 262, 196].forEach((f, i) => setTimeout(() => this.tone(f, 0.22, 'square', 0.12), i * 130)); }
@@ -85,15 +86,17 @@ export function bindSfx(game, sfx) {
     chain = now - lastCoin < 800 ? chain + 1 : 0;
     lastCoin = now;
     sfx.coin(chain, entity.type === 'goldCoin');
+    if (entity.type === 'goldCoin') setTimeout(() => sfx.tone(1760, 0.12, 'sine', 0.05), 50);
   });
   on('runner:parry', () => { sfx.tone(170, 0.18, 'sawtooth', 0.24, -100); sfx.noise(0.1, 0.18, 1800); });
   on('runner:parry:miss', () => sfx.tone(220, 0.08, 'triangle', 0.06, -90));
   on('fever:start', () => { [440, 554, 659].forEach((f, i) => setTimeout(() => sfx.tone(f, 0.16, 'sawtooth', 0.12), i * 80)); });
   on('zone', () => sfx.zone());
-  on('weapon:equip', () => sfx.tone(440, 0.3, 'sawtooth', 0.12, 440));
+  on('weapon:equip', () => { sfx.pickup(); sfx.tone(440, 0.3, 'sawtooth', 0.08, 440); });
   on('weapon:fire', () => sfx.tone(1400, 0.05, 'square', 0.04, -900));
   on('weapon:expire', () => sfx.tone(500, 0.25, 'triangle', 0.1, -300));
-  on('effect:add', () => sfx.tone(660, 0.25, 'triangle', 0.12, 660));
+  on('effect:add', () => sfx.pickup());
+  on('pad:used', () => sfx.tone(980, 0.07, 'square', 0.05, 400));
   on('enemy:damage', ({ entity }) => { if (entity.kind === 'boss') sfx.tone(200, 0.08, 'square', 0.08, -100); });
   on('boss:start', () => [196, 185, 175, 165].forEach((f, i) => setTimeout(() => sfx.tone(f, 0.3, 'sawtooth', 0.15), i * 180)));
   on('boss:defeated', () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => sfx.tone(f, 0.2, 'square', 0.14), i * 110)));
