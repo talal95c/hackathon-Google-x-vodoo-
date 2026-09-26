@@ -336,10 +336,10 @@ body:not(.in-game) #hud { opacity: 0; }
   }
 }
 @media (max-height: 430px) and (min-width: 760px) {
-  #journey { top: 100px; left: 24px; width: 210px; transform: none; }
-  #feverGauge { top: 175px; left: 24px; width: 210px; transform: none; }
-  #challengeHud { top: 100px; left: auto; right: 24px; width: 210px; transform: none; }
-  #buffs { top: 255px; right: 24px; grid-template-columns: repeat(2, 146px); justify-content: space-between; }
+  #journey { top: 75px; width: 210px; }
+  #feverGauge { top: 120px; left: 24px; width: 210px; transform: none; }
+  #challengeHud { top: 120px; left: auto; right: 24px; width: 210px; transform: none; }
+  #buffs { top: 235px; right: 24px; grid-template-columns: repeat(2, 146px); justify-content: space-between; }
   #banner {
     top: 175px; left: auto; right: 24px; width: 210px; min-height: 39px;
     padding: 8px 10px; border: 1px solid #ffffffb8; border-radius: 16px;
