@@ -309,6 +309,7 @@ export class Game {
     r.x = 0; r.latV = 0; r.push = 0; r.shoveV = 0;
     r.Y = f.y; r.y = 0; r.vy = 0; r.grounded = true; r.prevRoadVy = 0;
     r.speed = r.cruise * ROYALE.respawnSpeed; r.boost = 0; r.drifting = false; r.driftCharge = 0;
+    r.tricking = false; r.trickDone = false;
     r.invul = ROYALE.respawnInvul;
     this.fall = null;
     this.respawns++;

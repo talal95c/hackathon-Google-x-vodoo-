@@ -46,7 +46,10 @@ export function createRaceServer({ port = 2567, store, staticDir = null, fillMs,
     for (const r of rooms.values()) if (r.phase === 'done' && !r.timer && !r.clients.size) rooms.delete(r.code);
   }, 1000);
 
-  const wss = new WebSocketServer({ server: http, maxPayload: 4096 });
+  // ALLOWED_ORIGINS="https://a.com,capacitor://localhost" : n'accepte que ces origines navigateur (vide = toutes)
+  const origins = (process.env.ALLOWED_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean);
+  const verifyClient = origins.length ? ({ origin }) => !origin || origins.includes(origin) : undefined;
+  const wss = new WebSocketServer({ server: http, maxPayload: 4096, verifyClient });
   wss.on('connection', (ws) => {
     online++;
     const id = randomUUID().slice(0, 8);

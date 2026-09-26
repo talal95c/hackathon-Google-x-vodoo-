@@ -1,6 +1,8 @@
 import { ITEMS, EMOTES } from '../race/rules.js';
 import { ROYALE } from '../kernel/config.js';
 
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
 // HUD de la Course Royale : place, chrono d'élimination, combo, objet, classement, fil d'actu.
 const $ = (id) => document.getElementById(id);
 const hex = (n) => `#${(n ?? 0x888888).toString(16).padStart(6, '0')}`;
@@ -47,7 +49,7 @@ export class RaceHud {
   }
 
   #push(m) {
-    const n = (id) => `<b style="color:${hex(this.race.colorOf(id))}">${this.race.nameOf(id)}</b>`;
+    const n = (id) => `<b style="color:${hex(this.race.colorOf(id))}">${esc(this.race.nameOf(id))}</b>`;
     const txt = {
       ringout: () => `${n(m.a)} a éjecté ${n(m.b)} 💥`,
       hit: () => `${n(m.a)} ${ITEMS[m.item]?.icon ?? ''} ${n(m.b)}`,
@@ -89,7 +91,7 @@ export class RaceHud {
     el.rItem.classList.toggle('ready', !!p.item && p.itemRoll <= 0);
     el.rBoard.innerHTML = [...p.standings, ...[...p.rivals.values()].filter((r) => !r.alive).map((r) => r.id)].map((id, i) => {
       const alive = p.standings.includes(id);
-      return `<div class="${id === p.id ? 'me' : ''} ${alive ? '' : 'out'}"><i style="background:${hex(this.race.colorOf(id))}"></i>${alive ? i + 1 : '✕'} ${this.race.nameOf(id)}</div>`;
+      return `<div class="${id === p.id ? 'me' : ''} ${alive ? '' : 'out'}"><i style="background:${hex(this.race.colorOf(id))}"></i>${alive ? i + 1 : '✕'} ${esc(this.race.nameOf(id))}</div>`;
     }).join('');
     this.#alertT = Math.max(0, this.#alertT - dt);
     el.rAlert.classList.toggle('hidden', this.#alertT <= 0);

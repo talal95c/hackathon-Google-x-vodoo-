@@ -50,6 +50,7 @@ export class CameraRig extends View {
     if (cam.view?.enabled) cam.clearViewOffset();
     const spec = g.state === 'over' ? this.ctx.race?.spectate?.state : null;
     const f = g.state === 'playing' ? r : spec ? this.#follow(spec) : null;
+    if (spec && f) g.track.update(f.z); // la route continue de se générer devant le coureur suivi
     if (f) {
       const flight = g.worldJump ? Math.sin(g.worldJump.progress * Math.PI) : 0;
       const back = 8 + speed * 0.04 + flight * 5;

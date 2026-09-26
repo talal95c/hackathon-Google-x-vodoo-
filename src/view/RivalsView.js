@@ -64,12 +64,12 @@ export class RivalsView extends View {
       });
     }
     this.rivals.clear();
-    for (const sh of this.shots) { this.scene.remove(sh.m); sh.m.geometry.dispose(); }
+    for (const sh of this.shots) { this.scene.remove(sh.m); sh.m.geometry.dispose(); sh.m.material.dispose(); }
     this.shots = [];
   }
 
   // Position monde d'un coureur (null si inconnu)
-  world(id, out = new THREE.Vector3()) {
+  posOf(id, out = new THREE.Vector3()) {
     const s = this.race.posOf(id);
     if (!s) return null;
     const f = this.track.frame(s.z, this.#f);
@@ -79,7 +79,7 @@ export class RivalsView extends View {
   #shot({ kind, from, target, self }) {
     if (self || !target || !FX_COLORS[kind]) return;
     const m = new THREE.Mesh(kind === 'virus' ? new THREE.IcosahedronGeometry(0.9, 0) : new THREE.BoxGeometry(0.7, 0.7, 0.7), new THREE.MeshBasicMaterial({ color: FX_COLORS[kind] }));
-    const a = this.world(from);
+    const a = this.posOf(from);
     if (!a) return;
     m.position.copy(a);
     this.scene.add(m);
@@ -118,11 +118,11 @@ export class RivalsView extends View {
     this.shots = this.shots.filter((sh) => {
       sh.t += dt;
       const k = Math.min(1, sh.t / sh.life);
-      const b = this.world(sh.target, tmp);
+      const b = this.posOf(sh.target, tmp);
       if (b) { sh.m.position.lerp(b, Math.min(1, dt / Math.max(0.05, sh.life - sh.t + dt))); sh.m.position.y = b.y + Math.sin(k * Math.PI) * sh.arc; }
       sh.m.rotation.set(time * 6, time * 5, 0);
       if (k < 1) return true;
-      this.scene.remove(sh.m); sh.m.geometry.dispose();
+      this.scene.remove(sh.m); sh.m.geometry.dispose(); sh.m.material.dispose();
       return false;
     });
   }

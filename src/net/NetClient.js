@@ -22,7 +22,11 @@ export class NetClient {
       const timer = setTimeout(() => { reject(new Error('timeout')); ws.close(); }, 6000);
       ws.onopen = () => { this.send({ t: 'hello', v: PROTOCOL_VERSION, ...hello }); this.#ping(); };
       ws.onerror = () => { clearTimeout(timer); this.status = 'offline'; reject(new Error('unreachable')); };
-      ws.onclose = () => { this.status = 'offline'; clearInterval(this.pingTimer); this.#emit({ t: 'disconnected' }); };
+      ws.onclose = () => {
+        clearTimeout(timer); clearInterval(this.pingTimer);
+        if (this.status === 'connecting') reject(new Error('closed'));
+        this.status = 'offline'; this.#emit({ t: 'disconnected' });
+      };
       ws.onmessage = (ev) => {
         let msg;
         try { msg = JSON.parse(ev.data); } catch { return; }

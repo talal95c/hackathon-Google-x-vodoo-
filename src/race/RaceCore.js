@@ -1,4 +1,4 @@
-import { ROYALE } from '../kernel/config.js';
+import { ROYALE, DIRECTOR } from '../kernel/config.js';
 import { Random } from '../kernel/Random.js';
 import { eliminationSchedule, ITEMS, rollItem, comboEffect, COMBO_GAIN, coinReward, trophyDelta, PLAYER_COLORS } from './rules.js';
 
@@ -27,6 +27,7 @@ export class RaceCore {
     this.lastSnaps = -1; this.lastStandings = -1;
     this.nextElim = 0;
     this.trapId = 0;
+    this.traps = new Map();   // id → { owner, s } (pièges posés, pour valider trapHit)
   }
 
   get raceTime() { return (this.now() - this.startAt) / 1000; }
@@ -39,7 +40,7 @@ export class RaceCore {
     const p = {
       id, name: String(name).slice(0, 16), skin, bot, elo, trophies, color,
       alive: true, connected: true, place: 0, snap: null, hist: [],
-      item: null, lastBox: -9, lastShove: -9, lastEmote: -9, lastBonus: {}, seen: {},
+      item: null, lastBox: -9, lastShove: -9, lastEmote: -9, lastBonus: {}, seen: {}, due: [], boxRows: new Set(),
       combo: { level: 0, until: 0, best: 0 }, shovedBy: null, suspicious: 0,
       stats: { overtakes: 0, shoves: 0, ringOuts: 0, hits: 0, points: 0, falls: 0 },
     };
@@ -80,6 +81,7 @@ export class RaceCore {
       if (t < h.at) continue;
       this.pending.splice(i, 1);
       const target = this.players.get(h.target);
+      if (target?.alive) target.due.push({ from: h.from, kind: h.kind, t });
       if (target?.alive) this.send(target.id, { t: 'hit', from: h.from, kind: h.kind, dodgeable: h.kind === 'laser' || h.kind === 'popup', slow: h.kind === 'lag' ? 0.55 : 1 });
     }
 
@@ -124,7 +126,10 @@ export class RaceCore {
     switch (msg.t) {
       case 'snap': return this.#snap(p, msg, t);
       case 'box': {
-        if (p.item || t - p.lastBox < 0.4) return;
+        if (p.item || t - p.lastBox < 0.4 || !p.snap) return;
+        const row = Math.round(p.snap.z / DIRECTOR.itemRowEvery);
+        if (row * DIRECTOR.itemRowEvery < DIRECTOR.firstSpawn || Math.abs(p.snap.z - row * DIRECTOR.itemRowEvery) > 15 || p.boxRows.has(row)) return;
+        p.boxRows.add(row);
         p.lastBox = t;
         return this.#grant(p, rollItem(this.placeOf(p), this.alive.length, () => this.rng.next()), 1);
       }
@@ -143,6 +148,9 @@ export class RaceCore {
         return;
       }
       case 'hitres': {
+        const i = p.due.findIndex((d) => d.from === msg.from && d.kind === msg.kind && t - d.t < 3);
+        if (i < 0) return;
+        p.due.splice(i, 1);
         if (msg.res !== 'hit') return;
         const from = this.players.get(msg.from);
         this.#breakCombo(p, 'hit');
@@ -154,6 +162,9 @@ export class RaceCore {
         return;
       }
       case 'trapHit': {
+        const trap = [...this.traps].find(([, tr]) => tr.owner === msg.owner && p.snap && Math.abs(tr.s - p.snap.z) < 20);
+        if (!trap) return;
+        this.traps.delete(trap[0]);
         const owner = this.players.get(msg.owner);
         this.#breakCombo(p, 'hit');
         if (owner && owner !== p) {
@@ -253,7 +264,8 @@ export class RaceCore {
     };
     switch (def.target) {
       case 'behind':
-        return this.send(null, { t: 'trap', id: ++this.trapId, owner: p.id, s: me.z - 3, d: me.x });
+        this.traps.set(++this.trapId, { owner: p.id, s: me.z - 3 });
+        return this.send(null, { t: 'trap', id: this.trapId, owner: p.id, s: me.z - 3, d: me.x });
       case 'ahead': {
         const q = others.filter((q) => q.snap.z > me.z && q.snap.z - me.z < def.range && Math.abs(q.snap.x - me.x) < 2.5).sort((a, b) => a.snap.z - b.snap.z)[0];
         return q ? fire(q, (q.snap.z - me.z) / def.speed) : this.send(null, { t: 'fx', kind: item, from: p.id, target: null });

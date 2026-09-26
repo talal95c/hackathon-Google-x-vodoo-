@@ -20,8 +20,7 @@ export class JsonFileStore extends MemoryStore {
   }
   async put(key, profile) {
     await super.put(key, profile);
-    clearTimeout(this.timer);
-    this.timer = setTimeout(() => this.flush(), 500);
+    this.flush(); // écrit avant que les récompenses soient annoncées au joueur
   }
   flush() {
     mkdirSync(dirname(this.path), { recursive: true });
