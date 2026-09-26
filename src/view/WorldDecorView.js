@@ -85,12 +85,29 @@ export class WorldDecorView extends View {
     const ground = [], edge = [];
     const pt = (i, d, y) => [track.X[i] + Math.cos(track.TH[i]) * d, track.Y[i] + y, track.Z[i] - Math.sin(track.TH[i]) * d];
     const quad = (arr, a, b, c, d) => arr.push(...a, ...b, ...c, ...b, ...d, ...c);
+    const width = chunk.zone === 4 ? 33 : 63;
+    // Une bande de sol s'arrête avant de recroiser la route plus loin (virage en U) :
+    // sinon, si la route a descendu entre-temps, le sol dépasserait au-dessus de la chaussée.
+    const reach = (i, side) => {
+      const nx = Math.cos(track.TH[i]) * side, nz = -Math.sin(track.TH[i]) * side;
+      const j0 = Math.max(0, i - 160), j1 = Math.min(track.X.length - 1, i + 160);
+      let d = track.W[i] / 2 + .5;
+      for (; d + 3 < width; d += 3) {
+        const x = track.X[i] + nx * (d + 3), z = track.Z[i] + nz * (d + 3);
+        for (let j = j0; j <= j1; j += 2) {
+          if (Math.abs(j - i) <= 4 || track.Y[j] > track.Y[i] - .1) continue;
+          if (Math.hypot(track.X[j] - x, track.Z[j] - z) < track.W[j] / 2 + 3) return d;
+        }
+      }
+      return width;
+    };
+    const reaches = { '-1': new Map(), 1: new Map() };
+    const far = (i, side) => { const m = reaches[side]; if (!m.has(i)) m.set(i, reach(i, side)); return m.get(i); };
     for (let i = chunk.i0; i < chunk.i1; i++) {
       if (isWorldSafe((i + .5) * TRACK.step)) continue;
       for (const side of [-1, 1]) {
         const a = side * (track.W[i] / 2 + .5), b = side * (track.W[i + 1] / 2 + .5);
-        const width = chunk.zone === 4 ? 33 : 63;
-        quad(ground, pt(i, a, -.4), pt(i, side * width, -.4), pt(i + 1, b, -.4), pt(i + 1, side * width, -.4));
+        quad(ground, pt(i, a, -.4), pt(i, side * far(i, side), -.4), pt(i + 1, b, -.4), pt(i + 1, side * far(i + 1, side), -.4));
         quad(edge, pt(i, a, -.4), pt(i, a, -3.6), pt(i + 1, b, -.4), pt(i + 1, b, -3.6));
       }
     }
@@ -100,14 +117,30 @@ export class WorldDecorView extends View {
       buckets.set(key, [geometry]);
     }
 
+    // Un décor occupe jusqu'à ±16 m de large et ±10 m de long autour de son ancre (dx > 0 =
+    // vers l'extérieur) : aucun point de cette emprise ne doit tomber sur un autre tronçon de
+    // route (virage en U, épingle), sinon le décor dépasserait sur la chaussée.
+    const roadFree = (f, i, x, side, dxs = [-16, 0, 16], dzs = [-10, 0, 10]) => {
+      const j0 = Math.max(0, i - 160), j1 = Math.min(track.X.length - 1, i + 160), fx = Math.sin(f.th), fz = Math.cos(f.th);
+      for (const dx of dxs) for (const dz of dzs) {
+        const px = f.x + f.lx * (x + side * dx) + fx * dz, pz = f.z + f.lz * (x + side * dx) + fz * dz;
+        for (let j = j0; j <= j1; j += 2) {
+          if (Math.abs(j - i) <= 10) continue;
+          if (Math.hypot(track.X[j] - px, track.Z[j] - pz) < track.W[j] / 2 + 2) return false;
+        }
+      }
+      return true;
+    };
     for (let j = 0; j < 5; j++) {
       const s = chunk.s0 + 12 + j * 23;
       if (isWorldSafe(s)) continue;
       const f = track.frame(s, {}), seed = (chunk.index + track.salt) * 57 + j * 17; // track.salt : décor différent à chaque partie
+      // largeur max de la route à ±14 m : un élargissement en virage ne doit pas passer sous le décor
+      const i = Math.round(s / TRACK.step), wide = Math.max(...track.W.slice(Math.max(0, i - 7), i + 8));
       for (const side of [-1, 1]) {
-        const n = seed + (side > 0 ? 19 : 0), x = side * (f.w / 2 + 15 + noise(n) * 10);
+        const n = seed + (side > 0 ? 19 : 0), x = side * (wide / 2 + 15 + noise(n) * 10);
         const wx = f.x + f.lx * x, wz = f.z + f.lz * x;
-        if (track.clearance(wx, wz, s) < f.w / 2 + 13) continue;
+        if (track.clearance(wx, wz, s) < f.w / 2 + 13 || !roadFree(f, i, x, side)) continue;
         const h = 8 + noise(n + 1) * 13;
         const variant = (j + chunk.index + track.salt + (side > 0 ? 1 : 0)) % 3;
         if (chunk.zone === 0) {
@@ -140,7 +173,7 @@ export class WorldDecorView extends View {
             sign(f, x, 11.5, -1, 9, 'NO SIGNAL');
             for (let k = 0; k < 4; k++) rock(k % 2 ? 'base' : 'white', f, x + (k - 1.5) * 3, -2.6, -5, 2.8, 2 + k, 2.4);
           }
-          if (j % 2 === 0) rock('base', f, x + side * 18, 1, 7, 8, h * 1.2, 11);
+          if (j % 2 === 0 && roadFree(f, i, x, side, [10, 18, 27], [-18, -5, 7, 18])) rock('base', f, x + side * 18, 1, 7, 8, h * 1.2, 11);
           if (j % 2 === 1) {
             const cx = x - side * 7;
             box('dark', f, cx, -.6, -5, .85, 5.7, .85);
@@ -236,7 +269,7 @@ export class WorldDecorView extends View {
           }
         } else {
           // The road reaches floating cloud banks and luminous data centres.
-          for (let k = 0; k < 5; k++) rock('white', f, x + (k - 2) * 4, -3 + Math.sin(k * 2) * 1.5, Math.cos(k) * 2, 5.5, 4, 5, 1);
+          for (let k = 0; k < 5; k++) rock('white', f, x + side * (k - 1.5) * 4, -3 + Math.sin(k * 2) * 1.5, Math.cos(k) * 2, 5.5, 4, 5, 1);
           for (let k = 0; k < (variant === 0 ? 3 : 1); k++) {
             const cx = x + (k - 1) * 4;
             box('white', f, cx, 3.7 + k, 1, 3.3, 12 + k * 2, 4);

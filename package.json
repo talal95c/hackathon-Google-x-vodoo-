@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "zip": "vite build && node scripts/check-secrets.mjs && cd dist && rm -f ../dino-race-fight-club-itch.zip && zip -qr ../dino-race-fight-club-itch.zip .",
     "test": "node --test test/*.test.js",
-    "share": "vite build && node scripts/check-secrets.mjs && (vite preview --port 4180 --strictPort & npx -y cloudflared tunnel --url http://localhost:4180)"
+    "share": "vite build && node scripts/check-secrets.mjs && (vite preview --port 4180 --strictPort & npx -y cloudflared tunnel --url http://localhost:4180)",
+    "voices": "node scripts/test-voices.mjs",
+    "voices:gen": "node scripts/gen-voices.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.24.0",

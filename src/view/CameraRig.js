@@ -12,7 +12,7 @@ export class CameraRig extends View {
   combatKick = 0;
   snap = true;
   #fc = {}; #fl = {}; #t = new THREE.Vector3(); #l = new THREE.Vector3();
-  #intro = 0; #from = new THREE.Vector3(); #fromLook = new THREE.Vector3(); #fromFov = 44; #fromOffset = 0; #menuLook = new THREE.Vector3();
+  #intro = 0; #from = new THREE.Vector3(); #fromLook = new THREE.Vector3(); #fromFov = 44; #fromOffset = 0; #fromOffsetY = 0; #menuLook = new THREE.Vector3();
 
   constructor(ctx) {
     super(ctx);
@@ -22,7 +22,7 @@ export class CameraRig extends View {
       if (this.camera.view?.enabled) { // on part du plan du menu : la caméra glisse jusque derrière le dino
         this.#intro = 1;
         this.#from.copy(this.camera.position); this.#fromLook.copy(this.#menuLook);
-        this.#fromFov = this.camera.fov; this.#fromOffset = this.camera.view.offsetX;
+        this.#fromFov = this.camera.fov; this.#fromOffset = this.camera.view.offsetX; this.#fromOffsetY = this.camera.view.offsetY;
       }
       this.snap = true; this.combatKick = 0; this.shake = 0;
     });
@@ -97,7 +97,7 @@ export class CameraRig extends View {
     cam.position.lerpVectors(this.#from, cam.position, e);
     cam.lookAt(this.#l.lerpVectors(this.#fromLook, this.look, e));
     cam.fov = this.#fromFov + (cam.fov - this.#fromFov) * e;
-    if (this.#intro > 0) cam.setViewOffset(innerWidth, innerHeight, this.#fromOffset * (1 - e), 0, innerWidth, innerHeight);
+    if (this.#intro > 0) cam.setViewOffset(innerWidth, innerHeight, this.#fromOffset * (1 - e), this.#fromOffsetY * (1 - e), innerWidth, innerHeight);
     else cam.clearViewOffset();
   }
 }

@@ -43,6 +43,7 @@ export function boot(el = document.getElementById('boot')) {
     body.classList.add('booted');
     window.removeEventListener('keydown', skip, true);
     window.removeEventListener('pointerdown', skip, true);
+    window.removeEventListener('touchstart', skip, true);
   };
 
   let impact = null;
@@ -157,6 +158,7 @@ export function boot(el = document.getElementById('boot')) {
 
   window.addEventListener('keydown', skip, true);
   window.addEventListener('pointerdown', skip, true);
+  window.addEventListener('touchstart', skip, { capture: true, passive: false });
   if (reduce) { setTimeout(finish, 600); return; }
   setTimeout(finish, MAX_MS);
   el.classList.add('run');
