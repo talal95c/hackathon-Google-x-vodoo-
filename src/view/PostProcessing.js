@@ -22,18 +22,20 @@ class SceneAO extends GTAOPass {
 }
 
 export class PostProcessing {
-  constructor(renderer, scene, camera) {
+  constructor(renderer, scene, camera, mobile = false) {
+    this.renderer = renderer;
+    this.scene = scene;
+    this.camera = camera;
+    if (mobile) return;
     const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
     target.samples = Math.min(4, renderer.capabilities.maxSamples);
     this.composer = new EffectComposer(renderer, target);
     this.composer.addPass(new RenderPass(scene, camera));
-    if (!window.matchMedia('(pointer: coarse)').matches) {
-      this.ao = new SceneAO(scene, camera, 512, 512);
-      this.ao.updateGtaoMaterial({ radius: 2.1, thickness: 1.5, distanceExponent: 1.6, scale: 1, samples: 8 });
-      this.ao.updatePdMaterial({ samples: 8, radius: 4 });
-      this.ao.blendIntensity = .6;
-      this.composer.addPass(this.ao);
-    }
+    this.ao = new SceneAO(scene, camera, 512, 512);
+    this.ao.updateGtaoMaterial({ radius: 2.1, thickness: 1.5, distanceExponent: 1.6, scale: 1, samples: 8 });
+    this.ao.updatePdMaterial({ samples: 8, radius: 4 });
+    this.ao.blendIntensity = .6;
+    this.composer.addPass(this.ao);
     this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), .30, .42, 1.8);
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
@@ -58,12 +60,16 @@ export class PostProcessing {
     });
     this.composer.addPass(this.grade);
   }
-  resize(w,h,dpr){this.composer.setPixelRatio(dpr);this.composer.setSize(w,h);}
+  resize(w,h,dpr){
+    if (!this.composer) return;
+    this.composer.setPixelRatio(dpr);this.composer.setSize(w,h);
+  }
   render(pulse=0,rush=0){
+    if (!this.composer) { this.renderer.render(this.scene, this.camera); return; }
     this.bloom.strength=.30+pulse*.07+rush*.10;
     this.grade.uniforms.time.value=performance.now()/1000;
     this.grade.uniforms.rush.value=rush;
     this.composer.render();
   }
-  dispose(){this.composer.passes.forEach(pass=>pass.dispose?.());this.composer.dispose();}
+  dispose(){if (this.composer) {this.composer.passes.forEach(pass=>pass.dispose?.());this.composer.dispose();}}
 }

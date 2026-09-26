@@ -52,8 +52,8 @@ export class TrackView extends View {
       m.userData.trackSurface = true;
       group.add(m);
     };
-    add(top, new THREE.MeshStandardMaterial({ color: new THREE.Color(pal.road).multiplyScalar(.72), roughness: .62, metalness: .06, side: THREE.DoubleSide }), true);
-    add(walls, new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.road).multiplyScalar(0.72), side: THREE.DoubleSide }));
+    add(top, new THREE.MeshStandardMaterial({ color: pal.road, roughness: .82, side: THREE.DoubleSide }), true);
+    add(walls, new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.road).multiplyScalar(.78), side: THREE.DoubleSide }));
     const edgeMat = new THREE.MeshBasicMaterial({ color: pal.edge, side: THREE.DoubleSide });
     add(edges, edgeMat);
     this.ctx.beatMaterials?.add(edgeMat); // pulse sur les temps (BeatFx)

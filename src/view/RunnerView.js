@@ -17,9 +17,17 @@ export class RunnerView extends View {
     this.focus = ctx.focus;
     this.root.rotation.order = 'YXZ';
     this.scene.add(this.root);
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 64;
+    const context = canvas.getContext('2d');
+    const gradient = context.createRadialGradient(32, 32, 3, 32, 32, 31);
+    gradient.addColorStop(0, '#00000077');
+    gradient.addColorStop(1, '#00000000');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 64, 64);
     this.blob = new THREE.Mesh(
-      new THREE.CircleGeometry(1.1, 16).rotateX(-Math.PI / 2),
-      new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.18, depthWrite: false }),
+      new THREE.PlaneGeometry(3.2, 3.2).rotateX(-Math.PI / 2),
+      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true, depthWrite: false }),
     );
     this.blob.rotation.order = 'YXZ';
     this.scene.add(this.blob);

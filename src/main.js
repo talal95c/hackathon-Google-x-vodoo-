@@ -46,7 +46,7 @@ const views = [
   new BeatFx(ctx),      // en premier : fournit ctx.fx et ctx.beatMaterials
   new TrackView(ctx),
   new WorldDecorView(ctx),
-  new SideLightShow(ctx),
+  ...(!world.mobile ? [new SideLightShow(ctx)] : []),
   new EntityViews(ctx),
   new RunnerView(ctx),
   new ChaserView(ctx),

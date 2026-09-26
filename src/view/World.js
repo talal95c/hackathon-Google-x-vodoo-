@@ -7,8 +7,9 @@ import { PostProcessing } from './PostProcessing.js';
 // Les couleurs suivent la palette de la zone courante (transition douce).
 export class World {
   constructor(container = document.body) {
-    const r = this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
-    this.pixelRatio = Math.min(window.devicePixelRatio, window.matchMedia('(pointer: coarse)').matches ? 1.25 : 1.5);
+    this.mobile = window.matchMedia('(pointer: coarse)').matches;
+    const r = this.renderer = new THREE.WebGLRenderer({ antialias: this.mobile, powerPreference: 'high-performance' });
+    this.pixelRatio = this.#pixelRatio();
     r.setPixelRatio(this.pixelRatio);
     r.toneMapping = THREE.ACESFilmicToneMapping;
     r.toneMappingExposure = .86;
@@ -38,10 +39,12 @@ export class World {
     this.scene.environment = this.environmentTarget.texture;
     this.scene.environmentIntensity = .22;
     room.dispose(); pmrem.dispose();
-    this.post = new PostProcessing(r, this.scene, this.camera);
+    this.post = new PostProcessing(r, this.scene, this.camera, this.mobile);
     this.post.resize(window.innerWidth, window.innerHeight, this.pixelRatio);
 
     window.addEventListener('resize', () => {
+      this.pixelRatio = this.#pixelRatio();
+      r.setPixelRatio(this.pixelRatio);
       this.camera.aspect = window.innerWidth / window.innerHeight;
       this.camera.updateProjectionMatrix();
       r.setSize(window.innerWidth, window.innerHeight);
@@ -71,7 +74,8 @@ export class World {
     this.cloudMaterial = mat;
     const geo = new THREE.IcosahedronGeometry(1, 1);
     this.clouds = [];
-    for (let i = 0; i < 14; i++) {
+    const count = this.mobile ? 8 : 14;
+    for (let i = 0; i < count; i++) {
       const g = new THREE.Group();
       const n = 4 + Math.floor(Math.random() * 4);
       for (let k = 0; k < n; k++) {
@@ -81,7 +85,7 @@ export class World {
         m.position.set((k - n / 2) * 7 + Math.random() * 3, Math.random() * 3 - (k === 0 || k === n - 1) * 3, Math.random() * 4);
         g.add(m);
       }
-      this.clouds.push({ g, a: (i / 14) * Math.PI * 2 + Math.random() * 0.3, r: 170 + Math.random() * 110, y: 35 + Math.random() * 45 });
+      this.clouds.push({ g, a: (i / count) * Math.PI * 2 + Math.random() * 0.3, r: 170 + Math.random() * 110, y: 35 + Math.random() * 45 });
       this.scene.add(g);
     }
   }
@@ -90,7 +94,7 @@ export class World {
     this.scene.add(new THREE.HemisphereLight(0xb5d7f5, 0x7c7078, .7));
     const sun = this.sun = new THREE.DirectionalLight(this.colors.sun, 1.85);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.mapSize.set(this.mobile ? 1024 : 2048, this.mobile ? 1024 : 2048);
     sun.shadow.bias = -0.0005;
     Object.assign(sun.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 120 });
     this.scene.add(sun, sun.target);
@@ -121,6 +125,13 @@ export class World {
   }
 
   render(pulse = 0, rush = 0) { this.post.render(pulse, rush); }
+
+  #pixelRatio() {
+    const dpr = window.devicePixelRatio || 1;
+    return this.mobile
+      ? Math.min(dpr, 1.5, Math.sqrt(650000 / (window.innerWidth * window.innerHeight)))
+      : Math.min(dpr, 1.5);
+  }
 }
 
 const tmp = new THREE.Color();

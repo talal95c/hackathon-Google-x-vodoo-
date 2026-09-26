@@ -5,7 +5,7 @@
 export const ZONES = [
   {
     id: 'offline', name: 'DÉSERT HORS LIGNE', subtitle: 'Quitte la page sans connexion.',
-    palette: { sky: 0x9fbdcb, skyTop: 0x476d97, cloud: 0xdce9ee, sun: 0xffe6bd, road: 0xd4d8d9, edge: 0x314c63, dash: 0xe8edf0, text: '#535353' },
+    palette: { sky: 0xe7f5ec, skyTop: 0x8ccfda, cloud: 0xfffaf0, sun: 0xffe7bb, road: 0xffe7b5, edge: 0x38bca8, dash: 0xffffff, text: '#183d42' },
     decor: 'clouds',
     spawns: [
       { type: 'cactus', weight: 3 },

@@ -8,7 +8,7 @@ Models.register('reggaeDino', () => {
   root.add(body);
   const geometries = new Set(), materials = new Set();
   const material = (color, extra = {}) => {
-    const m = new THREE.MeshStandardMaterial({ color, roughness: 0.82, flatShading: true, ...extra });
+    const m = new THREE.MeshStandardMaterial({ color, roughness: 0.82, ...extra });
     materials.add(m); return m;
   };
   const mint = material(0x24be9f), lightMint = material(0x64dfab);
@@ -17,11 +17,11 @@ Models.register('reggaeDino', () => {
   const ink = material(0x193d47), lens = material(0x173044, { roughness: 0.25, metalness: 0.3 });
   const glow = material(0xffc637, { emissive: 0xffb52e, emissiveIntensity: 0.6 });
   const geo = (g) => { geometries.add(g); return g; };
-  const facet = geo(new THREE.IcosahedronGeometry(1, 1));
+  const facet = geo(new THREE.SphereGeometry(1, 16, 12));
   const rounded = geo(new RoundedBoxGeometry(1, 1, 1, 1, 0.16));
-  const cylinder = geo(new THREE.CylinderGeometry(1, 1, 1, 10));
+  const cylinder = geo(new THREE.CylinderGeometry(1, 1, 1, 12));
   const spike = geo(new THREE.ConeGeometry(1, 1, 4));
-  const sphere = geo(new THREE.IcosahedronGeometry(1, 0));
+  const sphere = geo(new THREE.SphereGeometry(1, 12, 8));
   function part(parent, geometry, mat, scale, position) {
     const m = new THREE.Mesh(geometry, mat);
     m.scale.set(...scale); m.position.set(...position);

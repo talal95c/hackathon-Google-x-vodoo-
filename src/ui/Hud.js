@@ -14,11 +14,17 @@ export class Hud {
     this.game = game;
     this.profile = profile;
     this.el = Object.fromEntries(['hud', 'score', 'coins', 'lives', 'best', 'speed', 'dangerTxt', 'dangerFill', 'boss', 'bossName', 'bossFill',
-      'worldName', 'worldProgress', 'buffs', 'driftFill', 'driftLabel', 'vignette', 'flash', 'banner', 'music'].map((id) => [id, $(id)]));
+      'worldName', 'worldProgress', 'buffs', 'touchHint', 'driftFill', 'driftLabel', 'vignette', 'flash', 'banner', 'music'].map((id) => [id, $(id)]));
     this.setBest(profile.data.best);
 
     const on = (t, fn) => game.on(t, fn);
-    on('game:start', () => { this.#lives(false); this.el.boss.classList.add('hidden'); });
+    on('game:start', () => {
+      this.#lives(false);
+      this.el.boss.classList.add('hidden');
+      this.el.touchHint.classList.remove('active');
+      void this.el.touchHint.offsetWidth;
+      this.el.touchHint.classList.add('active');
+    });
     on('tempo', ({ level }) => { if (level > 0) this.banner(`VITESSE ×${game.tempo.ratio.toFixed(1)}`, 1.4); });
     on('zone', ({ number, zone }) => { this.banner(`MONDE ${Math.min(number + 1, 5)} — ${zone.name}`); this.el.hud.style.color = zone.palette.text; this.el.banner.style.color = zone.palette.text; });
     on('world:jump', ({ to }) => this.banner(`ÉVASION → ${to.name}`, 1.8));

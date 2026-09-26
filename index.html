@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Dino Escape</title>
   <link rel="stylesheet" href="/src/ui/style.css" />
 </head>
@@ -21,6 +21,7 @@
     <div id="journey"><span id="worldName">01 / 05 · DÉSERT HORS LIGNE</span><div class="bar"><div class="fill" id="worldProgress"></div></div></div>
     <div id="boss" class="hidden"><div id="bossName">BOSS</div><div class="bar"><div class="fill" id="bossFill"></div></div></div>
     <div id="buffs"></div>
+    <div id="touchHint">Maintiens gauche / droite · balaie ↑ pour sauter · 2 doigts pour glisser</div>
     <div class="row" id="bottom">
       <div id="speed">0 <small>km/h</small></div>
       <div id="driftbox"><div class="label" id="driftLabel">GLISSADE</div><div class="bar"><div class="fill" id="driftFill"></div></div></div>
@@ -33,22 +34,22 @@
 
   <!-- Écrans (pilotés par src/ui/Menus.js) -->
   <div class="screen" id="start">
-    <div class="menu-brand"><span class="brand-icon">d.</span><span>DINO ESCAPE</span><span class="edition">ERR_INTERNET_DISCONNECTED</span></div>
+    <div class="menu-brand"><span class="brand-icon">d.</span><span>DINO ESCAPE</span><span class="edition">05 MONDES · UNE SEULE FUITE</span></div>
     <div class="hero-copy">
-      <p class="eyebrow"><span class="live-dot"></span> NO CONNECTION. JUST GOOD VIBES.</p>
-      <h1>DINO<br /><span>ESCAPE.</span></h1>
-      <p class="hero-description">Suis le rythme.<br /> Sème le curseur.</p>
-      <p class="hero-detail">Du désert hors ligne jusqu’au cloud.<br />Traverse les cinq mondes pour semer le curseur.</p>
+      <p class="eyebrow"><span class="live-dot"></span> PAS DE RÉSEAU. PAS DE LIMITES.</p>
+      <h1>DINO<br /><span>ESCAPE</span><span class="title-dot">.</span></h1>
+      <p class="hero-description">Cours. Glisse. Échappe au curseur.</p>
+      <p class="hero-detail">Cinq mondes. Un dino. À toi de jouer.</p>
       <div class="buttons hero-actions">
-        <button class="primary" data-action="play"><span>▶</span> Lancer la session <span>↗</span></button>
+        <button class="primary" data-action="play">Jouer <span aria-hidden="true">↗</span></button>
         <button class="reggae-button" data-action="reggae" aria-label="Équiper le dino reggae"><span class="reggae-stripes"></span> Dino reggae</button>
       </div>
       <p class="small" id="wallet"></p>
     </div>
     <div class="hero-tag"><span class="tag-dot"></span><div><b id="heroName">RIDDIM</b><span id="heroTheme">REGGAE DINO · VOL. 01</span></div><span class="equalizer"><i></i><i></i><i></i><i></i></span></div>
     <div class="menu-footer">
-      <div class="controls"><span><b>← →</b> tourner</span><span><b>ESPACE</b> sauter</span><span><b>SHIFT</b> glisser</span></div>
-      <div class="buttons"><button data-action="shop">Collection & boutique</button><button data-action="music">♫ Musique</button></div>
+      <div class="controls"><span class="desktop-controls"><b>← →</b> tourner &nbsp; <b>ESPACE</b> sauter &nbsp; <b>SHIFT</b> glisser</span><span class="touch-controls">Maintiens un côté pour tourner · glisse vers le haut pour sauter · 2 doigts pour glisser</span></div>
+      <div class="buttons"><button data-action="shop">Collection</button><button data-action="music">♫ Musique</button></div>
     </div>
   </div>
 

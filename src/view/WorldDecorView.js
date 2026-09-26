@@ -17,7 +17,7 @@ export class WorldDecorView extends View {
   constructor(ctx) {
     super(ctx);
     const colors = [
-      [0x8fa6b5, 0xe2e8e7, 0x344f60, 0x91a7b3, 0x64bbdf, 0x129cff, 0xffa338],
+      [0xd9b998, 0xffe9cd, 0x4b6871, 0xe9cbab, 0xa5e0d8, 0x47c8b4, 0xffbf70],
       [0xdce5ed, 0xffffff, 0x364358, 0x9eb7c9, 0x9ccfec, 0x268df3, 0xffbd47],
       [0x79a6cc, 0xe7f5ff, 0x214b71, 0x527da6, 0x2496f2, 0x4ec7ff, 0xffd058],
       [0x175445, 0x829599, 0x132728, 0x216755, 0x203a3f, 0x35edb5, 0xe6b75a],
@@ -99,7 +99,7 @@ export class WorldDecorView extends View {
       buckets.set(key, [geometry]);
     }
 
-    for (let j = 0; j < 5; j++) {
+    for (let j = 0; j < 5; j += this.ctx.world.mobile ? 2 : 1) {
       const s = chunk.s0 + 12 + j * 23;
       if (isWorldSafe(s)) continue;
       const f = track.frame(s, {}), seed = chunk.index * 57 + j * 17;
@@ -288,7 +288,7 @@ export class WorldDecorView extends View {
       const merged = mergeGeometries(normalized);
       new Set([...geometries, ...normalized]).forEach(g => g.dispose());
       const mesh = new THREE.Mesh(merged, this.palettes[chunk.zone][key]);
-      mesh.castShadow = !['neon', 'gold', 'ground'].includes(key);
+      mesh.castShadow = !this.ctx.world.mobile && !['neon', 'gold', 'ground'].includes(key);
       mesh.receiveShadow = !['neon', 'gold'].includes(key); group.add(mesh);
     }
     group.userData.fans = fans;
