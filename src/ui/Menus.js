@@ -4,15 +4,15 @@ import { skinPortraits } from './SkinPortraits.js';
 import './skins.css';
 
 // Écrans (titre, fin de partie) et panneaux (boutique, musique Lyria).
-// Ne connaît le jeu qu'à travers des callbacks : onPlay().
+// Ne connaît le jeu qu'à travers des callbacks : onPlay(), onBack() (retour depuis l'écran de fin).
 const $ = (id) => document.getElementById(id);
 const hex = (n) => `#${n.toString(16).padStart(6, '0')}`;
 
 export class Menus {
   tab = 'skin';
 
-  constructor({ game, profile, shop, lyria, music, onPlay }) {
-    Object.assign(this, { game, profile, shop, lyria, music, onPlay });
+  constructor({ game, profile, shop, lyria, music, onPlay, onBack }) {
+    Object.assign(this, { game, profile, shop, lyria, music, onPlay, onBack });
     this.screens = { start: $('start'), over: $('over') };
     this.panels = { shop: $('shop'), music: $('musicPanel') };
 
@@ -21,7 +21,7 @@ export class Menus {
       if (!b) return;
       const a = b.dataset.action;
       if (a === 'play') this.onPlay();
-      else if (a === 'reggae') { profile.selectSkin('reggae'); game.emit('skin:preview', { skin: 'reggae' }); this.refresh(); }
+      else if (a === 'back') this.onBack?.();
       else if (a === 'shop') this.open('shop');
       else if (a === 'music') this.open('music');
       else if (a === 'close') this.closePanels();
@@ -55,22 +55,24 @@ export class Menus {
   open(name) { this.closePanels(); this.panels[name].classList.remove('hidden'); this.refresh(); }
   closePanels() { for (const p of Object.values(this.panels)) p.classList.add('hidden'); }
 
-  showGameOver(result, { isBest, best }) {
+  // multi : le bouton de retour ramène au salon plutôt qu'au menu
+  showGameOver(result, { isBest, best }, { multiplayer = false } = {}) {
+    $('overBack').textContent = multiplayer ? '⚔ BACK TO LOBBY' : '↩ BACK TO MENU';
     const TXT = {
-      fall: ['ERR_404 — le dino est tombé hors de la page', 'Page introuvable.'],
-      dead: ['ERR_TOO_MANY_HITS — plus de vies', 'Le dino a planté.'],
+      fall: ['ERR_404 — the dino fell off the page', 'Page not found.'],
+      dead: ['ERR_TOO_MANY_HITS — out of lives', 'The dino crashed.'],
     }[result.reason];
     $('overErr').textContent = TXT[0];
     $('overTitle').textContent = TXT[1];
     $('overScore').textContent = `${result.score} pts`;
-    $('overDetails').innerHTML = `${result.distance} m · +${result.coins} ★ (total ${this.profile.coins} ★)<br/>${isBest ? '🏆 NOUVEAU RECORD !' : `Record : ${best} pts`}`;
+    const tile = (v, l, cls = '') => `<div class="stat ${cls}"><b>${v}</b><span>${l}</span></div>`;
+    $('overStats').innerHTML = tile(`${result.distance} m`, 'distance') + tile(`+${result.coins} ★`, `${this.profile.coins} ★ total`)
+      + (isBest ? tile('🏆', 'new best!', 'best') : tile(`${best}`, 'best score'));
+    $('overRace').innerHTML = '';
     this.show('over');
   }
 
   refresh() {
-    $('heroName').textContent = this.profile.data.skin === 'reggae' ? 'RIDDIM' : Skins.get(this.profile.data.skin).name.toUpperCase();
-    $('heroTheme').textContent = `${MusicThemes.get(this.profile.data.theme).name.toUpperCase()} · DINO ESCAPE`;
-    $('wallet').textContent = `★ ${this.profile.coins} pièces · skin ${Skins.get(this.profile.data.skin).name} · musique ${MusicThemes.get(this.profile.data.theme).name}`;
     this.#renderShop();
     this.#renderMusic();
   }
@@ -85,17 +87,17 @@ export class Menus {
       const portraits = this.panels.shop.classList.contains('hidden') ? null : skinPortraits();
       for (const s of Skins.all()) {
         const owned = p.ownsSkin(s.id), sel = p.data.skin === s.id;
-        const btn = sel ? '<button disabled>Équipé</button>'
-          : owned ? `<button data-skin="${s.id}">Équiper</button>`
+        const btn = sel ? '<button disabled>Equipped</button>'
+          : owned ? `<button data-skin="${s.id}">Equip</button>`
             : this.#buyButton(`skin:${s.id}`);
         const portrait = portraits?.get(s.id);
         cards += `<div class="card skin-card ${sel ? 'selected' : ''}" aria-label="${s.name}"><div class="skin-art">${portrait ? `<img class="skin-portrait" src="${portrait}" alt=""/>` : `<div class="swatch" style="background:${hex(s.view.color)}"></div>`}</div>
-          <div class="name">${s.name}</div><div class="desc rarity-${s.rarity}">${s.description || s.rarity}${s.modifiers ? ' · bonus' : ''}</div>${s.starter ? '<span class="skin-included">Inclus dans ta collection</span>' : ''}${btn}</div>`;
+          <div class="name">${s.name}</div><div class="desc rarity-${s.rarity}">${s.description || s.rarity}${s.modifiers ? ' · bonus' : ''}</div>${s.starter ? '<span class="skin-included">In your collection</span>' : ''}${btn}</div>`;
       }
     } else {
       for (const item of shop.items(this.tab)) {
         const lvl = p.upgradeLevel(item.id);
-        const extra = item.category === 'music' ? `Possédé : ${p.musicCount(item.ref)}` : item.category === 'upgrade' ? `Niveau ${lvl} / ${item.maxLevel}` : '';
+        const extra = item.category === 'music' ? `Owned: ${p.musicCount(item.ref)}` : item.category === 'upgrade' ? `Level ${lvl} / ${item.maxLevel}` : '';
         cards += `<div class="card"><div class="name">${item.name}</div><div class="desc">${item.desc || ''}<br/>${extra}</div>${this.#buyButton(item.id)}</div>`;
       }
     }
@@ -104,7 +106,7 @@ export class Menus {
 
   #buyButton(id) {
     const c = this.shop.check(id);
-    if (c.reason === 'owned') return '<button disabled>Possédé</button>';
+    if (c.reason === 'owned') return '<button disabled>Owned</button>';
     if (c.reason === 'maxed') return '<button disabled>Max</button>';
     return `<button data-buy="${id}" ${c.ok ? '' : 'disabled'}>★ ${c.price}</button>`;
   }
@@ -113,11 +115,11 @@ export class Menus {
     const l = this.lyria, p = this.profile;
     const input = $('apiKey');
     if (document.activeElement !== input) input.value = l.apiKey ? '••••••••••••' : '';
-    $('lyriaStatus').textContent = l.message || (l.hasKey() ? 'Clé enregistrée' : 'Pas de clé : musique synthétisée');
+    $('lyriaStatus').textContent = l.message || (l.hasKey() ? 'Key saved' : 'No key: synthesized music');
     $('themeGrid').innerHTML = MusicThemes.all().map((t) => {
       const count = p.musicCount(t.id), sel = p.data.theme === t.id;
-      const label = count === Infinity ? (t.consumable ? 'Inclus avec ton dino' : 'Gratuit') : `${count} partie(s)`;
-      const btn = sel ? '<button disabled>Choisi</button>' : count > 0 ? `<button data-theme="${t.id}">Choisir</button>` : this.#buyButton(`music:${t.id}`);
+      const label = count === Infinity ? (t.consumable ? 'Included with your dino' : 'Free') : `${count} run(s)`;
+      const btn = sel ? '<button disabled>Selected</button>' : count > 0 ? `<button data-theme="${t.id}">Select</button>` : this.#buyButton(`music:${t.id}`);
       return `<div class="card ${sel ? 'selected' : ''}"><div class="name">🎵 ${t.name}</div><div class="desc">${label} · ${t.bpm}→${Math.round(t.bpm * GAME.tempoLevels.at(-1).ratio)} BPM</div>${btn}</div>`;
     }).join('');
   }
