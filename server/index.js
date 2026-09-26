@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
-import { extname, join, normalize, resolve, sep } from 'node:path';
+import { readFile, realpath } from 'node:fs/promises';
+import { extname, join, normalize, sep } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { WebSocketServer } from 'ws';
 import { Room, makeCode } from './Room.js';
@@ -24,10 +24,10 @@ export function createRaceServer({ port = 2567, store, staticDir = null, fillMs,
     }
     if (!staticDir) { res.writeHead(404); return res.end(); }
     const path = normalize(join(staticDir, url.pathname === '/' ? 'index.html' : decodeURIComponent(url.pathname)));
-    const root = resolve(staticDir);
-    if (!resolve(path).startsWith(root + sep)) { res.writeHead(403); return res.end(); }
     try {
-      const body = await readFile(path);
+      const root = await realpath(staticDir), real = await realpath(path);
+      if (!real.startsWith(root + sep)) { res.writeHead(403); return res.end(); }
+      const body = await readFile(real);
       res.writeHead(200, { 'content-type': TYPES[extname(path)] ?? 'application/octet-stream' });
       res.end(body);
     } catch { res.writeHead(404); res.end(); }
