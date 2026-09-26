@@ -226,7 +226,7 @@ body:not(.in-game) #hud { opacity: 0; }
     background: #183d42e8; color: white; text-align: center; font-size: 10px; font-weight: 750;
     animation: hint-out 5s forwards;
   }
-  #banner { top: 31%; }
+  #banner { top: 50%; }
   .panel { inset: auto 0 0; max-height: min(88dvh, 880px); padding: 22px 16px calc(20px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; }
   .panel-head h2 { font-size: 23px; }
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
