@@ -127,7 +127,8 @@ export class World {
     this.sun.target.position.copy(focus);
   }
 
-  render(pulse = 0, rush = 0) { this.post.render(pulse, rush); }
+  // fx : effets de vitesse calculés par view/TransitionFx.js
+  render(pulse = 0, fx) { this.post.render(pulse, fx); }
 }
 
 const tmp = new THREE.Color();

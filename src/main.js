@@ -26,6 +26,8 @@ import { RunnerView } from './view/RunnerView.js';
 import { Particles } from './view/Particles.js';
 import { CameraRig } from './view/CameraRig.js';
 import { BeatFx } from './view/BeatFx.js';
+import { TransitionFx } from './view/TransitionFx.js';
+import { PortalView } from './view/PortalView.js';
 import { Input } from './input/Input.js';
 import { Sfx, bindSfx } from './audio/Sfx.js';
 import { LyriaEngine } from './audio/music/LyriaEngine.js';
@@ -53,6 +55,7 @@ const views = [
   new BeatFx(ctx),      // en premier : fournit ctx.fx et ctx.beatMaterials
   new TrackView(ctx),
   new WorldDecorView(ctx),
+  new PortalView(ctx),   // vortex dans la porte de chaque monde
   new DioramaView(ctx),
   new TunnelView(ctx),
   new SideLightShow(ctx),
@@ -60,6 +63,7 @@ const views = [
   // (RivalView ajoutée plus bas, une fois le multijoueur créé)
   new RunnerView(ctx),
   new Particles(ctx),
+  new TransitionFx(ctx), // lignes de vitesse, flou, flash : fournit ctx.transition
   new CameraRig(ctx),
 ];
 
@@ -96,16 +100,16 @@ function play() {
 }
 
 const lobby = new Lobby({ mp, bots, menus, hud, onLaunch: () => play() });
-music.setRaceSource(() => lobby.race); // la musique réagit au match (rivaux proches, coups…)
-game.on('bot:out', ({ bot }) => hud.banner(`💥 ${bot} is out!`, 1));
-game.on('runner:respawn', ({ lives }) => hud.banner(`Back on track! ${'♥'.repeat(lives)}`, 1.2));
-mp.on('start', ({ seed, delay, lane }) => {
 
 // Retour depuis l'écran de fin : le menu en solo, le salon en multijoueur
 function back() {
   menus.show('start');
   if (mp.inRoom) lobby.open();
 }
+music.setRaceSource(() => lobby.race); // la musique réagit au match (rivaux proches, coups…)
+game.on('bot:out', ({ bot }) => hud.banner(`💥 ${bot} is out!`, 1));
+game.on('runner:respawn', ({ lives }) => hud.banner(`Back on track! ${'♥'.repeat(lives)}`, 1.2));
+mp.on('start', ({ seed, delay, lane }) => {
   sfx.init();
   menus.show(null);
   bots.stop(); // en multijoueur : pas de PNJ
@@ -153,7 +157,7 @@ function frame(now) {
   music.update(dt);
   hud.update(dt);
   world.update(dt, ctx.focus);
-  world.render(ctx.fx?.pulse ?? 0, game.worldJump ? Math.sin(game.worldJump.progress * Math.PI) : game.runner.boost > 0 ? .8 : 0);
+  world.render(ctx.fx?.pulse ?? 0, ctx.transition);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
