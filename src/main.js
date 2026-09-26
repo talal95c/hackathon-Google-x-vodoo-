@@ -75,7 +75,7 @@ if (lyria.hasKey()) lyria.connect();
 // --- Interface
 const hud = new Hud(game, profile);
 const input = new Input();
-const menus = new Menus({ game, profile, shop, lyria, music, onPlay: play });
+const menus = new Menus({ game, profile, shop, lyria, music, onPlay: play, onBack: back });
 let overAt = 0;
 
 // --- Multijoueur (WebRTC pair-à-pair, sans serveur)
@@ -100,6 +100,12 @@ music.setRaceSource(() => lobby.race); // la musique réagit au match (rivaux pr
 game.on('bot:out', ({ bot }) => hud.banner(`💥 ${bot} is out!`, 1));
 game.on('runner:respawn', ({ lives }) => hud.banner(`Back on track! ${'♥'.repeat(lives)}`, 1.2));
 mp.on('start', ({ seed, delay, lane }) => {
+
+// Retour depuis l'écran de fin : le menu en solo, le salon en multijoueur
+function back() {
+  menus.show('start');
+  if (mp.inRoom) lobby.open();
+}
   sfx.init();
   menus.show(null);
   bots.stop(); // en multijoueur : pas de PNJ
@@ -112,7 +118,8 @@ game.on('runner:knocked', ({ lateral }) => views.find((v) => v instanceof Camera
 
 input.onAction((a) => {
   if (a !== 'confirm' || menus.panelOpen) return;
-  if (game.state === 'menu' || (game.state === 'over' && performance.now() - overAt > 900)) play();
+  if (game.state === 'menu') play();
+  else if (game.state === 'over' && performance.now() - overAt > 900) { if (menus.screens.start.classList.contains('hidden')) back(); else play(); } // ESPACE : quitter l'écran de fin, puis relancer
 });
 
 game.on('game:start', ({ loadout }) => hud.setMusicLabel(`🎵 ${MusicThemes.get(loadout.theme).name}${lyria.ready ? ' · Lyria' : ''}`));
@@ -123,7 +130,7 @@ game.on('game:over', (result) => {
   hud.setBest(record.best);
   mp.finish(result);
   setTimeout(() => {
-    menus.showGameOver(result, record);
+    menus.showGameOver(result, record, { multiplayer: mp.inRoom });
     if (mp.inRace || bots.list.length) document.getElementById('overRace').innerHTML = lobby.resultsHtml() + (mp.inRace && !mp.isHost ? '<p class="small">The host can start a rematch.</p>' : '');
   }, 700);
 });
