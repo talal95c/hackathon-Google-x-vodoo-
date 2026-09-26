@@ -1,0 +1,18 @@
+{
+  "name": "dino-escape",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview",
+    "zip": "vite build && cd dist && rm -f ../dino-escape-itch.zip && zip -r ../dino-escape-itch.zip ."
+  },
+  "dependencies": {
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "vite": "^8.3.1"
+  }
+}
