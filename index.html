@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Dino Escape</title>
+  <title>Dino Race Fight Club</title>
   <link rel="stylesheet" href="/src/ui/style.css" />
 </head>
 <body>
@@ -15,18 +15,18 @@
         <div class="small" id="coins">★ 0</div>
         <div id="lives"></div>
       </div>
-      <div class="right"><div class="small">RECORD</div><div id="best">0</div></div>
+      <div class="right"><div class="small">BEST</div><div id="best">0</div></div>
     </div>
-    <div id="journey"><span id="worldName">01 / 05 · DÉSERT HORS LIGNE</span><div class="bar"><div class="fill" id="worldProgress"></div></div></div>
+    <div id="journey"><span id="worldName">01 / 05 · OFFLINE DESERT</span><div class="bar"><div class="fill" id="worldProgress"></div></div></div>
     <div id="boss" class="hidden"><div id="bossName">BOSS</div><div class="bar"><div class="fill" id="bossFill"></div></div></div>
     <div id="buffs"></div>
     <div class="row" id="bottom">
       <div id="speed">0 <small>km/h</small></div>
-      <div id="driftbox"><div class="label" id="driftLabel">GLISSADE</div><div class="bar"><div class="fill" id="driftFill"></div></div></div>
+      <div id="driftbox"><div class="label" id="driftLabel">SLIDE</div><div class="bar"><div class="fill" id="driftFill"></div></div></div>
     </div>
     <div id="music" class="small"></div>
     <ol id="mpBoard" class="hidden"></ol>
-    <div id="shoveBox" class="hidden"><button id="shoveBtn">✋ E / F · CLAQUE</button><div class="bar"><div class="fill" id="shoveFill"></div></div></div>
+    <div id="shoveBox" class="hidden"><button id="shoveBtn">✋ E / F · SLAP</button><div class="bar"><div class="fill" id="shoveFill"></div></div></div>
   </div>
   <div id="vignette"></div>
   <div id="flash"></div>
@@ -34,82 +34,77 @@
 
   <!-- Écrans (pilotés par src/ui/Menus.js) -->
   <div class="screen" id="start">
-    <div class="menu-brand"><span class="brand-icon">d.</span><span>DINO ESCAPE</span><span class="edition">ERR_INTERNET_DISCONNECTED</span></div>
+    <div class="menu-brand"><span class="brand-icon">d.</span><span>DINO RACE FIGHT CLUB</span></div>
     <div class="hero-copy">
-      <p class="eyebrow"><span class="live-dot"></span> NO CONNECTION. JUST GOOD VIBES.</p>
-      <h1>DINO<br /><span>ESCAPE.</span></h1>
-      <p class="hero-description">Suis le rythme.<br /> Bats-toi pour survivre.</p>
-      <p class="hero-detail">Du désert hors ligne jusqu’au cloud.<br />Traverse les cinq mondes et fais tomber tes rivaux.</p>
+      <h1>DINO RACE<br /><span>FIGHT CLUB.</span></h1>
+      <p class="hero-description">Follow the beat.<br /> Fight to survive.</p>
       <div class="buttons hero-actions">
-        <button class="primary" data-action="play"><span>▶</span> Lancer la session <span>↗</span></button>
-        <button class="mp-button" data-mp="open">⚔ Multijoueur</button>
-        <button class="reggae-button" data-action="reggae" aria-label="Équiper le dino reggae"><span class="reggae-stripes"></span> Dino reggae</button>
+        <button class="primary" data-action="play"><span>▶</span> Play <span>↗</span></button>
+        <button class="mp-button" data-mp="open">⚔ Multiplayer</button>
       </div>
-      <p class="small" id="wallet"></p>
     </div>
-    <div class="hero-tag"><span class="tag-dot"></span><div><b id="heroName">RIDDIM</b><span id="heroTheme">REGGAE DINO · VOL. 01</span></div><span class="equalizer"><i></i><i></i><i></i><i></i></span></div>
     <div class="menu-footer">
-      <div class="controls"><span><b>↑</b> courir</span><span><b>← →</b> tourner</span><span><b>ESPACE</b> sauter</span><span><b>SHIFT</b> glisser</span><span><b>E</b> claque</span></div>
-      <div class="buttons"><button data-action="shop">Collection & boutique</button><button data-action="music">♫ Musique</button></div>
+      <div class="controls"><span><b>↑</b> run</span><span><b>← →</b> steer</span><span><b>SPACE</b> jump</span><span><b>SHIFT</b> slide</span><span><b>E / F</b> slap</span></div>
+      <div class="buttons"><button data-action="shop">🛒 Shop</button><button data-action="music">♫ Music</button></div>
     </div>
   </div>
 
   <div class="screen hidden" id="over">
     <p class="err" id="overErr">ERR</p>
-    <h2 id="overTitle">Onglet fermé.</h2>
+    <h2 id="overTitle">Tab closed.</h2>
     <h1 id="overScore">0</h1>
-    <p id="overDetails"></p>
+    <div class="over-stats" id="overStats"></div>
+    <div id="overRace"></div>
     <div class="buttons">
-      <button class="primary" data-action="play">↻ REJOUER</button>
-      <button data-mp="open">⚔ MULTIJOUEUR</button>
-      <button data-action="shop">🛒 BOUTIQUE</button>
+      <button class="primary" id="overBack" data-action="back">↩ BACK TO MENU</button>
+      <button data-action="shop">🛒 SHOP</button>
     </div>
   </div>
 
   <div class="panel hidden" id="shop">
-    <div class="panel-head"><h2>Boutique</h2><span id="shopCoins"></span><button data-action="close">✕</button></div>
+    <div class="panel-head"><h2>Shop</h2><span id="shopCoins"></span><button data-action="close">✕</button></div>
     <div class="tabs">
       <button data-tab="skin" class="active">Skins</button>
-      <button data-tab="music">Musiques</button>
-      <button data-tab="upgrade">Améliorations</button>
+      <button data-tab="music">Music</button>
+      <button data-tab="upgrade">Upgrades</button>
     </div>
     <div class="grid" id="shopGrid"></div>
   </div>
 
   <div class="panel hidden" id="mpPanel">
-    <div class="panel-head"><h2>⚔ Multijoueur</h2><button data-action="close">✕</button></div>
-    <p>Crée une partie, partage le code : tout le monde court sur la même route. Bouscule tes rivaux (<span class="key">E</span> = claque) pour les faire tomber. Le dernier en vie gagne.</p>
-    <label class="small">Ton pseudo <input id="mpName" maxlength="14" /></label>
+    <div class="panel-head"><h2>⚔ Multiplayer</h2><button data-action="close">✕</button></div>
+    <p>Create a game and share the code: everyone runs on the same road. Slap your rivals (<span class="key">E</span> or <span class="key">F</span>) to knock them off. Last one standing wins.</p>
+    <label class="small">Your name <input id="mpName" maxlength="14" /></label>
     <div id="mpJoin">
-      <div class="buttons"><button class="primary" data-mp="create">Créer une partie</button></div>
-      <div class="mp-input"><input id="mpCode" placeholder="Code de la partie (ex. K7QXP)" autocomplete="off" /><button data-mp="join">Rejoindre</button></div>
+      <div class="buttons"><button class="primary" data-mp="create">Create a game</button></div>
+      <div class="mp-input"><input id="mpCode" placeholder="Game code (e.g. K7QXP)" autocomplete="off" /><button data-mp="join">Join</button></div>
     </div>
     <div id="mpRoom" class="hidden">
-      <div class="mp-code">Code : <b id="mpCodeShow"></b> <button data-mp="copy">Copier le lien</button></div>
+      <div class="mp-code">Code: <b id="mpCodeShow"></b> <button data-mp="copy">Copy link</button></div>
       <ul id="mpPlayers" class="mp-players"></ul>
       <div class="buttons">
-        <button id="mpLaunch" class="primary" data-mp="launch">⚔ Lancer la course</button>
-        <span id="mpWait" class="small">En attente du lancement par l'hôte…</span>
-        <button data-mp="leave">Quitter la partie</button>
+        <button id="mpLaunch" class="primary" data-mp="launch">⚔ Start the race</button>
+        <span id="mpWait" class="small">Waiting for the host to start…</span>
+        <button data-mp="leave">Leave game</button>
       </div>
     </div>
     <p class="small" id="mpStatus"></p>
   </div>
 
   <div class="panel hidden" id="musicPanel">
-    <div class="panel-head"><h2>Musique Lyria</h2><button data-action="close">✕</button></div>
-    <p>La musique est générée en direct par <b>Google DeepMind Lyria RealTime</b> et accélère avec le jeu.
-      Il faut une clé API Gemini (<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a>), gardée uniquement dans ton navigateur.
-      Sans clé, une musique synthétisée prend le relais.</p>
-    <input id="apiKey" type="password" placeholder="Clé API Gemini" autocomplete="off" />
-    <div class="buttons"><button class="primary" data-action="connect">Connecter</button><button data-action="forget">Oublier la clé</button></div>
+    <div class="panel-head"><h2>Lyria music</h2><button data-action="close">✕</button></div>
+    <p>The music is generated live by <b>Google DeepMind Lyria RealTime</b> and speeds up with the game.
+      It needs a Gemini API key (<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a>), stored only in your browser.
+      Without a key, a synthesized track takes over.</p>
+    <input id="apiKey" type="password" placeholder="Gemini API key" autocomplete="off" />
+    <div class="buttons"><button class="primary" data-action="connect">Connect</button><button data-action="forget">Forget key</button></div>
     <p class="small" id="lyriaStatus"></p>
-    <label class="small"><input id="vocals" type="checkbox" style="width:auto" /> Voix (mode vocal de Lyria)</label>
-    <label class="small">Synchro musique ↔ jeu : <b id="audioOffsetVal">0 ms</b>
+    <label class="small"><input id="vocals" type="checkbox" style="width:auto" /> Vocals (Lyria vocal mode)</label>
+    <label class="small">Music ↔ game sync: <b id="audioOffsetVal">0 ms</b>
       <input id="audioOffset" type="range" min="-200" max="200" step="5" />
     </label>
-    <p class="small">Cale les pulsations du décor sur la musique : si elles arrivent après le kick, baisse le réglage ; avant, monte-le (casque Bluetooth : environ +150 ms).</p>
-    <h3>Thème de la prochaine partie</h3>
+    <p class="small">Lines up the world's pulses with the music: if they land after the kick, lower it; if before, raise it (Bluetooth headphones: about +150 ms).</p>
+    <h3>Theme for the next run</h3>
     <div class="grid" id="themeGrid"></div>
   </div>
 
