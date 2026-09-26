@@ -228,7 +228,7 @@ const cross = (parent, mat, x, y, z, size = 0.36) => {
 // Le côté +z du groupe "front" est tourné vers le dino.
 const frontGroup = (root) => { const f = new THREE.Group(); f.rotation.y = Math.PI; root.add(f); return f; };
 
-const TAB_LABELS = ['Nouvel onglet', 'Sans titre', 'Chargement…', 'Erreur 404'];
+const TAB_LABELS = ['New tab', 'Untitled', 'Loading…', 'Error 404'];
 register('tabWall', () => {
   const root = new THREE.Group(), f = frontGroup(root);
   const label = TAB_LABELS[Math.floor(Math.random() * TAB_LABELS.length)];

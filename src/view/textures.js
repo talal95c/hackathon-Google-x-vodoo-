@@ -107,28 +107,28 @@ export const tabFaceTex = (label) => canvasTex(1024, 256, (g, w, h) => {
 export const cookieFaceTex = () => canvasTex(1024, 208, (g, w, h) => {
   drawCookie(g, 92, h / 2, 56);
   g.textBaseline = 'middle';
-  g.fillStyle = '#202124'; g.font = `800 50px ${UI_FONT}`; g.fillText('Ce site utilise des cookies', 180, 76);
-  g.fillStyle = '#5f6368'; g.font = `600 32px ${UI_FONT}`; g.fillText('pour améliorer votre fuite.', 180, 134);
+  g.fillStyle = '#202124'; g.font = `800 50px ${UI_FONT}`; g.fillText('This site uses cookies', 180, 76);
+  g.fillStyle = '#5f6368'; g.font = `600 32px ${UI_FONT}`; g.fillText('to improve your escape.', 180, 134);
 });
 
 export const acceptTex = () => canvasTex(256, 96, (g, w, h) => {
   g.fillStyle = '#1a73e8'; roundRect(g, 0, 0, w, h, 26); g.fill();
   g.fillStyle = '#ffffff'; g.font = `900 38px ${UI_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillText('ACCEPTER', w / 2, h / 2 + 2);
+  g.fillText('ACCEPT', w / 2, h / 2 + 2);
 });
 
 export const popupFaceTex = () => canvasTex(512, 256, (g, w, h) => {
   g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillStyle = '#fbbc04'; g.font = `900 34px ${UI_FONT}`; g.fillText('★ FÉLICITATIONS ★', w / 2, 44);
+  g.fillStyle = '#fbbc04'; g.font = `900 34px ${UI_FONT}`; g.fillText('★ CONGRATULATIONS ★', w / 2, 44);
   g.fillStyle = '#202124'; g.font = `900 46px ${UI_FONT}`;
-  g.fillText('Vous avez gagné', w / 2, 102); g.fillText('un iPhone 27 !', w / 2, 152);
+  g.fillText('You have won', w / 2, 102); g.fillText('an iPhone 27!', w / 2, 152);
   g.fillStyle = '#34a853'; roundRect(g, w / 2 - 130, 186, 260, 58, 29); g.fill();
-  g.fillStyle = '#ffffff'; g.font = `900 30px ${UI_FONT}`; g.fillText('RÉCLAMER', w / 2, 216);
+  g.fillStyle = '#ffffff'; g.font = `900 30px ${UI_FONT}`; g.fillText('CLAIM', w / 2, 216);
 });
 
 export const popupTitleTex = () => canvasTex(512, 64, (g, w, h) => {
   g.fillStyle = '#ffffff'; g.font = `800 30px ${UI_FONT}`; g.textBaseline = 'middle';
-  g.fillText('publicite-gratuite.exe', 22, h / 2 + 2);
+  g.fillText('free-prize.exe', 22, h / 2 + 2);
 });
 
 // Bande danger jaune / noir (bas des barrières)
