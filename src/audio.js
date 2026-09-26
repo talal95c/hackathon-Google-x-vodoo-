@@ -395,6 +395,11 @@ class SoundEffects {
     if ((step === 3 || step === 7 || step === 11 || step === 14) && this.musicIntensity > 0.25) {
       this.triggerRaveStab(time, step);
     }
+
+    // 6. Synthetic Robotic Vocal Chops ("GO", "BASS", "DROP") on bar drops
+    if ((step === 0 || step === 8) && this.musicIntensity > 0.3) {
+      this.triggerVocalChop(time, step);
+    }
   }
 
   triggerKick(time) {
@@ -539,6 +544,98 @@ class SoundEffects {
       osc.start(time);
       osc.stop(time + dur);
     });
+  }
+
+  triggerVocalChop(time, step) {
+    // Formant-filtered robotic vocal chop inside the techno beat
+    const carrier = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    // Parallel formant filters to simulate human vocal tract (e.g., "AH", "OH", "EE")
+    const f1 = this.ctx.createBiquadFilter();
+    const f2 = this.ctx.createBiquadFilter();
+
+    f1.type = 'bandpass';
+    f2.type = 'bandpass';
+    f1.Q.value = 5.0;
+    f2.Q.value = 5.0;
+
+    // Vowel selection based on step
+    if (step === 0) {
+      // Vowel "OH / GO": F1=500Hz, F2=900Hz
+      f1.frequency.setValueAtTime(500, time);
+      f2.frequency.setValueAtTime(950, time);
+    } else {
+      // Vowel "AH / BASS": F1=750Hz, F2=1300Hz
+      f1.frequency.setValueAtTime(750, time);
+      f2.frequency.setValueAtTime(1300, time);
+    }
+
+    carrier.type = 'sawtooth';
+    carrier.frequency.setValueAtTime(110, time); // Pitch: A2
+    carrier.frequency.exponentialRampToValueAtTime(82, time + 0.14);
+
+    carrier.connect(f1);
+    carrier.connect(f2);
+    f1.connect(gain);
+    f2.connect(gain);
+    gain.connect(this.masterMusicGain);
+
+    const dur = 0.15;
+    gain.gain.setValueAtTime(0.25 * this.musicIntensity, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+
+    carrier.start(time);
+    carrier.stop(time + dur);
+  }
+
+  // --- Cybernetic Synthetic Voice Announcer (Zero-latency Web Speech + Sci-Fi Telemetry Bleeps) ---
+
+  playRadioBeep() {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    [1800, 2400].forEach((freq, i) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + i * 0.025);
+      gain.gain.setValueAtTime(0.12, now + i * 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.025 + 0.035);
+
+      osc.start(now + i * 0.025);
+      osc.stop(now + i * 0.025 + 0.035);
+    });
+  }
+
+  speak(text, { pitch = 0.75, rate = 1.25, volume = 0.95 } = {}) {
+    this.playRadioBeep();
+
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.pitch = pitch; // Robotic low pitch
+      utterance.rate = rate;   // Sharp techno delivery speed
+      utterance.volume = volume;
+
+      const voices = window.speechSynthesis.getVoices();
+      // Look for robotic or crisp English voice
+      const preferred = voices.find((v) =>
+        /Google UK English Male|Google US English|Daniel|Fred|Zira|David|en-US/i.test(v.name)
+      ) || voices.find((v) => v.lang.startsWith('en')) || voices[0];
+
+      if (preferred) {
+        utterance.voice = preferred;
+      }
+
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn('Speech synthesis error:', e);
+    }
   }
 
   stopMusic(slowdown = true) {

@@ -284,11 +284,17 @@ class GameDirector {
     // Reset camera elevated over-the-shoulder behind the Dino
     this.camera.position.set(0, 7.0, 9.2);
     this.camera.lookAt(0, 1.8, -12);
+
+    // Cyber AI Voice Announcer on 3D breach
+    sounds.speak('DIMENSION THREE-D INITIATED. RUN.', { pitch: 0.8, rate: 1.2 });
   }
 
   handle3DDeath(finalScore3D) {
     this.score3D = finalScore3D;
     const totalScore = this.score2D + this.score3D;
+
+    // Cyber Voice Announcer on failure
+    sounds.speak('SYSTEM FAILURE. SESSION TERMINATED.', { pitch: 0.65, rate: 1.15 });
 
     if (totalScore > this.highScore) {
       this.highScore = totalScore;
@@ -323,6 +329,17 @@ class GameDirector {
       this.phasePopup.style.animation = 'none';
       void this.phasePopup.offsetHeight; // trigger reflow
       this.phasePopup.style.animation = 'phasePop 2.2s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+
+      // Cybernetic AI Vocal Announcements per phase
+      const vocalLines = [
+        'DIMENSION ACTIVATED.',
+        'PHASE TWO. NEON EMERGENCE.',
+        'SYNTHWAVE OVERDRIVE ENGAGED.',
+        'HYPER SPEED. MAXIMUM VELOCITY.',
+        'WARNING. CRITICAL OVERLOAD.',
+      ];
+      const vocalLine = vocalLines[phase] || `PHASE ${phase + 1}.`;
+      sounds.speak(vocalLine, { pitch: 0.85 - phase * 0.05, rate: 1.25 });
     }
   }
 
