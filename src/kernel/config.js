@@ -4,7 +4,9 @@
 export const RUNNER = {
   baseSpeed: 34,         // vitesse de course au palier de tempo 0 (m/s), × GAME.tempoLevels[i].ratio ensuite
   startSpeed: 26,        // départ lancé
-  accel: 3,              // réactivité vers la vitesse cible
+  accel: 3,              // réactivité vers la vitesse cible (en courant)
+  decel: 2.2,            // ralentissement quand on ne court plus (touche relâchée)
+  brakeDecel: 6,         // freinage (↓)
   latSpeed: 13,          // vitesse latérale max (+ 12 % de la vitesse)
   latResponse: 16,       // nervosité du latéral (plus haut = plus sec)
   airControl: 0.55,      // contrôle latéral en l'air
@@ -53,9 +55,9 @@ export const GAME = {
   fixedDt: 1 / 120,      // pas de simulation fixe (physique déterministe)
   maxSubSteps: 8,
   difficultyDistance: 5000,
-  chaserStartGap: 45,    // avance au départ sur le curseur (m)
-  chaserMaxGap: 55,      // le curseur ne se laisse jamais distancer au-delà
-  chaserSpeedFactor: 0.93,
+  chaserStartGap: 60,    // avance au départ sur le curseur (m)
+  chaserMaxGap: 90,      // le curseur ne se laisse jamais distancer au-delà
+  chaserSpeedFactor: 0.75, // assez lent pour s'arrêter quelques secondes et se battre, pas pour camper
   fallDuration: 1.3,     // durée de la chute avant l'écran de fin (tomber = game over)
   coinValue: 25,
   startS: 5,

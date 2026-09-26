@@ -4,8 +4,8 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 export class Lobby {
-  constructor({ mp, menus, hud, onLaunch }) {
-    Object.assign(this, { mp, menus, hud, onLaunch });
+  constructor({ mp, bots, menus, hud, onLaunch }) {
+    Object.assign(this, { mp, bots, menus, hud, onLaunch });
     this.el = $('mpPanel');
     menus.panels.mp = this.el;
     $('mpName').value = mp.name;
@@ -58,23 +58,28 @@ export class Lobby {
     setTimeout(() => { this.hud.banner('GO ! ⚔', 0.8); go(); }, delay);
   }
 
+  // Course en cours : multijoueur, ou solo avec PNJ
+  get race() { return this.mp.inRace ? this.mp : this.bots?.active || this.bots?.list.length ? this.bots : null; }
+
   // Classement live (course) et HUD du coup d'épaule
   board() {
-    const mp = this.mp, el = $('mpBoard');
-    el.classList.toggle('hidden', !mp.inRace);
-    if (!mp.inRace) return;
-    el.innerHTML = mp.ranking().map((p, i) => `<li class="${p.alive ? '' : 'out'}"><b>${i + 1}</b><span class="dot" style="background:${p.color}"></span>${esc(p.name)}<em>${p.alive ? `${p.dist} m` : `💀 ${p.dist} m`}</em></li>`).join('');
+    const race = this.race, el = $('mpBoard');
+    el.classList.toggle('hidden', !race);
+    if (!race) return;
+    el.innerHTML = race.ranking().map((p, i) => `<li class="${p.alive ? '' : 'out'}"><b>${i + 1}</b><span class="dot" style="background:${p.color}"></span>${esc(p.name)}<em>${p.alive ? `${p.dist} m` : `💀 ${p.dist} m`}${p.rtt ? ` · ${Math.round(p.rtt)} ms` : ''}</em></li>`).join('');
   }
 
   update() {
-    const mp = this.mp, racing = mp.inRace && this.mp.game.state === 'playing';
-    $('shoveBox').classList.toggle('hidden', !racing || !mp.peers.size);
-    $('shoveFill').style.width = `${(1 - mp.shoveCooldown) * 100}%`;
-    if (mp.inRace) this.board();
+    const race = this.race, playing = this.mp.game.state === 'playing';
+    const fighters = race === this.mp ? this.mp.peers.size : race ? race.list.length : 0;
+    $('shoveBox').classList.toggle('hidden', !race || !playing || !fighters);
+    if (race) { $('shoveFill').style.width = `${(1 - race.shoveCooldown) * 100}%`; this.board(); }
   }
 
   // Résultats de fin (ajoutés à l'écran de fin)
   resultsHtml() {
-    return `<ol class="mp-results">${this.mp.ranking().map((p) => `<li><span class="dot" style="background:${p.color}"></span>${esc(p.name)} — ${p.alive ? `en course (${p.dist} m)` : `${p.dist} m`}</li>`).join('')}</ol>`;
+    const race = this.race;
+    if (!race) return '';
+    return `<ol class="mp-results">${race.ranking().map((p) => `<li><span class="dot" style="background:${p.color}"></span>${esc(p.name)} — ${p.alive ? `en course (${p.dist} m)` : `${p.dist} m`}</li>`).join('')}</ol>`;
   }
 }

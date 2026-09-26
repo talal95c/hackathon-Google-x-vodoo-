@@ -148,20 +148,6 @@ body:not(.in-game) #hud { opacity: 0; }
 #journey .bar { height: 3px; margin-top: 5px; } #worldProgress { background: #299dda; }
 @media (max-width: 600px) { #journey { top: 84px; font-size: 7px; width: 42vw; letter-spacing: .2px; } }
 
-/* ---------- Monde généré depuis un site */
-.site-button { background: linear-gradient(90deg, #1a73e8, #ff4f8b); color: #fff; border-color: #0d3c7a; }
-.browser { border: 3px solid #333; border-radius: 10px; overflow: hidden; background: #fff; }
-.browser-bar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #eef1f5; border-bottom: 2px solid #333; font-size: 13px; }
-.browser-bar .dots i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; background: #ff5f57; }
-.browser-bar .dots i:nth-child(2) { background: #febc2e; } .browser-bar .dots i:nth-child(3) { background: #28c840; }
-#siteAddress { flex: 1; background: #fff; border-radius: 20px; padding: 4px 12px; color: #555; }
-.browser-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
-.site-input { display: flex; gap: 8px; }
-.site-input input { flex: 1; }
-#siteBar { background: linear-gradient(90deg, #1a73e8, #34a853); transition: width .25s; }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { font-size: 13px; padding: 6px 12px; border-radius: 20px; }
-
 /* ---------- Multijoueur */
 .mp-button { background: linear-gradient(90deg, #ff4f8b, #ff9100); color: #fff; border-color: #7a1f3d; }
 .mp-code { font-size: 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -176,3 +162,5 @@ body:not(.in-game) #hud { opacity: 0; }
 #shoveBtn { font-size: 13px; padding: 6px 12px; width: 100%; }
 #shoveFill { background: #ff4f8b; }
 .mp-results { text-align: left; margin: 6px auto; display: inline-block; }
+.mp-input { display: flex; gap: 8px; margin-top: 8px; }
+.mp-input input { flex: 1; }

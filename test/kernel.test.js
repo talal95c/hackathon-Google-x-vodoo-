@@ -237,3 +237,18 @@ test('un coup latéral pousse le dino puis s\'amortit (et peut le faire tomber)'
   for (let t = 0; t < 2 && !fell; t += 1 / 60) { g.update(1 / 60, { steer: 0, drift: false, brake: false, jump: false }); fell = g.state !== 'playing'; }
   assert.ok(fell, 'un gros coup au bord fait tomber');
 });
+
+test('le dino ne court que si on le demande : il ralentit puis s\'arrête', () => {
+  const g = new Game({ seed: 2 });
+  g.start({ seed: 2 });
+  for (const e of g.entities) e.destroy();
+  g.entities = [];
+  const r = g.runner, go = { steer: 0, drift: false, brake: false, jump: false };
+  for (let t = 0; t < 2; t += 1 / 60) g.update(1 / 60, { ...go, throttle: 1 });
+  assert.ok(r.speed > 30, `court : ${r.speed.toFixed(1)} m/s`);
+  for (let t = 0; t < 3; t += 1 / 60) g.update(1 / 60, { ...go, throttle: 0 });
+  assert.ok(r.speed < 1.5, `arrêté : ${r.speed.toFixed(1)} m/s`);
+  const z = r.z;
+  for (let t = 0; t < 1; t += 1 / 60) g.update(1 / 60, { ...go, throttle: 0 });
+  assert.ok(r.z - z < 1.5, 'ne bouge presque plus');
+});

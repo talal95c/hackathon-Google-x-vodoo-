@@ -92,8 +92,12 @@ test('multijoueur : un contact pousse les DEUX joueurs, chacun de son côté', a
   B.g.on('runner:knocked', () => knocks.B++);
   for (let i = 0; i < 5; i++) { tick(A); tick(B); }
   // collés côte à côte à la même distance ; A fonce latéralement vers B
-  B.g.runner.z = A.g.runner.z; A.g.runner.x = 0.5; B.g.runner.x = -0.5;
-  for (let i = 0; i < 8; i++) { A.g.runner.latV = -12; tick(B); tick(A); } // A fonce vers B
+  // côte à côte (hors contact) le temps que chacun voie l'autre à sa vraie place…
+  B.g.runner.z = A.g.runner.z;
+  for (let i = 0; i < 30; i++) { A.g.runner.x = 2.2; B.g.runner.x = -0.5; tick(B); tick(A); }
+  knocks.A = 0; knocks.B = 0;
+  // …puis A fonce latéralement sur B
+  for (let i = 0; i < 12; i++) { A.g.runner.latV = -14; tick(B); tick(A); }
   assert.ok(knocks.A >= 1 && knocks.B >= 1, `poussées : A ${knocks.A}, B ${knocks.B}`);
   assert.ok(B.g.runner.knockV < -5, 'B (percuté) est éjecté vers la droite');
 });
@@ -108,4 +112,34 @@ test('multijoueur : le coup d\'épaule touche le rival à portée', async () => 
   tick(A, { ...still, shove: true });
   assert.equal(shoved, 1);
   assert.ok(B.g.runner.knockV < -20, 'B éjecté loin de A');
+});
+
+// --- PNJ du mode solo
+import { Bots } from '../src/bots/Bots.js';
+
+test('PNJ : ils courent avec le joueur et restent dans la course', () => {
+  const g = new Game({ seed: 8 });
+  g.start({ seed: 8 });
+  const bots = new Bots(g, 3);
+  bots.start();
+  const pilot = (gg) => ({ steer: Math.max(-1, Math.min(1, (-gg.runner.x * 3 - gg.runner.push) / 6)), throttle: 1, drift: false, brake: false, jump: false });
+  for (let t = 0; t < 20 && g.state === 'playing'; t += 1 / 60) { g.runner.invul = 99; const i = pilot(g); g.update(1 / 60, i); bots.update(1 / 60, i); }
+  const alive = bots.list.filter((b) => b.alive);
+  assert.ok(alive.length >= 1, 'au moins un PNJ encore en course');
+  for (const b of alive) assert.ok(Math.abs(b.s - g.runner.z) < 60, `${b.name} reste à portée (${Math.round(b.s - g.runner.z)} m)`);
+});
+
+test('PNJ : le coup d\'épaule du joueur peut les éjecter de la route', () => {
+  const g = new Game({ seed: 8 });
+  g.start({ seed: 8 });
+  for (const e of g.entities) e.destroy();
+  g.entities = [];
+  const bots = new Bots(g, 1);
+  bots.start();
+  const b = bots.list[0];
+  b.s = g.runner.z; b.d = -5; b.aggression = 0; g.runner.x = -3; // à mi-chemin entre le centre et le bord
+  const idle = { steer: 0, throttle: 1, drift: false, brake: false, jump: false };
+  g.update(1 / 60, idle); bots.update(1 / 60, { ...idle, shove: true });
+  for (let t = 0; t < 2 && b.alive; t += 1 / 60) { g.runner.invul = 99; g.update(1 / 60, idle); bots.update(1 / 60, idle); }
+  assert.equal(b.alive, false, 'éjecté de la route');
 });
