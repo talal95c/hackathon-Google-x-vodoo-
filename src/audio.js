@@ -589,55 +589,6 @@ class SoundEffects {
     carrier.stop(time + dur);
   }
 
-  // --- Cybernetic Synthetic Voice Announcer (Zero-latency Web Speech + Sci-Fi Telemetry Bleeps) ---
-
-  playRadioBeep() {
-    if (!this.ctx) return;
-    const now = this.ctx.currentTime;
-    [1800, 2400].forEach((freq, i) => {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now + i * 0.025);
-      gain.gain.setValueAtTime(0.12, now + i * 0.025);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.025 + 0.035);
-
-      osc.start(now + i * 0.025);
-      osc.stop(now + i * 0.025 + 0.035);
-    });
-  }
-
-  speak(text, { pitch = 0.75, rate = 1.25, volume = 0.95 } = {}) {
-    this.playRadioBeep();
-
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-
-    try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.pitch = pitch; // Robotic low pitch
-      utterance.rate = rate;   // Sharp techno delivery speed
-      utterance.volume = volume;
-
-      const voices = window.speechSynthesis.getVoices();
-      // Look for robotic or crisp English voice
-      const preferred = voices.find((v) =>
-        /Google UK English Male|Google US English|Daniel|Fred|Zira|David|en-US/i.test(v.name)
-      ) || voices.find((v) => v.lang.startsWith('en')) || voices[0];
-
-      if (preferred) {
-        utterance.voice = preferred;
-      }
-
-      window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      console.warn('Speech synthesis error:', e);
-    }
-  }
-
   stopMusic(slowdown = true) {
     if (lyriaDJ.isConnected) {
       lyriaDJ.stop();

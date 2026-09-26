@@ -2,45 +2,45 @@ import { GoogleGenAI } from '@google/genai';
 
 /**
  * Definition of prompt signatures and acoustic profiles per game phase.
- * PURE HIGH-OCTANE TECHNO & HARD TECHNO EXPLOSION (no chill).
+ * PURE HIGH-OCTANE TECHNO & HARD TECHNO WITH VOCALS & LYRICS.
  */
 export const LYRIA_PHASE_PROFILES = [
   {
     phase: 0,
-    name: 'Industrial Techno Intro',
-    text: 'High-energy driving warehouse techno, heavy distorted 909 kick drum, rolling sub bassline, aggressive industrial rave groove, intense beat',
+    name: 'Industrial Vocal Techno',
+    text: 'Driving warehouse techno featuring rhythmic robotic vocals with spoken lyrics repeating "Run through the system, never look back", heavy 909 kick drum, dark rolling sub bassline, energetic vocal techno groove',
     baseBpm: 134,
-    density: 0.75,
+    density: 0.78,
     brightness: 0.7,
   },
   {
     phase: 1,
-    name: 'Peak-Time Acid Techno',
-    text: 'Peak time acid techno, screaming 303 acid bassline, relentless punchy kick, massive sub drops, dark rave energy, fast tempo',
+    name: 'Acid Techno with Vocals',
+    text: 'Peak-time acid techno with catchy vocoder vocal hook chanting lyrics "Faster, harder, push the limits, run into the neon", screaming 303 acid bassline, relentless punchy kick, female rave vocal phrases',
     baseBpm: 140,
-    density: 0.85,
+    density: 0.86,
     brightness: 0.8,
   },
   {
     phase: 2,
-    name: 'Hard Techno Explosion',
-    text: 'Hard techno, explosive industrial kick drum, aggressive rave stabs, pounding heavy rhythm, hyper energetic festival drop, high intensity',
+    name: 'Hard Techno & Cyber Vocals',
+    text: 'Hard techno rave with energetic fast robotic spoken vocal lyrics and chopped vocal hooks singing "Overdrive, break the grid, ignite the fire", pounding heavy festival kick drum, explosive vocal drop',
     baseBpm: 145,
     density: 0.92,
     brightness: 0.88,
   },
   {
     phase: 3,
-    name: 'Hard Techno & Psytrance',
-    text: 'Relentless hard techno psytrance hybrid, rolling 16th bassline, explosive percussion, intense rave synth stabs, maximum speed, massive energy',
+    name: 'Psytrance & Anthemic Vocals',
+    text: 'Hard techno and psytrance with anthemic female vocal hook and lyrics "We are limitless, take control, escape the void", high-speed rolling bassline, intense rave synth stabs, dramatic vocal buildup',
     baseBpm: 150,
     density: 0.96,
     brightness: 0.94,
   },
   {
     phase: 4,
-    name: 'Maximum Overdrive Rave',
-    text: 'Maximum overdrive ultra hard techno rave, massive distorted kick drum, apocalyptic synth riffs, earth-shaking bass drops, pure adrenaline climax, 155 bpm',
+    name: 'Maximum Overdrive Vocal Rave',
+    text: 'Maximum overdrive ultra hard techno rave with intense distorted vocal chants repeating lyrics "System overload, maximum velocity, never stop", massive distorted kick drum, apocalyptic rave climax',
     baseBpm: 156,
     density: 1.0,
     brightness: 1.0,
