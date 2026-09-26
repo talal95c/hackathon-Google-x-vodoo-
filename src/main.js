@@ -93,7 +93,7 @@ function play() {
     return;
   }
   menus.show(null);
-  game.start(shop.prepareRun());
+  game.start({ ...shop.prepareRun(), respawn: true }); // solo aussi : une chute coûte une vie, on réapparaît
   bots.start(Skins.ids()); // solo : 3 dinos IA pour se battre
 }
 
