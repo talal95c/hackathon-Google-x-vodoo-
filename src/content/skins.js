@@ -9,7 +9,7 @@ Skins.define('reggae', {
 });
 
 Skins.define('bnw', {
-  name: 'BNW · Smash', price: 0, rarity: 'rare', starter: true,
+  name: 'BNW · Smash', price: 0, rarity: 'rare', starter: true, theme: 'bnw',
   view: { model: 'blockDino', color: 0x143852, emissive: 0x0a1c2a, eye: 0xffcc40 },
 });
 
