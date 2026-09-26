@@ -29,6 +29,11 @@ class GameDirector {
     this.ui3DHud = document.getElementById('ui-3d-hud');
     this.touchControls = document.getElementById('touch-controls');
     this.scoreDisplay = document.getElementById('score-display');
+    this.speedDisplay = document.getElementById('speed-display');
+    this.hudBadge = document.getElementById('hud-badge');
+    this.phasePopup = document.getElementById('phase-popup');
+    this.phasePopupTitle = document.getElementById('phase-popup-title');
+    this.phasePopupName = document.getElementById('phase-popup-name');
     this.modalGameOver = document.getElementById('modal-gameover');
 
     this.initThree();
@@ -83,9 +88,12 @@ class GameDirector {
 
     // Initialize Shatter Effect & 3D Runner
     this.shatter = new ShatterEffect(this.scene, this.camera);
-    this.dino3D = new Dino3DGame(this.scene, this.camera, (finalScore3D) => {
-      this.handle3DDeath(finalScore3D);
-    });
+    this.dino3D = new Dino3DGame(
+      this.scene,
+      this.camera,
+      (finalScore3D) => this.handle3DDeath(finalScore3D),
+      (phase, name) => this.handlePhaseChange(phase, name)
+    );
     this.dino3D.hide();
 
     window.addEventListener('resize', () => this.onResize());
@@ -293,18 +301,44 @@ class GameDirector {
     this.modalGameOver.classList.remove('hidden');
   }
 
+  handlePhaseChange(phase, name) {
+    if (!this.hudBadge) return;
+    this.hudBadge.textContent = `PHASE ${phase + 1} : ${name}`;
+
+    if (phase > 0 && this.phasePopup) {
+      if (this.phasePopupTitle) this.phasePopupTitle.textContent = `⚡ PHASE ${phase + 1} ACTIVATED ⚡`;
+      if (this.phasePopupName) this.phasePopupName.textContent = name;
+
+      this.phasePopup.classList.remove('hidden');
+      this.phasePopup.style.animation = 'none';
+      void this.phasePopup.offsetHeight; // trigger reflow
+      this.phasePopup.style.animation = 'phasePop 2.2s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+    }
+  }
+
   restartGame() {
     this.modalGameOver.classList.add('hidden');
     this.ui3DHud?.classList.add('hidden');
     this.touchControls?.classList.add('hidden');
+    this.phasePopup?.classList.add('hidden');
     this.dino3D.hide();
     this.dino2D.reset();
+
+    // Reset scene background to clean Chrome white
+    this.scene.background = new THREE.Color(0xf7f7f7);
+    if (this.scene.fog) {
+      this.scene.fog.color = new THREE.Color(0xf7f7f7);
+      this.scene.fog.density = 0.012;
+    }
 
     this.chromeOfflineText?.classList.remove('faded');
     this.container.style.display = 'flex';
 
     // Reset camera to 2D view
+    this.camera.fov = 50;
+    this.camera.updateProjectionMatrix();
     this.camera.position.set(0, 0, 16);
+    this.camera.rotation.set(0, 0, 0);
     this.camera.lookAt(0, 0, 0);
 
     this.state = STATE.INTRO_2D;
@@ -394,7 +428,27 @@ class GameDirector {
       this.dino3D.update(dt);
       this.renderer.render(this.scene, this.camera);
       if (this.state === STATE.PLAYING_3D) {
-        this.scoreDisplay.textContent = `TOTAL : ${this.score2D + this.dino3D.score} (2D: ${this.score2D} + 3D: ${this.dino3D.score})`;
+        const total = this.score2D + this.dino3D.score;
+        this.scoreDisplay.textContent = `SCORE : ${total}`;
+        if (this.speedDisplay) {
+          const mult = (this.dino3D.speed / this.dino3D.minSpeed).toFixed(1);
+          this.speedDisplay.textContent = `⚡ ${mult}x`;
+        }
+
+        // Adaptive HUD styling when colors awaken
+        const hudTop = document.querySelector('.hud-top');
+        if (hudTop && this.dino3D.colorProgress > 0.15) {
+          const cp = this.dino3D.colorProgress;
+          hudTop.style.background = `rgba(16, 12, 28, ${0.7 + cp * 0.25})`;
+          hudTop.style.borderColor = `rgba(0, 240, 255, ${0.2 + cp * 0.4})`;
+          this.scoreDisplay.style.color = '#ffffff';
+          this.scoreDisplay.style.textShadow = `0 0 10px rgba(0, 240, 255, ${cp})`;
+        } else if (hudTop) {
+          hudTop.style.background = 'rgba(255, 255, 255, 0.9)';
+          hudTop.style.borderColor = 'rgba(0, 0, 0, 0.08)';
+          this.scoreDisplay.style.color = '#222222';
+          this.scoreDisplay.style.textShadow = 'none';
+        }
       }
     }
 

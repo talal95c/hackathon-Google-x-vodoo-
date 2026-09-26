@@ -160,15 +160,91 @@ body, html {
 }
 
 .badge-3d {
-  background: #2ed573;
-  color: #083c17;
+  background: linear-gradient(135deg, #00f0ff, #ff007f);
+  color: #fff;
   font-weight: bold;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.badge-speed {
+  background: #111424;
+  color: #00ffcc;
+  border: 1px solid rgba(0, 255, 204, 0.4);
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.25);
 }
 
 #score-display {
   font-family: 'Press Start 2P', monospace;
   font-size: 0.85rem;
-  color: #333;
+  color: #222;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+/* Dynamic Phase Level-Up Banner */
+.phase-popup {
+  position: fixed;
+  top: 18%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 36px;
+  background: rgba(15, 12, 30, 0.92);
+  border: 2px solid #00f0ff;
+  border-radius: 20px;
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.6), inset 0 0 20px rgba(255, 0, 127, 0.3);
+  backdrop-filter: blur(16px);
+  z-index: 50;
+  pointer-events: none;
+  animation: phasePop 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.phase-popup-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.75rem;
+  color: #ff007f;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px #ff007f;
+}
+
+.phase-popup-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #00f0ff, #ff007f, #ffe600);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+}
+
+@keyframes phasePop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -30%) scale(0.7);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1.0);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -70%) scale(1.05);
+  }
 }
 
 #instructions {
