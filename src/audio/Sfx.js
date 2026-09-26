@@ -111,6 +111,19 @@ export class Sfx {
     return src;
   }
 
+  raceCountdown(step) {
+    if (step === 0) {
+      this.tone(880, .48, 'square', .16, 440);
+      this.tone(1320, .4, 'triangle', .2);
+      this.tone(110, .28, 'sine', .36, -55);
+      this.noise(.2, .16, 2800);
+    } else {
+      this.tone(step === 1 ? 660 : 440, .18, 'square', .2);
+      this.tone(150, .16, 'sine', .3, -70);
+      this.noise(.055, .12, 1800);
+    }
+  }
+
   coin() { this.tone(988, 0.08, 'square', 0.1); setTimeout(() => this.tone(1319, 0.12, 'square', 0.1), 60); }
   pickup() { [784, 988, 1319].forEach((f, i) => setTimeout(() => this.tone(f, 0.12, 'triangle', 0.1, f * 0.05), i * 55)); }
   boost(big) { this.tone(big ? 300 : 220, 0.45, 'sawtooth', 0.12, big ? 900 : 500); this.noise(0.4, 0.15, 3000); }
@@ -124,6 +137,7 @@ export class Sfx {
 
 export function bindSfx(game, sfx) {
   const on = (t, fn) => game.on(t, fn);
+  on('mp:countdown', ({ step }) => sfx.raceCountdown(step));
   on('club:approach', () => { sfx.whoosh(); sfx.tone(440, .3, 'triangle', .1, 440); });
   on('club:countdown', ({ tick }) => sfx.tone(tick === 1 ? 880 : 440, .11, 'triangle', .15));
   on('club:phase', ({ phase }) => { if (phase === 'tapping') { sfx.tone(880, .2, 'triangle', .18, 440); } });

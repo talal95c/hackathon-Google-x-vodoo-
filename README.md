@@ -37,7 +37,7 @@ This hackathon version uses public brokers from **HiveMQ, Mosquitto and EMQX**, 
 
 ## Fight Club: three seconds to win
 
-Every **450 meters**, an animated warning announces the next arena. The race pauses for everyone while the duel takes place, including the bots in solo mode.
+Every **700 meters**, an animated warning announces the next arena. The race pauses for everyone while the duel takes place, including the bots in solo mode.
 
 - **Tap for three seconds.** The player with the most taps wins, with slaps, kicks, flips, explosions and a crowd of cheering dinos bringing the fight to life.
 - **The winner steals coins:** half the loser's current-race coins, up to 20.
@@ -56,7 +56,9 @@ You can also play without a key using the built-in synthesized soundtrack.
 
 ## Skin voices
 
-Every skin has **its own voice**: when a dino slaps, it shouts a one-to-three-word line from its own inventory (a deep menacing Vader, a cheerful Mario plumber, a chill reggae Riddim, an offline Classic robot...). The clips are **generated ahead of time** with Gemini TTS (`npm run voices:gen`, key in `.env`) into `public/voices/` and shipped with the game, so players need no key and no API call. Turn them off with the **Skin voices** checkbox in the Music panel.
+Every skin has **its own voice** and shouts a short line when it slaps a rival, adding personality to each fight.
+
+We used **Gradium** to generate voices during the hackathon. The project also includes **Gemini TTS** generation for skin voice clips. The clips are created ahead of time and shipped with the game, so players need no API key to hear them. Toggle **Skin voices** in the Music panel to turn them on or off.
 
 ## Run the game locally
 

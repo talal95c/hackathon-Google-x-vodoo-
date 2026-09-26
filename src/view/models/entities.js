@@ -370,4 +370,3 @@ register('spinner', () => {
   }
   return { object: g, update(e, dt, t) { wheel.rotation.z = e.charging ? -t * 9 : -t * 3; } };
 });
-

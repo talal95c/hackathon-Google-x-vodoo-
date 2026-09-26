@@ -37,7 +37,6 @@ import { LyriaEngine } from './audio/music/LyriaEngine.js';
 import { SynthEngine } from './audio/music/SynthEngine.js';
 import { MusicDirector } from './audio/music/MusicDirector.js';
 import { Hud } from './ui/Hud.js';
-import { boot } from './ui/Boot.js';
 import { Menus } from './ui/Menus.js';
 import { Multiplayer } from './net/Multiplayer.js';
 import { Lobby } from './ui/Lobby.js';
@@ -52,7 +51,6 @@ import { Skins } from './kernel/Registry.js';
 import { MusicThemes } from './kernel/Registry.js';
 
 // --- Logique
-boot();
 
 const game = new Game({ seed: (Math.random() * 2 ** 32) >>> 0 }); // le menu aussi change à chaque chargement
 const profile = new Profile(new LocalStorage());
@@ -120,7 +118,7 @@ function play() {
   bots.start(Skins.ids(), profile.data.skin); // solo : 3 dinos IA, tous différents (et différents du tien)
 }
 
-const lobby = new Lobby({ mp, bots, menus, hud, onLaunch: () => play() });
+const lobby = new Lobby({ mp, bots, menus, hud, onLaunch: () => play(), onInteract: () => sfx.init() });
 views.push(new CombatView(ctx, [mp, bots]), new CombatHud(ctx, () => lobby.race));
 bindVoices(game, voices, { mp, bots });
 const club = new FightClub(game, { mp, bots, profile });
@@ -147,7 +145,7 @@ document.getElementById('shoveBtn').addEventListener('pointerdown', (e) => { e.p
 
 
 input.onAction((a) => {
-  if (a !== 'confirm' || menus.panelOpen || club.active) return;
+  if (a !== 'confirm' || menus.panelOpen || club.active || lobby.countingDown) return;
   if (game.state === 'menu') play();
   else if (game.state === 'over' && performance.now() - overAt > 900) { if (menus.screens.start.classList.contains('hidden')) back(); else play(); } // ESPACE : quitter l'écran de fin, puis relancer
 });
@@ -175,9 +173,9 @@ function frame(now) {
   last = now;
   time += dt;
   club.update();
-  input.enabled = !menus.panelOpen && !club.active;
+  input.enabled = !menus.panelOpen && !club.active && !lobby.countingDown;
   const intent = input.read(dt);
-  game.update(dt, intent, wallDt);
+  if (!lobby.countingDown) game.update(dt, intent, wallDt);
   mp.update(dt, intent);
   bots.update(dt, intent);
   lobby.update();

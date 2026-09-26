@@ -1,5 +1,5 @@
 export const CLUB = Object.freeze({
-  firstAt: 450, every: 450, approachAt: 180, introMs: 1800, tapMs: 3000, minTapMs: 50,
+  firstAt: 700, every: 700, approachAt: 180, introMs: 1800, tapMs: 3000, minTapMs: 50,
   resultMs: 2800, networkGraceMs: 2500, timeoutMs: 15000,
   stealMax: 20, stealShare: .5, stunSeconds: 1, slowSeconds: 5, slowFactor: .65,
 });
