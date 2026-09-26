@@ -27,9 +27,9 @@ export class Bots {
     for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rng.next() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
     this.list = Array.from({ length: this.count }, (_, i) => ({
       id: `bot${i}`, name: NAMES[(i * 3 + (g.seed % NAMES.length)) % NAMES.length], color: COLORS[i % COLORS.length],
-      skin: pool.length ? pool[i % pool.length] : 'classic', coins: 12 + (g.seed + i * 3) % 12, clubSlow: 0,
+      skin: pool.length ? pool[i % pool.length] : 'classic', coins: 12 + (g.seed + i * 3) % 12, clubSlow: 0, clubStun: 0,
       s: r.z - 2 - i * 1.5, d: [-2.8, 2.8, -5.2, 5.2][i % 4], y: 0, vy: 0, speed: RUNNER.startSpeed, latV: 0, knockV: 0,
-      stumble: 0, shoveCd: 2 + rng.range(0, 2), bumpCd: 0, alive: true, fall: 0, shoveAnim: 0, shoveDir: 1,
+      stumble: 0, shoveCd: 2 + rng.range(0, 2), bumpCd: 0, lives: 3, alive: true, fall: 0, shoveAnim: 0, shoveDir: 1,
       pace: rng.range(0.93, 1.04),            // plus ou moins rapide
       aggression: rng.range(0.35, 0.8),       // envie de se battre
       lane: rng.range(-2.5, 2.5),
@@ -44,12 +44,12 @@ export class Bots {
   rivals() {
     return this.list.map((b) => ({ id: b.id, name: b.name, skin: b.skin, color: b.color, alive: b.alive,
       view: { s: b.s, d: b.d, y: b.y, v: b.speed, lat: b.latV + b.knockV, st: b.alive ? 'playing' : b.fall > 0 ? 'falling' : 'over',
-        sh: b.shoveAnim > 0 ? 1 : 0, shd: b.shoveDir, hit: b.stumble > 0 ? 1 : 0 } }));
+        sh: b.shoveAnim > 0 ? 1 : 0, shd: b.shoveDir, hit: b.stumble > 0 || b.clubStun > 0 ? 1 : 0 } }));
   }
 
   ranking() {
     const g = this.game;
-    const rows = [{ id: 'me', name: 'You', color: '#1a73e8', me: true, alive: g.state === 'playing' || g.state === 'falling', dist: g.distance }];
+    const rows = [{ id: 'me', name: 'You', color: '#1a73e8', me: true, alive: ['playing', 'falling', 'duel'].includes(g.state), dist: g.distance }];
     for (const b of this.list) rows.push({ id: b.id, name: b.name, color: b.color, alive: b.alive, dist: Math.floor(b.s) });
     return rows.sort((a, b) => (b.alive - a.alive) || b.dist - a.dist);
   }
@@ -57,12 +57,16 @@ export class Bots {
   update(dt, intent) {
     if (!this.active) return;
     const g = this.game;
-    if (g.state !== 'playing') return;
+    if (g.state !== 'playing') return; // tous les PNJ restent exactement à leur place pendant le Fight Club
     const r = g.runner, track = g.track, f = {};
     const me = { s: r.z, d: r.x, y: r.y, lat: r.latV + r.push };
 
     for (const b of this.list) {
       if (!b.alive) { if (b.fall > 0) { b.fall -= dt; b.y -= 25 * dt; } continue; }
+      if (b.clubStun > 0) {
+        b.clubStun = Math.max(0, b.clubStun - dt); b.speed = b.latV = b.knockV = 0;
+        continue; // la pénalité de vitesse ne décompte pas encore ses cinq secondes
+      }
       track.frame(b.s, f);
       b.stumble = Math.max(0, b.stumble - dt);
       b.shoveCd -= dt; b.bumpCd -= dt; b.shoveAnim = Math.max(0, b.shoveAnim - dt);

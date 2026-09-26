@@ -112,6 +112,7 @@ export class Sfx {
 
 export function bindSfx(game, sfx) {
   const on = (t, fn) => game.on(t, fn);
+  on('club:approach', () => { sfx.whoosh(); sfx.tone(440, .3, 'triangle', .1, 440); });
   on('club:countdown', ({ tick }) => sfx.tone(tick === 1 ? 880 : 440, .11, 'triangle', .15));
   on('club:phase', ({ phase }) => { if (phase === 'tapping') { sfx.tone(880, .2, 'triangle', .18, 440); } });
   on('club:hit', ({ index, count }) => { sfx.slap(index ? 1 : -1, .8); if (count > 0 && count % 10 === 0) sfx.cheer(); });

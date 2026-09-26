@@ -63,7 +63,7 @@ export class RunnerView extends View {
     let state = 'run';
     if (g.state === 'menu') state = 'idle';
     else if (g.state === 'falling') state = 'fall';
-    else if (r.stumble > 0) state = 'stumble';
+    else if ((r.stumble > 0 || r.effects.has('fightStun'))) state = 'stumble';
     else if (!r.grounded) state = 'jump';
     else if (r.drifting) state = 'slide';
     else if (r.speed < 1.5) state = 'idle'; // le dino ne court plus tout seul : à l'arrêt
@@ -80,7 +80,8 @@ export class RunnerView extends View {
     } else {
       // regarde là où il va vraiment ; glissade = de travers ; choc = tremblote
       const move = Math.atan2(r.latV + r.push, Math.max(8, r.speed));
-      const wobble = r.stumble > 0 ? Math.sin(r.stumble * 45) * 0.09 : 0;
+      const stun = r.effects.get('fightStun');
+      const wobble = (r.stumble > 0 || stun) ? Math.sin((stun?.timeLeft ?? r.stumble) * 45) * 0.09 : 0;
       this.yaw += ((r.drifting ? r.driftDir * 0.6 : move * 0.9) + wobble - this.yaw) * Math.min(1, dt * 12);
       this.root.position.set(f.x + f.lx * r.x, r.Y, f.z + f.lz * r.x);
       this.root.rotation.y = f.th + this.yaw;
@@ -92,10 +93,10 @@ export class RunnerView extends View {
       this.blob.scale.set(sc, 1, sc);
     }
     // clignote pendant l'invulnérabilité
-    this.root.visible = !!g.worldJump || r.invul <= 0 || g.state !== 'playing' || Math.floor(r.invul * 16) % 2 === 0;
+    this.root.visible = !!g.worldJump || r.effects.has('fightStun') || r.invul <= 0 || g.state !== 'playing' || Math.floor(r.invul * 16) % 2 === 0;
 
     this.model.update?.(this.pose(), dt, time);
-    this.fx.apply(dt, g.state === 'playing' && r.stumble > 0, time);
+    this.fx.apply(dt, g.state === 'playing' && (r.stumble > 0 || r.effects.has('fightStun')), time);
     if (this.weaponModel && this.weapon) this.weaponModel.update?.(this.weapon, dt, time);
     this.focus.copy(this.root.position);
   }

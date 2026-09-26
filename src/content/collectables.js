@@ -1,3 +1,4 @@
+import { CLUB } from '../fight/TapDuel.js';
 import { Entities, Weapons, Effects } from '../kernel/Registry.js';
 import { CoinPickup, WeaponPickup, EffectPickup, BoostPad } from '../entities/Collectable.js';
 import { Projectile } from '../entities/Projectile.js';
@@ -22,3 +23,5 @@ Effects.define('doubleCoins', { name: 'Coins ×2', duration: 12, modifiers: { mu
 
 // Pénalité du Fight Club, gelée pendant la cinématique comme les autres effets.
 Effects.define('fightSlow', { name: 'Stunned · speed 65%', duration: 5, modifiers: { mul: { baseSpeed: .65, boostSpeed: .65 } } });
+
+Effects.define('fightStun', { name: 'Stunned · stopped', duration: CLUB.stunSeconds, modifiers: {} });

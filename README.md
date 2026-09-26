@@ -6,7 +6,15 @@ boss, boutique (skins, musiques, améliorations) et musique générée en direct
 
 ## Aperçu sur ordinateur
 
-Captures du rendu du jeu en **1440 × 900** : les vrais skins remplissent les gradins, le combo se termine par un salto et une explosion cartoon.
+Captures du rendu du jeu en **1440 × 900**. Les courses traversent cinq mondes avant de rejoindre les rings.
+
+![Course dans le désert : tunnel lumineux et cookies obstacles](docs/screenshots/race-desert-desktop.png)
+
+![Course dans le navigateur : fenêtres géantes, décor pastel et rivaux](docs/screenshots/race-browser-desktop.png)
+
+![Course dans le hardware : circuits, processeurs et tunnel néon](docs/screenshots/race-hardware-desktop.png)
+
+Dans le Fight Club, les vrais skins remplissent les gradins et le combo se termine par un salto et une explosion cartoon.
 
 ![Salto du dino reggae dans le Fight Club, devant les dinos spectateurs](docs/screenshots/fight-club-salto-desktop.png)
 
@@ -79,9 +87,9 @@ Les animations passent par un pivot visuel séparé des positions réseau : les 
 
 ### Fight Club mobile
 
-Un portique annonce le premier duel à **140 m**, puis tous les **360 m**. La course se suspend pendant le combat et reprend au même endroit. En solo, le rival est un bot ; en multijoueur, l'hôte affronte le joueur vivant le plus proche et les autres joueurs en course regardent le duel.
+Un portique annonce le premier duel à **2 500 m**, puis tous les **2 500 m**. À 180 m du ring, une annonce animée affiche la distance restante avec des mains qui se rapprochent et un signal sonore. À 60 m, elle passe à « GET READY TO TAP! » ; le portique pulse en néon. La course se suspend pendant le combat et reprend au même endroit. En solo, le rival est un bot ; en multijoueur, l'hôte affronte le joueur vivant le plus proche et les autres joueurs en course regardent le duel.
 
-Après le compte à rebours, tapoter le gros bouton pendant **3 secondes** (ou appuyer sur E / F / espace). Chaque tap validé donne une claque, avec main 3D, son, combo, éclats et réaction du rival. Le gagnant place un coup final et prend **la moitié des pièces de course du perdant, arrondie au-dessus, au maximum 20**. Les pièces déjà en banque ne sont pas engagées. Le perdant garde ses vies mais sa vitesse passe à **65 % pendant 5 secondes**. Égalité : aucune pièce volée, aucun ralentissement.
+Après le compte à rebours, tapoter le gros bouton pendant **3 secondes** (ou appuyer sur E / F / espace). Chaque tap validé donne une claque, avec main 3D, son, combo, éclats et réaction du rival. Le gagnant place un coup final et prend **la moitié des pièces de course du perdant, arrondie au-dessus, au maximum 20**. Les pièces déjà en banque ne sont pas engagées. Le perdant perd **une vie** à la fin de la cinématique, reste **immobile pendant 1 seconde** à la reprise, puis sa vitesse passe à **65 % pendant 5 secondes**. À zéro vie, la partie se termine après le coup final. Les bots ont également trois vies pour les duels. Tous les PNJ sont gelés pendant le duel, classement compris ; ils repartent ensemble à la sortie du ring, avec cette pénalité pour le seul perdant. Égalité : aucune pièce volée, aucun ralentissement.
 
 L'arène utilise le même renderer et les mêmes passes de post-processing que la course. Les animations sont faites directement sur les modèles low poly ; aucun appel d'API ni téléchargement ne bloque un duel. L'entrée dans le ring vide les commandes tactiles/clavier pour éviter de repartir en sautant ou en tournant après les taps.
 

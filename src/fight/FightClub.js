@@ -8,20 +8,27 @@ export class FightClub {
     Object.assign(this, { game, mp, bots, profile, now });
     this.closed = new Set(); this.applied = new Set();
     game.on('game:start', () => {
-      this.cancel('Nouvelle course', false); this.nextAt = CLUB.firstAt; this.round = 0;
-      this.closed.clear(); this.applied.clear();
+      this.cancel('New race', false); this.nextAt = CLUB.firstAt; this.round = 0;
+      this.closed.clear(); this.applied.clear(); this.announcedAt = null;
     });
     mp.on('duel', ({ data, from }) => this.receive(data, from));
     mp.on('peer:left', ({ id }) => {
-      if (this.active && !this.result && (id === this.hostId || this.fighters.some(f => f.id === id))) this.cancel('Adversaire déconnecté — retour en piste');
+      if (this.active && !this.result && (id === this.hostId || this.fighters.some(f => f.id === id))) this.cancel('Opponent disconnected — back to the race');
     });
-    mp.on('left', () => { if (this.active && this.online) this.cancel('Salon quitté', false); });
+    mp.on('left', () => { if (this.active && this.online) this.cancel('Left the lobby', false); });
   }
   get fighters() { return this.session?.fighters ?? this.roster ?? []; }
   get counts() { return this.session?.counts ?? [0, 0]; }
   get localIndex() { return this.fighters.findIndex(f => f.id === this.meId); }
   get isHost() { return !this.online || this.mp.net?.selfId === this.hostId; }
   get remaining() { return this.session ? this.session.remaining(this.now()) / 1000 : 3; }
+  get approachDistance() {
+    if (this.active || this.game.state !== 'playing' || this.game.worldJump || (!this.mp.inRace && !this.bots.active)) return null;
+    // En multijoueur, l'hôte déclenche le ring : les autres voient son approche.
+    const host = this.mp.inRace && !this.mp.isHost ? [...this.mp.peers.values()].find(p => p.host) : null;
+    const distance = Math.max(0, this.nextAt - (host?.last?.s ?? this.game.distance));
+    return distance <= CLUB.approachAt ? distance : null;
+  }
   get progress() { return this.session ? 1 - this.remaining / 3 : 0; }
   emit(type, data = {}) { this.game.emit(`club:${type}`, data); }
   send(type, data = {}, to) { if (this.online) this.mp.sendDuel({ type, id: this.id, ...data }, to); }
@@ -29,12 +36,15 @@ export class FightClub {
   update() {
     const now = this.now(), g = this.game;
     if (!this.active) {
+      if (this.approachDistance !== null && this.announcedAt !== this.nextAt) {
+        this.announcedAt = this.nextAt; this.emit('approach');
+      }
       if (g.state !== 'playing' || g.worldJump || !g.runner.grounded || g.runner.stumble > 0 || g.distance < this.nextAt) return;
       if (this.mp.inRace) { if (this.mp.isHost) this.startMultiplayer(); }
       else if (this.bots.active) this.startSolo();
       return;
     }
-    if (now - this.openedAt > CLUB.timeoutMs && !this.result) { this.cancel('Connexion interrompue — duel annulé'); return; }
+    if (now - this.openedAt > CLUB.timeoutMs && !this.result) { this.cancel('Connection lost — duel cancelled'); return; }
     if (this.online && now >= (this.nextSend ?? 0)) {
       this.nextSend = now + 250;
       if (this.isHost && this.phase === 'matching') this.send('offer', { fighters: this.roster, checkpoint: this.checkpoint });
@@ -58,7 +68,7 @@ export class FightClub {
         if (this.localIndex >= 0) this.session.finished[this.localIndex] = true;
         if (!this.online) this.session.finished[1] = true;
         if (this.isHost && this.session.finished.every(Boolean)) this.settle(this.session.resolve());
-        else if (this.isHost && now - this.session.startedAt > CLUB.introMs + CLUB.tapMs + CLUB.networkGraceMs) this.cancel('Score non reçu — aucun butin perdu');
+        else if (this.isHost && now - this.session.startedAt > CLUB.introMs + CLUB.tapMs + CLUB.networkGraceMs) this.cancel('Score missing — no loot lost');
       }
     }
     if (this.result && now - this.resultAt >= CLUB.resultMs) this.close();
@@ -68,7 +78,7 @@ export class FightClub {
     if (this.active || this.game.state !== 'playing' || this.mp.inRace) return false;
     const b = this.bots.list.filter(b => b.alive).sort((a, b) => Math.abs(a.s - this.game.runner.z) - Math.abs(b.s - this.game.runner.z))[0];
     if (!b) { this.nextAt += CLUB.every; return false; }
-    const roster = [{ id: 'me', name: 'TOI', skin: this.profile.data.skin, coins: this.game.coins }, { id: b.id, name: b.name, skin: b.skin, coins: b.coins ?? 12 }];
+    const roster = [{ id: 'me', name: 'YOU', skin: this.profile.data.skin, coins: this.game.coins }, { id: b.id, name: b.name, skin: b.skin, coins: b.coins ?? 12 }];
     this.online = false; this.meId = 'me'; this.hostId = 'me';
     if (!this.open(`solo-${this.game.seed}-${++this.round}`, roster, this.nextAt)) return false;
     this.begin(roster);
@@ -130,7 +140,7 @@ export class FightClub {
     }
     if (!this.active || this.id !== d.id) return;
     const index = this.fighters.findIndex(f => f.id === from);
-    if (d.type === 'reject' && this.isHost && index >= 0 && !this.result) { this.cancel('Rival indisponible — duel reporté'); return; }
+    if (d.type === 'reject' && this.isHost && index >= 0 && !this.result) { this.cancel('Rival unavailable — duel postponed'); return; }
     if (d.type === 'ready' && this.isHost && index >= 0 && !this.session && Number.isInteger(d.coins) && d.coins >= 0) {
       this.ready.set(from, d.coins);
       if (this.roster.every(f => this.ready.has(f.id))) {
@@ -162,7 +172,7 @@ export class FightClub {
       const expected = check.resolve();
       if (expected.winner !== result.winner || expected.transfer !== result.transfer || expected.loser !== result.loser) return;
       this.settle(expected);
-    } else if (d.type === 'cancel' && from === host && !this.result) this.cancel(d.reason || 'Duel annulé', false);
+    } else if (d.type === 'cancel' && from === host && !this.result) this.cancel(d.reason || 'Duel cancelled', false);
   }
 
   settle(result) {
@@ -174,13 +184,13 @@ export class FightClub {
       if (me === result.winner) this.game.coins += result.transfer;
       if (me === result.loser) {
         this.game.coins = Math.max(0, this.game.coins - result.transfer);
-        this.game.runner.addEffect('fightSlow'); this.game.runner.speed *= CLUB.slowFactor;
+        this.game.runner.addEffect('fightSlow'); this.game.runner.addEffect('fightStun'); this.game.runner.speed = 0;
       }
       if (!this.online) {
         const b = this.bots.list.find(b => b.id === this.fighters[1].id);
         if (b) {
           b.coins = Math.max(0, (b.coins ?? 12) + (result.winner === 1 ? result.transfer : -result.transfer));
-          if (result.loser === 1) { b.clubSlow = CLUB.slowSeconds; b.speed *= CLUB.slowFactor; }
+          if (result.loser === 1) { b.clubSlow = CLUB.slowSeconds; b.clubStun = CLUB.stunSeconds; b.speed = 0; }
         }
       }
     }
@@ -197,6 +207,18 @@ export class FightClub {
     if (!this.active) return;
     this.closed.add(this.id);
     this.nextAt = Math.max(this.checkpoint + CLUB.every, this.game.distance + 100);
-    this.active = false; this.phase = 'idle'; this.game.resumeFromDuel(); this.emit('close');
+    const finishedDuel = this.game.state === 'duel' && this.result?.loser !== null && !!this.result;
+    this.active = false; this.phase = 'idle'; this.game.resumeFromDuel();
+    // La vie est retirée à la sortie : le coup final reste visible, même avec une seule vie.
+    // Un redémarrage a déjà remplacé l'état de la course et ne doit pas recevoir l'ancienne pénalité.
+    if (finishedDuel && this.result.loser === this.localIndex) this.game.loseLife('fight');
+    if (finishedDuel && !this.online && this.result.loser === 1) {
+      const bot = this.bots.list.find(b => b.id === this.fighters[1].id);
+      if (bot) {
+        bot.lives = Math.max(0, (bot.lives ?? 3) - 1);
+        if (!bot.lives) { bot.alive = false; bot.fall = 0; this.game.emit('bot:out', { bot: bot.name, reason: 'fight' }); }
+      }
+    }
+    this.emit('close');
   }
 }
