@@ -23,6 +23,8 @@ export class Track {
     this.nextChunk = 0;
     // Échantillons (tableaux parallèles, lecture seule pour les vues)
     this.X = [0]; this.Y = [0]; this.Z = [0]; this.TH = [0]; this.K = [0]; this.SL = [0]; this.W = [TRACK.width];
+    // sel du décor : change à chaque partie (dérivé de la graine de route → reproductible)
+    this.salt = Math.floor(this.rng.next() * 1e6);
     this.gen = { th: 0, k: 0, kT: 0, kLeft: 60, inArc: false, slope: 0, slT: 0, slLeft: 80, lastHard: -Infinity };
     this.hardTurns = [];   // virages durs : { s, end, sign (+1 = à gauche) }, lus par le Director et les vues
   }
