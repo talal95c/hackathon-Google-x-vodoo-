@@ -253,11 +253,11 @@ button .i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentCo
 
 /* sortie du menu au lancement d'une partie */
 #start.leaving { pointer-events: none; animation: menu-bg-out .5s ease-in forwards; }
-#start.leaving .menu-brand { animation: menu-out-up .35s cubic-bezier(.5, 0, .75, 0) forwards; }
-#start.leaving .hero-copy > * { animation: menu-out-left .42s cubic-bezier(.5, 0, .75, 0) forwards; }
-#start.leaving .hero-copy > :nth-child(2) { animation-delay: .04s; }
-#start.leaving .hero-copy > :nth-child(3) { animation-delay: .08s; }
-#start.leaving .menu-footer { animation: menu-out-down .35s cubic-bezier(.5, 0, .75, 0) forwards; }
+body #start.leaving .menu-brand { animation: menu-out-up .35s cubic-bezier(.5, 0, .75, 0) forwards; }
+body #start.leaving .hero-copy > * { animation: menu-out-left .42s cubic-bezier(.5, 0, .75, 0) forwards; }
+body #start.leaving .hero-copy > :nth-child(2) { animation-delay: .04s; }
+body #start.leaving .hero-copy > :nth-child(3) { animation-delay: .08s; }
+body #start.leaving .menu-footer { animation: menu-out-down .35s cubic-bezier(.5, 0, .75, 0) forwards; }
 @keyframes menu-bg-out { to { opacity: 0; } }
 @keyframes menu-out-up { to { opacity: 0; transform: translateY(-16px); } }
 @keyframes menu-out-left { 0% { transform: none; } 25% { transform: translateX(8px); } 100% { opacity: 0; transform: translateX(-60px); } }
