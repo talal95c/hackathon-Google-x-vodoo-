@@ -22,7 +22,7 @@ export class WebVoicePlayer {
     this.out.gain.value = this.volume;
     this.out.connect(ctx.destination);
     this.preload(this.character);
-    if (this.queued && performance.now() - this.queued.at < 1500) this.play(this.queued.file);
+    if (this.queued && performance.now() - this.queued.at < 4000) this.play(this.queued.file);
     this.queued = null;
   }
 
@@ -49,7 +49,7 @@ export class WebVoicePlayer {
   }
 
   // Réplique pas encore décodée (ou contexte audio pas encore créé) : jouée dès qu'elle est prête,
-  // sauf si une autre réplique l'a remplacée entre-temps ou si elle arrive trop tard.
+  // sauf si une autre réplique l'a remplacée entre-temps ou si elle arrive trop tard (4 s).
   play(file) {
     const token = ++this.seq;
     if (!this.ctx) { this.queued = { file, at: performance.now() }; return 0; }
@@ -58,7 +58,7 @@ export class WebVoicePlayer {
     const at = performance.now();
     this.#load(file).then(() => {
       const ready = this.buffers.get(file);
-      if (ready && token === this.seq && performance.now() - at < 1500) this.#start(ready);
+      if (ready && token === this.seq && performance.now() - at < 4000) this.#start(ready);
     });
     return 0;
   }
