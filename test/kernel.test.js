@@ -81,7 +81,7 @@ test('pas de boss dans les zones', () => {
   g.start({ seed: 5 });
   let boss = null;
   g.on('boss:start', (e) => { boss = e.boss; });
-  g.runner.z = 690; g.sMax = 690; g.chaser.reset(690);
+  g.runner.z = 690; g.sMax = 690;
   run(g, 3, pilot);
   assert.equal(boss, null);
 });
@@ -112,7 +112,7 @@ test('paliers de vitesse : appliqués dès la distance atteinte (sans attendre l
   g.start({ seed: 4 });
   const tempos = [];
   g.on('tempo', (t) => tempos.push(t));
-  g.runner.z = 460; g.sMax = 460; g.chaser.reset(460);
+  g.runner.z = 460; g.sMax = 460;
   run(g, 0.2, pilot);
   assert.equal(tempos.at(-1)?.level, 1);
   assert.ok(Math.abs(g.runner.cruise - 34 * 1.1) < 1e-9, `cruise ${g.runner.cruise}`);
@@ -157,7 +157,7 @@ test('virages durs : présents de temps en temps, jouables, sans obstacle dedans
   for (let i = 1; i < Z.length; i++) assert.ok(Z[i] > Z[i - 1], 'la route ne revient jamais en arrière');
   // pas d'obstacle dans le premier virage dur
   const t = turns[0];
-  g.runner.z = t.s - 200; g.sMax = g.runner.z; g.chaser.reset(g.runner.z);
+  g.runner.z = t.s - 200; g.sMax = g.runner.z;
   run(g, 1, pilot);
   assert.ok(!g.entities.some((e) => e.kind === 'enemy' && e.s >= t.s - 20 && e.s <= t.end), 'aucun ennemi dans le virage');
 });
@@ -165,7 +165,7 @@ test('virages durs : présents de temps en temps, jouables, sans obstacle dedans
 test('même graine = même route, même si on génère la route loin devant avant de jouer', () => {
   const a = new Game({ seed: 12 }); a.start({ seed: 12 }); a.track.ensure(3000);
   const b = new Game({ seed: 12 }); b.start({ seed: 12 });
-  b.runner.z = 1200; b.sMax = 1200; b.chaser.reset(1200);
+  b.runner.z = 1200; b.sMax = 1200;
   run(b, 1, pilot); // b peuple des morceaux au fil de l'eau
   b.track.ensure(3000);
   assert.deepEqual(a.track.X.slice(0, 1400), b.track.X.slice(0, 1400));
@@ -178,7 +178,7 @@ test('virages durs : il faut tenir la direction (lâcher = sortir), jouable au c
     for (const t of g.track.hardTurns.slice(0, 3)) {
       for (const mode of ['hold', 'late', 'release']) {
         const h = new Game({ seed }); h.start({ seed }); const r = h.runner;
-        r.z = t.s - 60; h.sMax = r.z; h.chaser.reset(r.z); r.speed = 34 * h.tempoAt(r.z).ratio;
+        r.z = t.s - 60; h.sMax = r.z; r.speed = 34 * h.tempoAt(r.z).ratio;
         let inTurn = 0, key = 0;
         for (let k = 0; k < 400 && h.state === 'playing' && r.z < t.end + 30; k++) {
           r.invul = 99;
@@ -251,4 +251,22 @@ test('le dino ne court que si on le demande : il ralentit puis s\'arrête', () =
   const z = r.z;
   for (let t = 0; t < 1; t += 1 / 60) g.update(1 / 60, { ...go, throttle: 0 });
   assert.ok(r.z - z < 1.5, 'ne bouge presque plus');
+});
+
+test('multijoueur : une chute coûte une vie et on réapparaît au bon endroit ; à 0 vie, fin', () => {
+  const g = new Game({ seed: 3 });
+  g.start({ seed: 3, respawn: true });
+  const respawns = [];
+  let over = null;
+  g.on('runner:respawn', () => respawns.push(Math.round(g.runner.z)));
+  g.on('game:over', (r) => { over = r; });
+  const idle = { steer: 0, throttle: 1, drift: false, brake: false, jump: false };
+  for (let t = 0; t < 120 && !over; t += 1 / 60) {
+    if (g.state === 'playing' && g.runner.invul <= 0) g.runner.x += 0.5; // on se jette dans le vide
+    g.update(1 / 60, idle);
+  }
+  assert.equal(respawns.length, 2, 'deux réapparitions (3 vies)');
+  assert.ok(respawns[1] > respawns[0], 'on réapparaît plus loin, là où on est tombé');
+  assert.equal(over?.reason, 'fall');
+  assert.equal(g.lives, 0);
 });

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { View } from './View.js';
 import { Models } from './ModelRegistry.js';
 import { Skins } from '../kernel/Registry.js';
+import { FightFx } from './fightFx.js';
 
 // Dinos rivaux (autres joueurs ET PNJ) : leur skin, un anneau à leur couleur au sol et leur nom au-dessus.
 // sources : objets exposant rivals() → [{ id, name, skin, color, view: { s, d, y, v, lat, st } }]. Purement visuel.
@@ -34,7 +35,7 @@ export class RivalView extends View {
     tag.scale.set(2.4, 0.6, 1); tag.position.y = 5; tag.renderOrder = 10;
     root.add(tag);
     this.scene.add(root);
-    const r = { root, model, tag, skin: p.skin, name: p.name, gait: 0 };
+    const r = { root, model, tag, skin: p.skin, name: p.name, gait: 0, fx: new FightFx(root), sh: 0, hit: 0 };
     this.rivals.set(p.id, r);
     return r;
   }
@@ -64,7 +65,12 @@ export class RivalView extends View {
       r.root.rotation.x = -Math.atan(f.slope) * 0.6;
       const grounded = v.y < 0.05;
       if (grounded) r.gait += dt * (v.v || 0) * 0.42;
-      r.model.update?.({ state: grounded ? 'run' : 'jump', speed: v.v || 0, gait: r.gait, steer: 0, grounded, vy: 0, boost: false, driftCharge: 0 }, dt, time);
+      r.model.update?.({ state: v.hit ? 'stumble' : grounded ? (v.v > 1.5 ? 'run' : 'idle') : 'jump', speed: v.v || 0, gait: r.gait, steer: 0, grounded, vy: 0, boost: false, driftCharge: 0 }, dt, time);
+      // combat : déclenche les animations sur les fronts montants des drapeaux reçus
+      if (v.sh && !r.sh) r.fx.shove(v.shd || 1);
+      if (v.hit && !r.hit) r.fx.hit(v.lat || 1);
+      r.sh = v.sh; r.hit = v.hit;
+      r.fx.apply(dt, !!v.hit, time);
     }
   }
 }

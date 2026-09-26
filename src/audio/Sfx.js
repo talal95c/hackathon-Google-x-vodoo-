@@ -83,6 +83,6 @@ export function bindSfx(game, sfx) {
   on('enemy:damage', ({ entity }) => { if (entity.kind === 'boss') sfx.tone(200, 0.08, 'square', 0.08, -100); });
   on('boss:start', () => [196, 185, 175, 165].forEach((f, i) => setTimeout(() => sfx.tone(f, 0.3, 'sawtooth', 0.15), i * 180)));
   on('boss:defeated', () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => sfx.tone(f, 0.2, 'square', 0.14), i * 110)));
-  on('game:over', ({ reason }) => { if (reason === 'caught') sfx.click(); sfx.over(); sfx.skid(false); });
+  on('game:over', () => { sfx.over(); sfx.skid(false); });
   on('state', ({ state }) => { if (state !== 'playing') sfx.skid(false); });
 }

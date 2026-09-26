@@ -26,7 +26,7 @@ export class Bots {
       id: `bot${i}`, name: NAMES[(i * 3 + (g.seed % NAMES.length)) % NAMES.length], color: COLORS[i % COLORS.length],
       skin: skins[i % skins.length],
       s: r.z - 2 - i * 1.5, d: [-2.8, 2.8, -5.2, 5.2][i % 4], y: 0, vy: 0, speed: RUNNER.startSpeed, latV: 0, knockV: 0,
-      stumble: 0, shoveCd: 2 + rng.range(0, 2), bumpCd: 0, alive: true, fall: 0,
+      stumble: 0, shoveCd: 2 + rng.range(0, 2), bumpCd: 0, alive: true, fall: 0, shoveAnim: 0, shoveDir: 1,
       pace: rng.range(0.93, 1.04),            // plus ou moins rapide
       aggression: rng.range(0.35, 0.8),       // envie de se battre
       lane: rng.range(-2.5, 2.5),
@@ -39,7 +39,8 @@ export class Bots {
   // Interface commune avec le multijoueur (RivalView, classement)
   rivals() {
     return this.list.map((b) => ({ id: b.id, name: b.name, skin: b.skin, color: b.color, alive: b.alive,
-      view: { s: b.s, d: b.d, y: b.y, v: b.speed, lat: b.latV + b.knockV, st: b.alive ? 'playing' : b.fall > 0 ? 'falling' : 'over' } }));
+      view: { s: b.s, d: b.d, y: b.y, v: b.speed, lat: b.latV + b.knockV, st: b.alive ? 'playing' : b.fall > 0 ? 'falling' : 'over',
+        sh: b.shoveAnim > 0 ? 1 : 0, shd: b.shoveDir, hit: b.stumble > 0 ? 1 : 0 } }));
   }
 
   ranking() {
@@ -60,7 +61,7 @@ export class Bots {
       if (!b.alive) { if (b.fall > 0) { b.fall -= dt; b.y -= 25 * dt; } continue; }
       track.frame(b.s, f);
       b.stumble = Math.max(0, b.stumble - dt);
-      b.shoveCd -= dt; b.bumpCd -= dt;
+      b.shoveCd -= dt; b.bumpCd -= dt; b.shoveAnim = Math.max(0, b.shoveAnim - dt);
 
       // vitesse : suit le rythme de la course, reste à portée du joueur pour se battre
       const gap = r.z - b.s;
@@ -110,6 +111,7 @@ export class Bots {
         const targets = [{ id: 'me', s: r.z, d: r.x, alive: true }, ...this.list.filter((o) => o !== b && o.alive).map((o) => ({ id: o.id, s: o.s, d: o.d, alive: true }))];
         const t = shoveTarget(b, targets);
         if (t && Math.random() < b.aggression) {
+          b.shoveAnim = 0.35; b.shoveDir = t.dir;
           if (t.id === 'me') { if (!r.isInvulnerable) { r.knock(t.dir * FIGHT.shovePower, { stumble: FIGHT.shoveStumble, source: 'bot' }); g.emit('mp:shoved', { from: b.name }); } }
           else { const o = this.list.find((x) => x.id === t.id); o.knockV += t.dir * FIGHT.shovePower; o.latV = 0; o.stumble = FIGHT.shoveStumble; }
           g.emit('bot:shove', { bot: b.name });
@@ -117,9 +119,8 @@ export class Bots {
         b.shoveCd = 2.5 + Math.random() * 2;
       }
 
-      // sorti de la route (poussé !) ou rattrapé par le curseur → éliminé
+      // sorti de la route (poussé !) → éliminé
       if (b.y <= 0 && Math.abs(b.d) > f.w / 2 + 0.4) this.#eliminate(b, 'fall');
-      else if (b.s < g.chaser.s) this.#eliminate(b, 'caught');
     }
 
     // contacts : joueur ↔ PNJ et PNJ ↔ PNJ (règles du multijoueur, calculées localement)
@@ -145,7 +146,7 @@ export class Bots {
       this.shoveCd = FIGHT.shoveCooldown;
       const t = shoveTarget(me, this.list.filter((b) => b.alive).map((b) => ({ id: b.id, s: b.s, d: b.d, alive: true })));
       if (t) { const b = this.list.find((x) => x.id === t.id); b.knockV += t.dir * FIGHT.shovePower; b.latV = 0; b.stumble = FIGHT.shoveStumble; }
-      g.emit('mp:shove', { hit: !!t });
+      g.emit('mp:shove', { hit: !!t, dir: t ? t.dir : (Math.sign(r.latV) || 1) });
     }
     this.shoveCd = Math.max(0, (this.shoveCd ?? 0) - dt);
   }

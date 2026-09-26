@@ -22,6 +22,9 @@ export class Particles extends View {
     this.listen('world:jump', () => this.emit(P.x, P.y + 1, P.z, 0x55ccff, 30, 14, 12, .3, 1));
     this.listen('world:land', () => this.emit(P.x, P.y + .3, P.z, edge(), 28, 15, 9, .28, .9));
     this.listen('runner:land', () => this.emit(P.x, P.y + 0.2, P.z, edge(), 6, 6, 3, 0.25, 0.4));
+    // combat : gerbe d'étoiles quand on encaisse un coup, éclat quand on touche
+    this.listen('runner:knocked', ({ lateral }) => { if (Math.abs(lateral) > 12) { this.emit(P.x, P.y + 2.5, P.z, 0xffd740, 10, 10, 8, 0.28, 0.6); this.emit(P.x, P.y + 2.5, P.z, 0xffffff, 6, 12, 6, 0.2, 0.4); } });
+    this.listen('mp:shove', ({ hit }) => { if (hit) this.emit(P.x, P.y + 2.2, P.z, 0xff9100, 8, 9, 6, 0.25, 0.45); });
     this.listen('runner:hit', () => this.emit(P.x, P.y + 1, P.z, edge(), 12, 12, 9, 0.22, 0.7));
     this.listen('weapon:fire', () => this.emit(P.x, P.y + 2.6, P.z, 0xff1744, 2, 3, 2, 0.15, 0.2));
     this.listen('entity:destroy', ({ entity: e, reason }) => {

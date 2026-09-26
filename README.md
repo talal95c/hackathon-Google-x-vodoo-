@@ -1,7 +1,7 @@
 # Dino Escape
 
 Runner 3D : le dino de la page « Pas de connexion » s'enfuit du navigateur en courant, poursuivi
-par un curseur géant qui veut fermer l'onglet. Route procédurale (virages serrés, dénivelé), armes,
+en affrontant ses rivaux (PNJ en solo, amis en multijoueur). Route procédurale (virages serrés, dénivelé), armes,
 boss, boutique (skins, musiques, améliorations) et musique générée en direct par Google DeepMind Lyria.
 
 ## Dino reggae et rendu
@@ -22,6 +22,13 @@ boss, boutique (skins, musiques, améliorations) et musique générée en direct
   contraste coloré, grain fin, vignette et décomposition chromatique pendant les sprints et portails, tone mapping ACES
   et anticrénelage MSAA. La résolution est plafonnée pour limiter le coût sur mobile.
 - Le jury saisit sa propre clé Gemini dans le menu Musique. Aucun relais serveur n'est nécessaire.
+
+## Costumes inclus
+
+Dark Vador (casque, cape animée et sabre), Drift · Fortnite (masque kitsune et pioche),
+Mario (casquette, moustache et salopette) et Alligator rejoignent la collection gratuitement,
+y compris sur les anciennes sauvegardes. Choisir **Collection & boutique → Skins → Équiper**.
+Les aperçus 3D montrent les vrais modèles. Les costumes sont cosmétiques et fonctionnent aussi pour les rivaux en multijoueur.
 
 ## Lancer
     npm install

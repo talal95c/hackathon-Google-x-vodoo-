@@ -11,7 +11,7 @@ les animations ou la musique **sans jamais toucher au gameplay**, et inversement
  input/ ─▶ kernel/ ──événements──▶ view/  (Three.js : route, entités, dino, caméra, particules)
  (intent)  Game                  ├▶ audio/ (bruitages + musique Lyria / synthé)
            Runner, Track,        └▶ ui/    (HUD, menus, boutique)
-           Director, Chaser
+           Director
             ▲
  meta/ ─────┘ (profil, portefeuille, boutique → "loadout" de la partie)
 ```
@@ -22,12 +22,12 @@ les animations ou la musique **sans jamais toucher au gameplay**, et inversement
 
 | Dossier | Contenu | Dépend de Three.js ? |
 |---|---|---|
-| `kernel/` | `Game` (états, vies, score, boucle à pas fixe), `Runner` (physique du dino), `Track` (route procédurale), `Director` (spawns, boss), `Chaser`, `Stats`, `Registry`, `EventBus`, `Random`, `config` | **non** |
+| `kernel/` | `Game` (états, vies, score, boucle à pas fixe), `Runner` (physique du dino), `Track` (route procédurale), `Director` (spawns, boss), `Stats`, `Registry`, `EventBus`, `Random`, `config` | **non** |
 | `entities/` | `Entity` → `Collectable` (`CoinPickup`, `WeaponPickup`, `EffectPickup`, `BoostPad`), `Enemy` (`Obstacle`, `MovingEnemy`), `Boss`, `Projectile` | non |
 | `weapons/` | `Weapon` → `LaserWeapon`, `ShieldWeapon` ; `StatusEffect` (bonus temporaires) | non |
 | `meta/` | `Profile` (sauvegarde), `Shop` (achats + loadout), `Storage` | non |
 | `content/` | les définitions de contenu (un fichier par famille) + `index.js` | non |
-| `view/` | `World`, `CameraRig`, `TrackView`, `EntityViews`, `RunnerView`, `ChaserView`, `Particles`, `ModelRegistry`, `models/` | oui |
+| `view/` | `World`, `CameraRig`, `TrackView`, `EntityViews`, `RunnerView`, `Particles`, `ModelRegistry`, `models/` | oui |
 | `audio/` | `Sfx` + `bindSfx`, `music/` (`LyriaEngine`, `SynthEngine`, `MusicDirector`) | non |
 | `ui/` | `Hud`, `Menus`, `style.css` | non (DOM) |
 | `input/` | `Input` (clavier AZERTY/QWERTY + tactile → intent) | non |
@@ -49,7 +49,7 @@ S'abonner : `game.on('type', (payload) => …)`, ou `game.on('*', (type, payload
 | Événement | Payload |
 |---|---|
 | `state` | `{ state, prev }` : `menu`, `playing`, `falling`, `over` |
-| `game:start` / `game:over` | `{ loadout, seed }` / `{ reason: 'fall'\|'dead'\|'caught', distance, coins, score, zone }` |
+| `game:start` / `game:over` | `{ loadout, seed }` / `{ reason: 'fall'\|'dead', distance, coins, score, zone }` |
 | `zone` | `{ index, number, zone }` |
 | `tempo` | `{ level, ratio }` : nouveau palier de vitesse |
 | `chunk:add` / `chunk:remove` | morceau de route `{ index, i0, i1, s0, s1, zone }` |
@@ -157,7 +157,7 @@ MusicThemes.define('jazz', {
 });
 ```
 `levels` : un prompt par palier d'intensité. Le `MusicDirector` calcule l'intensité à partir de la vitesse,
-de la progression, du danger et des boss. Lyria change de palier au plus toutes les 6 s ; le BPM
+de la progression et des boss. Lyria change de palier au plus toutes les 6 s ; le BPM
 s'applique à ce moment-là (`resetContext`), ce qui produit un effet de « drop ».
 
 ### Une amélioration de boutique
@@ -180,7 +180,7 @@ Ajoute une entrée dans `content/zones.js` : `palette`, `decor` (clé `decor:<no
   DJ calée sur les mesures (filtre doux + fondu enchaîné). Le synthé de secours accélère progressivement.
 - **L'environnement pulse au rythme** : `game.beat` (`kernel/BeatClock.js`) est recalé sur la musique
   réelle (le `BeatTracker` analyse le PCM de Lyria avant lecture). `BeatFx` fait pulser les bordures
-  de route, le curseur et, légèrement, la caméra (`ctx.fx.pulse` / `ctx.fx.down`).
+  de route et, légèrement, la caméra (`ctx.fx.pulse` / `ctx.fx.down`).
 - Latence audio : réglage « Synchro musique ↔ jeu » dans le menu Musique (`music.offsetMs`).
 
 ## Multijoueur (`src/net/`)

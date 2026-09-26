@@ -8,6 +8,7 @@ import './view/models/entities.js';
 import './view/models/decor.js';
 import './view/models/blockDino.js';
 import './view/models/reggaeDino.js';
+import './view/models/costumeDinos.js';
 import './view/models/weapons.js';
 
 import { Game } from './kernel/Game.js';
@@ -22,7 +23,6 @@ import { DioramaView } from './view/DioramaView.js';
 import { TunnelView } from './view/TunnelView.js';
 import { EntityViews } from './view/EntityViews.js';
 import { RunnerView } from './view/RunnerView.js';
-import { ChaserView } from './view/ChaserView.js';
 import { Particles } from './view/Particles.js';
 import { CameraRig } from './view/CameraRig.js';
 import { BeatFx } from './view/BeatFx.js';
@@ -59,7 +59,6 @@ const views = [
   new EntityViews(ctx),
   // (RivalView ajoutée plus bas, une fois le multijoueur créé)
   new RunnerView(ctx),
-  new ChaserView(ctx),
   new Particles(ctx),
   new CameraRig(ctx),
 ];
@@ -97,12 +96,14 @@ function play() {
 }
 
 const lobby = new Lobby({ mp, bots, menus, hud, onLaunch: () => play() });
-game.on('bot:out', ({ bot, reason }) => hud.banner(reason === 'fall' ? `💥 ${bot} est tombé !` : `${bot} s'est fait attraper`, 1));
+music.setRaceSource(() => lobby.race); // la musique réagit au match (rivaux proches, coups…)
+game.on('bot:out', ({ bot }) => hud.banner(`💥 ${bot} est tombé !`, 1));
+game.on('runner:respawn', ({ lives }) => hud.banner(`Retour en piste ! ${'♥'.repeat(lives)}`, 1.2));
 mp.on('start', ({ seed, delay, lane }) => {
   sfx.init();
   menus.show(null);
   bots.stop(); // en multijoueur : pas de PNJ
-  lobby.countdown(delay, () => { game.start({ ...shop.prepareRun(), seed }); game.runner.x = lane; });
+  lobby.countdown(delay, () => { game.start({ ...shop.prepareRun(), seed, respawn: true }); game.runner.x = lane; }); // multi : 3 vies, on réapparaît
 });
 document.getElementById('shoveBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); input.shove(); });
 game.on('mp:shove', ({ hit }) => sfx.tone(hit ? 180 : 420, 0.18, 'square', 0.15, hit ? -80 : -200));

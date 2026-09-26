@@ -23,6 +23,7 @@ export class Multiplayer {
   #sendTimer = 0;
   #shoveCd = 0;
   #pingTimer = 0;
+  #shoveAnim = 0; #shoveDir = 1;
   #bumpCd = new Map();      // contact avec ce rival déjà traité récemment
   #bumpRecv = new Map();    // poussée reçue de ce rival récemment
 
@@ -92,7 +93,7 @@ export class Multiplayer {
       this.game.runner.knock(d.imp, { source: 'bump' });
       this.game.emit('mp:bump', {});
     });
-    this.ch.dn.on((d, id) => { const p = this.#peer(id); p.alive = false; p.final = d; this.#emit('lobby'); this.#emit('results'); });
+    this.ch.dn.on((d, id) => { const p = this.#peer(id); p.alive = false; p.final = d; this.game.emit('mp:out', { name: p.name }); this.#emit('lobby'); this.#emit('results'); });
     this.#hello(); // je me présente à tout le monde une fois mes canaux prêts
     const via = ` (via ${this.net.transport})`;
     this.#emit('status', (this.isHost ? 'Partage le code : tes amis le tapent dans « Rejoindre ».' : 'Connecté ! En attente du lancement par l\'hôte…') + via);
@@ -136,6 +137,7 @@ export class Multiplayer {
     if (!this.net) return;
     const g = this.game, r = g.runner;
     this.#shoveCd = Math.max(0, this.#shoveCd - dt);
+    this.#shoveAnim = Math.max(0, this.#shoveAnim - dt);
     for (const [id, cd] of this.#bumpCd) this.#bumpCd.set(id, cd - dt);
     for (const [id, cd] of this.#bumpRecv) this.#bumpRecv.set(id, cd - dt);
 
@@ -144,7 +146,11 @@ export class Multiplayer {
       this.#sendTimer -= dt;
       if (this.#sendTimer <= 0) {
         this.#sendTimer = SEND_EVERY;
-        this.ch.st.send({ s: +r.z.toFixed(2), d: +r.x.toFixed(2), y: +r.y.toFixed(2), v: +r.speed.toFixed(1), lat: +(r.latV + r.push + r.knockV).toFixed(1), st: g.state, skin: this.profile.data.skin });
+        this.ch.st.send({
+          s: +r.z.toFixed(2), d: +r.x.toFixed(2), y: +r.y.toFixed(2), v: +r.speed.toFixed(1), lat: +(r.latV + r.push + r.knockV).toFixed(1),
+          st: g.state, skin: this.profile.data.skin, l: g.lives,
+          sh: this.#shoveAnim > 0 ? 1 : 0, shd: this.#shoveDir, hit: r.stumble > 0 ? 1 : 0, // animations de combat
+        });
       }
     }
 
@@ -179,7 +185,8 @@ export class Multiplayer {
       const rivals = [...this.peers.values()].filter((p) => p.view?.st === 'playing').map((p) => ({ id: p.id, alive: true, ...predicted(p.view) }));
       const t = shoveTarget(me, rivals);
       if (t) this.ch.sh.send({ dir: t.dir }, t.id);
-      g.emit('mp:shove', { hit: !!t });
+      this.#shoveAnim = 0.35; this.#shoveDir = t ? t.dir : (Math.sign(r.latV) || 1);
+      g.emit('mp:shove', { hit: !!t, dir: this.#shoveDir });
       this.#emit('shove', { hit: !!t });
     }
   }
@@ -198,8 +205,8 @@ export class Multiplayer {
   // Classement : les vivants d'abord (distance live), puis les éliminés (distance finale)
   ranking() {
     const g = this.game;
-    const rows = [{ ...this.me, alive: g.state === 'playing' || g.state === 'falling', dist: g.distance }];
-    for (const p of this.peers.values()) rows.push({ ...p, dist: p.final ? p.final.distance : Math.floor(p.view?.s ?? 0) });
+    const rows = [{ ...this.me, alive: g.state === 'playing' || g.state === 'falling', dist: g.distance, lives: g.lives }];
+    for (const p of this.peers.values()) rows.push({ ...p, dist: p.final ? p.final.distance : Math.floor(p.view?.s ?? 0), lives: p.final ? 0 : p.last?.l });
     return rows.sort((a, b) => (b.alive - a.alive) || b.dist - a.dist);
   }
 }

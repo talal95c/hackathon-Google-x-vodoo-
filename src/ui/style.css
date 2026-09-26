@@ -143,10 +143,10 @@ body:not(.in-game) #hud { opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .equalizer i { animation: none; } button, #hud { transition: none; } }
 
-/* Progression de la fuite, sous la jauge du curseur. */
-#journey { position: absolute; top: 87px; left: 50%; transform: translateX(-50%); width: min(250px, 38vw); padding: 7px 10px; border-radius: 9px; background: #ffffffda; color: #344657; text-align: center; font-size: 9px; font-weight: 800; letter-spacing: .6px; }
+/* Progression à travers les mondes, en haut au centre. */
+#journey { position: absolute; top: 24px; left: 50%; transform: translateX(-50%); width: min(250px, 38vw); padding: 7px 10px; border-radius: 9px; background: #ffffffda; color: #344657; text-align: center; font-size: 9px; font-weight: 800; letter-spacing: .6px; }
 #journey .bar { height: 3px; margin-top: 5px; } #worldProgress { background: #299dda; }
-@media (max-width: 600px) { #journey { top: 84px; font-size: 7px; width: 42vw; letter-spacing: .2px; } }
+@media (max-width: 600px) { #journey { top: 14px; font-size: 7px; width: 42vw; letter-spacing: .2px; } }
 
 /* ---------- Multijoueur */
 .mp-button { background: linear-gradient(90deg, #ff4f8b, #ff9100); color: #fff; border-color: #7a1f3d; }
@@ -164,3 +164,4 @@ body:not(.in-game) #hud { opacity: 0; }
 .mp-results { text-align: left; margin: 6px auto; display: inline-block; }
 .mp-input { display: flex; gap: 8px; margin-top: 8px; }
 .mp-input input { flex: 1; }
+#mpBoard .hearts { color: #e53935; letter-spacing: 1px; }

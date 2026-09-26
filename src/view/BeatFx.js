@@ -3,7 +3,7 @@ import { View } from './View.js';
 
 // Effets calés sur la musique (événement 'beat' du kernel).
 //   pulse : 1 sur chaque temps puis décroît ; down : pareil mais sur le 1er temps de la mesure.
-// Les autres vues lisent ctx.fx.pulse / ctx.fx.down (caméra, curseur…).
+// Les autres vues lisent ctx.fx.pulse / ctx.fx.down (caméra…).
 // Les matériaux ajoutés à ctx.beatMaterials flashent vers le blanc sur les temps.
 const WHITE = new THREE.Color(0xffffff);
 

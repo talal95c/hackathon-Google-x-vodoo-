@@ -13,7 +13,7 @@ export class Hud {
   constructor(game, profile) {
     this.game = game;
     this.profile = profile;
-    this.el = Object.fromEntries(['hud', 'score', 'coins', 'lives', 'best', 'speed', 'dangerTxt', 'dangerFill', 'boss', 'bossName', 'bossFill',
+    this.el = Object.fromEntries(['hud', 'score', 'coins', 'lives', 'best', 'speed', 'boss', 'bossName', 'bossFill',
       'worldName', 'worldProgress', 'buffs', 'driftFill', 'driftLabel', 'vignette', 'flash', 'banner', 'music'].map((id) => [id, $(id)]));
     this.setBest(profile.data.best);
 
@@ -24,6 +24,7 @@ export class Hud {
     on('world:jump', ({ to }) => this.banner(`ÉVASION → ${to.name}`, 1.8));
     on('world:land', ({ zone }) => this.banner(zone.subtitle, 2.2));
     on('life:lost', () => this.#lives(true));
+    on('runner:respawn', () => this.flash(0.5));
     on('runner:manual', ({ on: m, dir }) => { if (m) this.banner(dir > 0 ? '⬅ TIENS À GAUCHE !' : 'TIENS À DROITE ! ➡', 1.2); });
     on('runner:hit', () => this.flash(0.6));
     on('boss:start', ({ boss }) => { this.el.boss.classList.remove('hidden'); this.el.bossName.textContent = `⚠ ${boss.def.name}`; this.banner('BOSS !', 1.6); });
@@ -32,7 +33,7 @@ export class Hud {
     on('boss:escaped', () => { this.el.boss.classList.add('hidden'); this.banner('Le boss s\'est enfui…', 1.6); });
     on('weapon:equip', ({ weapon }) => this.banner(`${Weapons.get(weapon.type).name.toUpperCase()} !`, 1));
     on('effect:add', ({ effect }) => this.banner(`${Effects.get(effect.type).name.toUpperCase()} !`, 1));
-    on('game:over', ({ reason }) => { if (reason === 'caught') this.flash(1); this.setTitle('✕ Onglet fermé — Dino Escape'); });
+    on('game:over', () => this.setTitle('✕ Onglet fermé — Dino Escape'));
     this.#lives(false);
   }
 
@@ -69,10 +70,6 @@ export class Hud {
 
     this.#set('worldName', v => { el.worldName.textContent = v; }, `${String(g.zoneIndex + 1).padStart(2, '0')} / 05 · ${g.zone.name}`);
     el.worldProgress.style.width = `${g.zoneIndex === ZONES.length - 1 ? 100 : (g.distance % TRACK.zoneLength) / TRACK.zoneLength * 100}%`;
-    const gap = g.chaser.gap(g.sMax), danger = g.chaser.danger(g.sMax);
-    this.#set('gap', (v) => { el.dangerTxt.textContent = `CURSEUR : ${v} m`; }, Math.max(0, Math.ceil(gap)));
-    el.dangerFill.style.width = `${danger * 100}%`;
-    el.vignette.style.boxShadow = `inset 0 0 160px 40px rgba(229,57,53,${Math.max(0, danger - 0.45) * 1.4})`;
 
     // jauge de glissade (se vide en glissant, se recharge sinon) ; couleur = charge du sprint
     el.driftFill.style.width = `${r.slideGauge * 100}%`;
@@ -90,7 +87,7 @@ export class Hud {
     }, buffs.map((b) => b.name).join('|'));
     el.buffs.querySelectorAll('.fill').forEach((f, i) => { f.style.width = `${(buffs[i]?.p ?? 0) * 100}%`; });
 
-    if (g.state === 'playing') this.setTitle(gap < 18 ? '⚠️ LE CURSEUR ARRIVE' : g.boss ? '👾 BOSS !' : '🦖 AIDEZ-MOI');
+    if (g.state === 'playing') this.setTitle(g.boss ? '👾 BOSS !' : '🦖 AIDEZ-MOI');
     if (this.#bannerTimer > 0 && (this.#bannerTimer -= dt) <= 0) el.banner.style.opacity = 0;
   }
 }

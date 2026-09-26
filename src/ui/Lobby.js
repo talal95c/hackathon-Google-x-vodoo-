@@ -66,7 +66,7 @@ export class Lobby {
     const race = this.race, el = $('mpBoard');
     el.classList.toggle('hidden', !race);
     if (!race) return;
-    el.innerHTML = race.ranking().map((p, i) => `<li class="${p.alive ? '' : 'out'}"><b>${i + 1}</b><span class="dot" style="background:${p.color}"></span>${esc(p.name)}<em>${p.alive ? `${p.dist} m` : `💀 ${p.dist} m`}${p.rtt ? ` · ${Math.round(p.rtt)} ms` : ''}</em></li>`).join('');
+    el.innerHTML = race.ranking().map((p, i) => `<li class="${p.alive ? '' : 'out'}"><b>${i + 1}</b><span class="dot" style="background:${p.color}"></span>${esc(p.name)}<em>${p.lives != null && p.alive ? `<span class="hearts">${'♥'.repeat(Math.max(0, p.lives))}</span> ` : ''}${p.alive ? `${p.dist} m` : `💀 ${p.dist} m`}${p.rtt ? ` · ${Math.round(p.rtt)} ms` : ''}</em></li>`).join('');
   }
 
   update() {

@@ -55,10 +55,8 @@ export const GAME = {
   fixedDt: 1 / 120,      // pas de simulation fixe (physique déterministe)
   maxSubSteps: 8,
   difficultyDistance: 5000,
-  chaserStartGap: 60,    // avance au départ sur le curseur (m)
-  chaserMaxGap: 90,      // le curseur ne se laisse jamais distancer au-delà
-  chaserSpeedFactor: 0.75, // assez lent pour s'arrêter quelques secondes et se battre, pas pour camper
-  fallDuration: 1.3,     // durée de la chute avant l'écran de fin (tomber = game over)
+  fallDuration: 1.3,     // durée de la chute (solo : game over ; multi : perd une vie puis réapparaît)
+  respawnInvul: 2,       // invulnérabilité après une réapparition (multijoueur)
   coinValue: 25,
   startS: 5,
 };

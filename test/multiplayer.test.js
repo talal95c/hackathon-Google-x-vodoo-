@@ -143,3 +143,26 @@ test('PNJ : le coup d\'épaule du joueur peut les éjecter de la route', () => {
   for (let t = 0; t < 2 && b.alive; t += 1 / 60) { g.runner.invul = 99; g.update(1 / 60, idle); bots.update(1 / 60, idle); }
   assert.equal(b.alive, false, 'éjecté de la route');
 });
+
+// --- La musique réagit au match
+import { MatchMood } from '../src/audio/music/MatchMood.js';
+
+test('ambiance du match : bagarre, danger et triomphe montent puis retombent en douceur', () => {
+  const g = new Game({ seed: 5 });
+  g.start({ seed: 5 });
+  const bots = new Bots(g, 1); bots.start();
+  const mood = new MatchMood(g, () => bots);
+  const step = (sec) => { for (let t = 0; t < sec; t += 1 / 60) mood.update(1 / 60); };
+  bots.list[0].s = 999; step(1);
+  assert.ok(mood.fight < 0.05, 'personne autour : calme');
+  bots.list[0].s = g.runner.z; bots.list[0].d = g.runner.x + 2;
+  g.emit('runner:knocked', { lateral: 20 });
+  step(1);
+  assert.ok(mood.fight > 0.5, `bagarre : ${mood.fight.toFixed(2)}`);
+  bots.list[0].s = 999; step(12);
+  assert.ok(mood.fight < 0.3, `retombe : ${mood.fight.toFixed(2)}`);
+  g.lives = 1; step(3);
+  assert.ok(mood.danger > 0.8, 'dernière vie : danger');
+  g.emit('bot:out', { bot: 'Rex' }); step(0.8);
+  assert.ok(mood.triumph > 0.6, 'élimination : triomphe');
+});

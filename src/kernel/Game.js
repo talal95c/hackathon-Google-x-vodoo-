@@ -5,7 +5,6 @@ import { Random } from './Random.js';
 import { Entities } from './Registry.js';
 import { Track } from './Track.js';
 import { Runner } from './Runner.js';
-import { Chaser } from './Chaser.js';
 import { Director } from './Director.js';
 import { BeatClock } from './BeatClock.js';
 import { ZONES } from '../content/zones.js';
@@ -27,7 +26,6 @@ export class Game {
     this.trackRng = new Random(seed ?? 1);   // forme de la route : flux séparé → même graine = même route,
     this.track = new Track(this.bus, this.trackRng); // quel que soit l'ordre génération / apparitions
     this.runner = new Runner(this);
-    this.chaser = new Chaser();
     this.director = new Director(this);
     this.beat = new BeatClock(this.bus);
     this.track.populate = (chunk) => this.director.populate(chunk);
@@ -54,7 +52,8 @@ export class Game {
     return { level: i, ratio: L[i].ratio };
   }
 
-  // loadout : { seed?, modifiers?: [{source, add, mul}], skin?, theme? } (préparé par meta/)
+  // loadout : { seed?, modifiers?: [{source, add, mul}], skin?, theme?, respawn? } (préparé par meta/)
+  //   respawn : true en multijoueur → une chute coûte une vie au lieu de finir la partie
   start(loadout = {}) {
     this.loadout = loadout;
     this.#resetWorld(loadout.seed ?? (Math.random() * 2 ** 32) >>> 0, loadout.modifiers);
@@ -86,7 +85,6 @@ export class Game {
     this.fall = null;
     this.worldJump = null;
     this.nextWorld = 1;
-    this.chaser.reset(this.sMax);
     this.track.update(this.runner.z);
   }
 
@@ -180,8 +178,6 @@ export class Game {
     }
     this.entities = list.filter((e) => e.alive);
 
-    this.chaser.update(h, this.sMax, r.cruise);
-    if (this.chaser.gap(this.sMax) <= 0) return this.#gameOver('caught');
 
     this.director.update(h);
     this.track.update(r.z);
@@ -205,7 +201,6 @@ export class Game {
       this.zoneIndex = index;
       this.emit('zone', { index, number: index, zone: this.zone });
     }
-    this.chaser.update(h, this.sMax, r.cruise);
     this.track.update(r.z);
     // The short cinematic pauses obstacles, power-ups and damage. Input resumes
     // only once the dino is safely on the destination road.
@@ -235,8 +230,24 @@ export class Game {
     F.t += h;
     F.vy -= 30 * h;
     F.x += F.vx * h; F.y += F.vy * h; F.z += F.vz * h;
-    this.chaser.update(h, this.sMax, this.runner.cruise);
-    if (F.t >= GAME.fallDuration) this.#gameOver('fall'); // tomber = fin de partie, quelles que soient les vies
+    if (F.t < GAME.fallDuration) return;
+    // solo : tomber = fin de partie ; multijoueur (loadout.respawn) : une vie en moins, puis on réapparaît
+    if (!this.loadout.respawn) return this.#gameOver('fall');
+    if (!this.loseLife('fall')) this.#respawn();
+  }
+
+  // Réapparition là où on est tombé, au milieu de la route, invulnérable un instant
+  #respawn() {
+    const r = this.runner;
+    r.z = Math.max(r.z, this.sMax) + 2;
+    const f = this.track.frame(r.z, {});
+    r.x = 0; r.latV = 0; r.push = 0; r.knockV = 0;
+    r.Y = f.y; r.vy = 0; r.y = 0; r.grounded = true; r.prevRoadVy = 0;
+    r.speed = r.cruise * 0.5; r.boost = 0; r.drifting = false; r.driftCharge = 0;
+    r.stumble = 0; r.invul = GAME.respawnInvul;
+    this.fall = null;
+    this.#setState('playing');
+    this.emit('runner:respawn', { lives: this.lives });
   }
 
   #gameOver(reason) {
