@@ -76,6 +76,18 @@ export class Sfx {
     src.start();
   }
 
+  // Réplique vocale (AudioBuffer déjà décodé) : position stéréo et volume, renvoie la source
+  voice(buffer, { pan = 0, volume = 1, rate = 1 } = {}) {
+    if (!this.ctx || !buffer) return null;
+    const src = this.ctx.createBufferSource(); src.buffer = buffer; src.playbackRate.value = rate;
+    const gain = this.ctx.createGain(); gain.gain.value = 1.4 * volume;
+    const panner = this.ctx.createStereoPanner(); panner.pan.value = Math.max(-.6, Math.min(.6, pan));
+    src.connect(gain).connect(panner).connect(this.master);
+    src.onended = () => { src.disconnect(); gain.disconnect(); panner.disconnect(); };
+    src.start();
+    return src;
+  }
+
   coin() { this.tone(988, 0.08, 'square', 0.1); setTimeout(() => this.tone(1319, 0.12, 'square', 0.1), 60); }
   boost(big) { this.tone(big ? 300 : 220, 0.45, 'sawtooth', 0.12, big ? 900 : 500); this.noise(0.4, 0.15, 3000); }
   crash() { this.noise(0.5, 0.5, 600); this.tone(120, 0.4, 'square', 0.2, -80); }
