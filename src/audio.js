@@ -311,28 +311,27 @@ class SoundEffects {
     osc.stop(now + 0.28);
   }
 
-  // --- Dynamic Music Engine (Lyria RealTime + Procedural Fallback) ---
+  // --- Dynamic High-Energy Techno Music Engine (Lyria RealTime + Procedural Fallback) ---
 
   startMusic() {
     this.init();
     if (this.musicPlaying) return;
 
     this.musicPlaying = true;
-    this.musicBpm = 120;
-    this.musicIntensity = 0.05;
+    this.musicBpm = 135; // Fast techno driving tempo!
+    this.musicIntensity = 0.15;
     this.currentStep = 0;
 
     // If Lyria AI is connected, play live stream
     if (lyriaDJ.isConnected) {
       lyriaDJ.play();
-      // Keep master procedural gain very low or muted to let Lyria shine
       if (this.masterMusicGain) {
         this.masterMusicGain.gain.setValueAtTime(0.04, this.ctx.currentTime);
       }
     } else {
       if (this.masterMusicGain) {
         this.masterMusicGain.gain.cancelScheduledValues(this.ctx.currentTime);
-        this.masterMusicGain.gain.setValueAtTime(0.24, this.ctx.currentTime);
+        this.masterMusicGain.gain.setValueAtTime(0.28, this.ctx.currentTime);
       }
     }
 
@@ -343,7 +342,8 @@ class SoundEffects {
   }
 
   updateMusic(speedFactor = 1.0, intensity = 0.0, phase = 0) {
-    this.musicBpm = Math.min(148, 118 + (speedFactor - 1.0) * 35);
+    // 135 BPM to 156 BPM peak-time hard techno
+    this.musicBpm = Math.min(156, 134 + (speedFactor - 1.0) * 32);
     this.musicIntensity = Math.max(0, Math.min(1.0, intensity));
 
     // Dynamic steering with Google DeepMind Lyria RealTime model
@@ -355,78 +355,82 @@ class SoundEffects {
   scheduler() {
     if (!this.musicPlaying || !this.ctx) return;
 
-    // Look ahead 0.1s and schedule notes
     while (this.nextNoteTime < this.ctx.currentTime + 0.12) {
       this.scheduleStep(this.currentStep, this.nextNoteTime);
-      // Advance step (16th notes: 4 steps per beat)
       const secondsPerBeat = 60.0 / this.musicBpm;
       const stepDuration = secondsPerBeat / 4;
       this.nextNoteTime += stepDuration;
       this.currentStep = (this.currentStep + 1) % 16;
     }
 
-    this.musicTimer = setTimeout(() => this.scheduler(), 25);
+    this.musicTimer = setTimeout(() => this.scheduler(), 20);
   }
 
   scheduleStep(step, time) {
     if (!this.ctx || !this.masterMusicGain) return;
 
-    // 1. Kick on quarter notes: 0, 4, 8, 12
+    // 1. Relentless 4-on-the-floor heavy 909 kick
     if (step % 4 === 0) {
       this.triggerKick(time);
     }
 
-    // 2. Snare / Clap on backbeats 4 and 12 (unlocked immediately, punchier with intensity)
+    // 2. Crisp, explosive industrial snare / clap on backbeats 4 and 12
     if (step === 4 || step === 12) {
       this.triggerSnare(time);
     }
 
-    // 3. Hi-hats: 8th notes at low intensity, full 16ths as intensity rises
-    const playHat = this.musicIntensity > 0.3 ? (step % 2 === 0 || this.musicIntensity > 0.6) : (step % 4 === 2);
-    if (playHat) {
-      this.triggerHat(time, step % 4 === 2);
+    // 3. Sizzling offbeat hi-hat on every step 2, 6, 10, 14 + 16th rolling hats
+    const isOffbeat = step % 4 === 2;
+    if (isOffbeat || (this.musicIntensity > 0.35 && step % 2 === 1)) {
+      this.triggerHat(time, isOffbeat);
     }
 
-    // 4. Bassline: 8th notes (0, 2, 4, 6, 8, 10, 12, 14)
-    if (step % 2 === 0) {
-      // D minor pentatonic bassline: D1, D1, F1, G1, D1, C1, F1, A1
-      const bassPattern = [73.42, 73.42, 87.31, 98.0, 73.42, 65.41, 87.31, 110.0];
-      const noteIdx = Math.floor(step / 2);
-      const freq = bassPattern[noteIdx % bassPattern.length];
-      this.triggerBass(freq, time);
-    }
+    // 4. Rolling Acid 303 Techno Bassline (16th-note relentless drive)
+    // Driving in F minor / D minor: pumping on the 16ths
+    const bassNotes = [65.41, 73.42, 65.41, 73.42, 87.31, 73.42, 65.41, 98.0];
+    const freq = bassNotes[step % bassNotes.length];
+    this.triggerBass(freq, time, step);
 
-    // 5. Synthwave Arpeggio (unlocked progressively as color & speed elevate)
-    if (this.musicIntensity > 0.2) {
-      // 16th note arp sequence in D dorian/minor
-      const arpNotes = [293.66, 349.23, 440.0, 523.25, 587.33, 523.25, 440.0, 349.23];
-      const arpFreq = arpNotes[step % arpNotes.length];
-      if (this.musicIntensity > 0.4 || step % 2 === 0) {
-        this.triggerArp(arpFreq, time, step);
-      }
+    // 5. Aggressive Rave Synth Stabs on offbeat syncopations (steps 3, 7, 11, 14)
+    if ((step === 3 || step === 7 || step === 11 || step === 14) && this.musicIntensity > 0.25) {
+      this.triggerRaveStab(time, step);
     }
   }
 
   triggerKick(time) {
+    // Punchy 909 Kick: fast pitch drop + sub rumble
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.connect(gain);
     gain.connect(this.masterMusicGain);
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(140, time);
-    osc.frequency.exponentialRampToValueAtTime(38, time + 0.1);
+    osc.frequency.setValueAtTime(180, time);
+    osc.frequency.exponentialRampToValueAtTime(42, time + 0.08);
 
-    gain.gain.setValueAtTime(0.7, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.14);
+    gain.gain.setValueAtTime(0.85, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.16);
 
     osc.start(time);
-    osc.stop(time + 0.14);
+    osc.stop(time + 0.16);
+
+    // Transient click for extra punch
+    const click = this.ctx.createOscillator();
+    const clickGain = this.ctx.createGain();
+    click.connect(clickGain);
+    clickGain.connect(this.masterMusicGain);
+    click.type = 'triangle';
+    click.frequency.setValueAtTime(320, time);
+    click.frequency.exponentialRampToValueAtTime(60, time + 0.02);
+    clickGain.gain.setValueAtTime(0.3, time);
+    clickGain.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
+    click.start(time);
+    click.stop(time + 0.02);
   }
 
   triggerSnare(time) {
     // Noise snap
-    const bufferSize = Math.floor(this.ctx.sampleRate * 0.12);
+    const bufferSize = Math.floor(this.ctx.sampleRate * 0.14);
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
@@ -438,19 +442,19 @@ class SoundEffects {
 
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(1400, time);
-    filter.Q.value = 2.0;
+    filter.frequency.setValueAtTime(1600, time);
+    filter.Q.value = 1.8;
 
     const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.28, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+    gain.gain.setValueAtTime(0.35, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.14);
 
     noise.connect(filter);
     filter.connect(gain);
     gain.connect(this.masterMusicGain);
 
     noise.start(time);
-    noise.stop(time + 0.12);
+    noise.stop(time + 0.14);
   }
 
   triggerHat(time, accent = false) {
@@ -466,22 +470,22 @@ class SoundEffects {
 
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'highpass';
-    filter.frequency.setValueAtTime(7500, time);
+    filter.frequency.setValueAtTime(8000, time);
 
     const gain = this.ctx.createGain();
-    const vol = (accent ? 0.16 : 0.08) * (0.6 + this.musicIntensity * 0.4);
+    const vol = (accent ? 0.22 : 0.1) * (0.8 + this.musicIntensity * 0.4);
     gain.gain.setValueAtTime(vol, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + (accent ? 0.06 : 0.03));
 
     noise.connect(filter);
     filter.connect(gain);
     gain.connect(this.masterMusicGain);
 
     noise.start(time);
-    noise.stop(time + 0.04);
+    noise.stop(time + 0.06);
   }
 
-  triggerBass(freq, time) {
+  triggerBass(freq, time, step) {
     const osc = this.ctx.createOscillator();
     const filter = this.ctx.createBiquadFilter();
     const gain = this.ctx.createGain();
@@ -493,45 +497,48 @@ class SoundEffects {
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(freq, time);
 
-    // Filter cutoff opens up as intensity increases
-    const baseCutoff = 350 + this.musicIntensity * 1200;
+    // Acid 303 resonant filter sweep
+    const baseCutoff = 450 + this.musicIntensity * 1600;
+    const peakCutoff = baseCutoff * (step % 4 === 1 ? 2.8 : 1.6);
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(baseCutoff * 1.8, time);
-    filter.frequency.exponentialRampToValueAtTime(baseCutoff, time + 0.12);
-    filter.Q.value = 4.0;
+    filter.frequency.setValueAtTime(peakCutoff, time);
+    filter.frequency.exponentialRampToValueAtTime(baseCutoff, time + 0.09);
+    filter.Q.value = 6.0; // Resonant acid squelch
 
-    const noteDuration = 0.16;
-    gain.gain.setValueAtTime(0.35, time);
+    const noteDuration = 0.1;
+    gain.gain.setValueAtTime(0.42, time);
     gain.gain.exponentialRampToValueAtTime(0.001, time + noteDuration);
 
     osc.start(time);
     osc.stop(time + noteDuration);
   }
 
-  triggerArp(freq, time, step) {
-    const osc = this.ctx.createOscillator();
-    const filter = this.ctx.createBiquadFilter();
-    const gain = this.ctx.createGain();
+  triggerRaveStab(time, step) {
+    // Classic 90s warehouse rave synth chord stab
+    const freqs = [220, 261.63, 329.63, 392.0]; // A minor 7 rave chord
+    freqs.forEach((f) => {
+      const osc = this.ctx.createOscillator();
+      const filter = this.ctx.createBiquadFilter();
+      const gain = this.ctx.createGain();
 
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(this.masterMusicGain);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterMusicGain);
 
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(freq, time);
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(f * 1.5, time);
 
-    filter.type = 'bandpass';
-    const filterFreq = 1200 + (step % 4) * 500 + this.musicIntensity * 1000;
-    filter.frequency.setValueAtTime(filterFreq, time);
-    filter.Q.value = 2.5;
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(2200 + (step % 2) * 800, time);
+      filter.Q.value = 3.0;
 
-    const dur = 0.08;
-    const vol = 0.12 * Math.min(1.0, this.musicIntensity * 1.5);
-    gain.gain.setValueAtTime(vol, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+      const dur = 0.12;
+      gain.gain.setValueAtTime(0.12 * this.musicIntensity, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
 
-    osc.start(time);
-    osc.stop(time + dur);
+      osc.start(time);
+      osc.stop(time + dur);
+    });
   }
 
   stopMusic(slowdown = true) {

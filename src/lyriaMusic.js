@@ -2,47 +2,48 @@ import { GoogleGenAI } from '@google/genai';
 
 /**
  * Definition of prompt signatures and acoustic profiles per game phase.
+ * PURE HIGH-OCTANE TECHNO & HARD TECHNO EXPLOSION (no chill).
  */
 export const LYRIA_PHASE_PROFILES = [
   {
     phase: 0,
-    name: 'Chrome Awakening',
-    text: 'Minimal electronic beat, 8-bit retro gaming rhythm, subtle kick drum, low-fi synth pulse',
-    baseBpm: 118,
-    density: 0.35,
-    brightness: 0.4,
+    name: 'Industrial Techno Intro',
+    text: 'High-energy driving warehouse techno, heavy distorted 909 kick drum, rolling sub bassline, aggressive industrial rave groove, intense beat',
+    baseBpm: 134,
+    density: 0.75,
+    brightness: 0.7,
   },
   {
     phase: 1,
-    name: 'Neon Emergence',
-    text: 'Melodic neon synthwave, 80s analog synthesizers, punchy electronic drums, smooth bassline',
-    baseBpm: 124,
-    density: 0.55,
-    brightness: 0.58,
+    name: 'Peak-Time Acid Techno',
+    text: 'Peak time acid techno, screaming 303 acid bassline, relentless punchy kick, massive sub drops, dark rave energy, fast tempo',
+    baseBpm: 140,
+    density: 0.85,
+    brightness: 0.8,
   },
   {
     phase: 2,
-    name: 'Synthwave Overdrive',
-    text: 'Cyberpunk synthwave, aggressive analog synth leads, energetic arpeggios, heavy sidechain kick, retro future electro',
-    baseBpm: 132,
-    density: 0.72,
-    brightness: 0.72,
+    name: 'Hard Techno Explosion',
+    text: 'Hard techno, explosive industrial kick drum, aggressive rave stabs, pounding heavy rhythm, hyper energetic festival drop, high intensity',
+    baseBpm: 145,
+    density: 0.92,
+    brightness: 0.88,
   },
   {
     phase: 3,
-    name: 'Hyper-Chromatic Drift',
-    text: 'High-octane drum and bass synthwave, rapid breakbeats, searing laser synths, maximum adrenaline video game score',
-    baseBpm: 140,
-    density: 0.88,
-    brightness: 0.85,
+    name: 'Hard Techno & Psytrance',
+    text: 'Relentless hard techno psytrance hybrid, rolling 16th bassline, explosive percussion, intense rave synth stabs, maximum speed, massive energy',
+    baseBpm: 150,
+    density: 0.96,
+    brightness: 0.94,
   },
   {
     phase: 4,
-    name: 'Maximum Overdrive',
-    text: 'Ultra-fast hyper-speed cyber rave, explosive bass drops, frantic cosmic synth arpeggios, transcendent neon runner soundtrack',
-    baseBpm: 148,
+    name: 'Maximum Overdrive Rave',
+    text: 'Maximum overdrive ultra hard techno rave, massive distorted kick drum, apocalyptic synth riffs, earth-shaking bass drops, pure adrenaline climax, 155 bpm',
+    baseBpm: 156,
     density: 1.0,
-    brightness: 0.95,
+    brightness: 1.0,
   },
 ];
 
