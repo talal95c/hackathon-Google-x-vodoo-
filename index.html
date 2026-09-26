@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Dino Escape</title>
+  <link rel="stylesheet" href="/src/ui/style.css" />
+</head>
+<body>
+  <!-- HUD (piloté par src/ui/Hud.js) -->
+  <div id="hud">
+    <div class="row" id="top">
+      <div>
+        <div id="score">0 m</div>
+        <div class="small" id="coins">★ 0</div>
+        <div id="lives"></div>
+      </div>
+      <div class="right"><div class="small">RECORD</div><div id="best">0</div></div>
+    </div>
+    <div id="danger"><div id="dangerTxt">CURSEUR</div><div class="bar"><div class="fill" id="dangerFill"></div></div></div>
+    <div id="journey"><span id="worldName">01 / 05 · DÉSERT HORS LIGNE</span><div class="bar"><div class="fill" id="worldProgress"></div></div></div>
+    <div id="boss" class="hidden"><div id="bossName">BOSS</div><div class="bar"><div class="fill" id="bossFill"></div></div></div>
+    <div id="buffs"></div>
+    <div class="row" id="bottom">
+      <div id="speed">0 <small>km/h</small></div>
+      <div id="driftbox"><div class="label" id="driftLabel">GLISSADE</div><div class="bar"><div class="fill" id="driftFill"></div></div></div>
+    </div>
+    <div id="music" class="small"></div>
+  </div>
+  <div id="vignette"></div>
+  <div id="flash"></div>
+  <div id="banner"></div>
+
+  <!-- Écrans (pilotés par src/ui/Menus.js) -->
+  <div class="screen" id="start">
+    <div class="menu-brand"><span class="brand-icon">d.</span><span>DINO ESCAPE</span><span class="edition">ERR_INTERNET_DISCONNECTED</span></div>
+    <div class="hero-copy">
+      <p class="eyebrow"><span class="live-dot"></span> NO CONNECTION. JUST GOOD VIBES.</p>
+      <h1>DINO<br /><span>ESCAPE.</span></h1>
+      <p class="hero-description">Suis le rythme.<br /> Sème le curseur.</p>
+      <p class="hero-detail">Du désert hors ligne jusqu’au cloud.<br />Traverse les cinq mondes pour semer le curseur.</p>
+      <div class="buttons hero-actions">
+        <button class="primary" data-action="play"><span>▶</span> Lancer la session <span>↗</span></button>
+        <button class="reggae-button" data-action="reggae" aria-label="Équiper le dino reggae"><span class="reggae-stripes"></span> Dino reggae</button>
+      </div>
+      <p class="small" id="wallet"></p>
+    </div>
+    <div class="hero-tag"><span class="tag-dot"></span><div><b id="heroName">RIDDIM</b><span id="heroTheme">REGGAE DINO · VOL. 01</span></div><span class="equalizer"><i></i><i></i><i></i><i></i></span></div>
+    <div class="menu-footer">
+      <div class="controls"><span><b>← →</b> tourner</span><span><b>ESPACE</b> sauter</span><span><b>SHIFT</b> glisser</span></div>
+      <div class="buttons"><button data-action="shop">Collection & boutique</button><button data-action="music">♫ Musique</button></div>
+    </div>
+  </div>
+
+  <div class="screen hidden" id="over">
+    <p class="err" id="overErr">ERR</p>
+    <h2 id="overTitle">Onglet fermé.</h2>
+    <h1 id="overScore">0</h1>
+    <p id="overDetails"></p>
+    <div class="buttons">
+      <button class="primary" data-action="play">↻ REJOUER</button>
+      <button data-action="shop">🛒 BOUTIQUE</button>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="shop">
+    <div class="panel-head"><h2>Boutique</h2><span id="shopCoins"></span><button data-action="close">✕</button></div>
+    <div class="tabs">
+      <button data-tab="skin" class="active">Skins</button>
+      <button data-tab="music">Musiques</button>
+      <button data-tab="upgrade">Améliorations</button>
+    </div>
+    <div class="grid" id="shopGrid"></div>
+  </div>
+
+  <div class="panel hidden" id="musicPanel">
+    <div class="panel-head"><h2>Musique Lyria</h2><button data-action="close">✕</button></div>
+    <p>La musique est générée en direct par <b>Google DeepMind Lyria RealTime</b> et accélère avec le jeu.
+      Il faut une clé API Gemini (<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a>), gardée uniquement dans ton navigateur.
+      Sans clé, une musique synthétisée prend le relais.</p>
+    <input id="apiKey" type="password" placeholder="Clé API Gemini" autocomplete="off" />
+    <div class="buttons"><button class="primary" data-action="connect">Connecter</button><button data-action="forget">Oublier la clé</button></div>
+    <p class="small" id="lyriaStatus"></p>
+    <label class="small"><input id="vocals" type="checkbox" style="width:auto" /> Voix (mode vocal de Lyria)</label>
+    <label class="small">Synchro musique ↔ jeu : <b id="audioOffsetVal">0 ms</b>
+      <input id="audioOffset" type="range" min="-200" max="200" step="5" />
+    </label>
+    <p class="small">Cale les pulsations du décor sur la musique : si elles arrivent après le kick, baisse le réglage ; avant, monte-le (casque Bluetooth : environ +150 ms).</p>
+    <h3>Thème de la prochaine partie</h3>
+    <div class="grid" id="themeGrid"></div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
