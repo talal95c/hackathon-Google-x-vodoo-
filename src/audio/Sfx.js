@@ -54,7 +54,10 @@ export class Sfx {
     src.start(t); src.stop(t + dur);
   }
 
-  coin() { this.tone(988, 0.08, 'square', 0.1); setTimeout(() => this.tone(1319, 0.12, 'square', 0.1), 60); }
+  coin(step = 0, gold = false) {
+    const freq = 660 * 2 ** (Math.min(step, 10) / 12);
+    this.tone(freq, 0.09, 'triangle', gold ? 0.16 : 0.1, freq * 0.2);
+  }
   boost(big) { this.tone(big ? 300 : 220, 0.45, 'sawtooth', 0.12, big ? 900 : 500); this.noise(0.4, 0.15, 3000); }
   crash() { this.noise(0.5, 0.5, 600); this.tone(120, 0.4, 'square', 0.2, -80); }
   zone() { [523, 659, 784].forEach((f, i) => setTimeout(() => this.tone(f, 0.15, 'triangle', 0.15), i * 90)); }
@@ -66,6 +69,8 @@ export class Sfx {
 
 export function bindSfx(game, sfx) {
   const on = (t, fn) => game.on(t, fn);
+  let chain = 0, lastCoin = -Infinity;
+  on('game:start', () => { chain = 0; lastCoin = -Infinity; });
   on('runner:jump', () => sfx.jump());
   on('runner:land', ({ impact }) => sfx.step(impact > 0.3));
   on('runner:step', () => sfx.step(false));
@@ -74,7 +79,16 @@ export function bindSfx(game, sfx) {
   on('runner:fall', () => sfx.tone(600, 0.8, 'sawtooth', 0.12, -500));
   on('runner:drift', ({ on: d }) => sfx.skid(d));
   on('runner:manual', ({ on: m }) => { if (m) sfx.tone(880, 0.12, 'square', 0.1, -300); });
-  on('coins', ({ amount }) => { if (amount <= 2) sfx.coin(); });
+  on('entity:destroy', ({ entity, reason }) => {
+    if (reason !== 'collected' || (entity.type !== 'coin' && entity.type !== 'goldCoin')) return;
+    const now = performance.now();
+    chain = now - lastCoin < 800 ? chain + 1 : 0;
+    lastCoin = now;
+    sfx.coin(chain, entity.type === 'goldCoin');
+  });
+  on('runner:parry', () => { sfx.tone(170, 0.18, 'sawtooth', 0.24, -100); sfx.noise(0.1, 0.18, 1800); });
+  on('runner:parry:miss', () => sfx.tone(220, 0.08, 'triangle', 0.06, -90));
+  on('fever:start', () => { [440, 554, 659].forEach((f, i) => setTimeout(() => sfx.tone(f, 0.16, 'sawtooth', 0.12), i * 80)); });
   on('zone', () => sfx.zone());
   on('weapon:equip', () => sfx.tone(440, 0.3, 'sawtooth', 0.12, 440));
   on('weapon:fire', () => sfx.tone(1400, 0.05, 'square', 0.04, -900));

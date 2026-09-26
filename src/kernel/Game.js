@@ -9,6 +9,7 @@ import { Chaser } from './Chaser.js';
 import { Director } from './Director.js';
 import { BeatClock } from './BeatClock.js';
 import { ZONES } from '../content/zones.js';
+import { CHALLENGES } from '../content/challenges.js';
 
 // Chef d'orchestre de la partie. Aucune dépendance graphique / DOM.
 //
@@ -45,6 +46,8 @@ export class Game {
   get score() { return this.distance + this.coins * GAME.coinValue; }
   get zone() { return ZONES[this.zoneIndex]; }
   get boss() { return this.director.bossActive ? this.director.boss : null; }
+  get challenge() { return CHALLENGES.find((c) => c.id === this.loadout.challenge); }
+  get challengeProgress() { return this.challenge ? Math.min(this.challenge.target, this[this.challenge.metric]) : 0; }
 
   // Palier de tempo à la distance s → { level, ratio }
   tempoAt(s) {
@@ -83,6 +86,11 @@ export class Game {
     this.tempo = this.tempoAt(0);
     this.acc = 0;
     this.pendingJump = false;
+    this.pendingAttack = false;
+    this.parryCooldown = 0;
+    this.parries = 0;
+    this.fever = 0;
+    this.feverTime = 0;
     this.fall = null;
     this.worldJump = null;
     this.nextWorld = 1;
@@ -111,6 +119,16 @@ export class Game {
     this.emit('coins', { amount, total: this.coins });
   }
 
+  addFever(n) {
+    if (this.state !== 'playing' || this.feverTime > 0) return;
+    this.fever = Math.min(100, this.fever + n);
+    if (this.fever >= 100) {
+      this.fever = 0;
+      this.feverTime = GAME.feverDuration;
+      this.emit('fever:start', { seconds: this.feverTime });
+    }
+  }
+
   // Renvoie true si la partie est finie
   loseLife(reason) {
     this.lives = Math.max(0, this.lives - 1);
@@ -124,12 +142,14 @@ export class Game {
   update(dt, intent) {
     this.beat.update(Math.min(dt, 0.25)); // l'horloge musicale tourne en temps réel, même au menu
     if (intent.jump) this.pendingJump = true;
+    if (intent.attack && this.state === 'playing') this.pendingAttack = true;
     if (this.state !== 'playing' && this.state !== 'falling') return;
     this.acc += Math.min(dt, 0.25);
     let n = 0;
     while (this.acc >= GAME.fixedDt && n < GAME.maxSubSteps) {
       this.#step(GAME.fixedDt, { ...intent, jump: this.pendingJump });
       this.pendingJump = false;
+      this.pendingAttack = false;
       this.acc -= GAME.fixedDt;
       n++;
     }
@@ -140,6 +160,11 @@ export class Game {
     if (this.state === 'falling') return this.#stepFall(h);
     if (this.state !== 'playing') return;
     const r = this.runner, S = r.stats, f = this._f || (this._f = {});
+    this.parryCooldown = Math.max(0, this.parryCooldown - h);
+    if (this.feverTime > 0) {
+      this.feverTime = Math.max(0, this.feverTime - h);
+      if (this.feverTime === 0) this.emit('fever:end', {});
+    }
 
     const tempo = this.tempoAt(this.sMax);
     if (tempo.level !== this.tempo.level) { this.tempo = tempo; this.emit('tempo', tempo); }
@@ -158,6 +183,7 @@ export class Game {
     this.track.frame(r.z, f);
     if (r.grounded) { r.Y = f.y; r.y = 0; }
     this.sMax = Math.max(this.sMax, r.z);
+    if (this.pendingAttack && this.parryCooldown <= 0) this.#parry();
 
     const zi = Track.zoneIndex(r.z);
     if (zi !== this.zoneIndex) {
@@ -185,6 +211,20 @@ export class Game {
 
     this.director.update(h);
     this.track.update(r.z);
+  }
+
+  #parry() {
+    const r = this.runner;
+    this.parryCooldown = GAME.parryCooldown;
+    const reach = Math.max(4, r.speed * GAME.parryWindow);
+    const target = this.entities.filter((e) => e.alive && e.def.parryable
+      && e.s - r.z >= -0.6 && e.s - r.z <= reach
+      && Math.abs(e.d - r.x) < e.hitbox.hx + r.stats.get('radius')).sort((a, b) => a.s - b.s)[0];
+    if (!target) { this.emit('runner:parry:miss', {}); return; }
+    target.takeDamage(Infinity, r, 'smashed');
+    this.parries++;
+    this.addFever(25);
+    this.emit('runner:parry', { entity: target, total: this.parries });
   }
 
   #stepWorldJump(h) {
@@ -241,8 +281,9 @@ export class Game {
 
   #gameOver(reason) {
     if (this.state === 'over') return;
+    const challenge = this.challenge && { id: this.challenge.id, progress: this.challengeProgress, complete: this.challengeProgress >= this.challenge.target };
     this.#setState('over');
-    this.emit('game:over', { reason, distance: this.distance, coins: this.coins, score: this.score, zone: Track.zoneNumber(this.sMax) });
+    this.emit('game:over', { reason, distance: this.distance, coins: this.coins, score: this.score, zone: Track.zoneNumber(this.sMax), challenge });
   }
 
   #despawnChunk(chunk) {
