@@ -510,8 +510,8 @@ class GameDirector {
 
         // Adaptive HUD styling when colors awaken
         const hudTop = document.querySelector('.hud-top');
-        if (hudTop && this.dino3D.colorProgress > 0.15) {
-          const cp = this.dino3D.colorProgress;
+        if (hudTop && this.dino3D.colorProgress > 0.3) {
+          const cp = Math.min(1.0, this.dino3D.colorProgress / 2.5);
           hudTop.style.background = `rgba(16, 12, 28, ${0.7 + cp * 0.25})`;
           hudTop.style.borderColor = `rgba(0, 240, 255, ${0.2 + cp * 0.4})`;
           this.scoreDisplay.style.color = '#ffffff';

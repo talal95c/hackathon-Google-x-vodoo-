@@ -1,6 +1,100 @@
 import * as THREE from 'three';
 import { sounds } from './audio.js';
 
+// Color themes for each phase (smoothly lerped)
+const THEMES = [
+  { // Phase 0: Pure Chrome Monochrome
+    sky: new THREE.Color(0xf7f7f7),
+    fogDensity: 0.012,
+    track: new THREE.Color(0xf5f5f5),
+    ground: new THREE.Color(0xededed),
+    lane: new THREE.Color(0xdedede),
+    railL: new THREE.Color(0xdedede),
+    railR: new THREE.Color(0xdedede),
+    dino: new THREE.Color(0x535353),
+    dinoEmissive: new THREE.Color(0x000000),
+    dinoEmissiveInt: 0,
+    eye: new THREE.Color(0xffffff),
+    cactus: new THREE.Color(0x535353),
+    cactusCore: new THREE.Color(0x535353),
+    cactusCoreOpacity: 0,
+    ptero: new THREE.Color(0x535353),
+    pteroEmissive: new THREE.Color(0x000000),
+  },
+  { // Phase 1: Neon Emergence (Soft twilight, crisp cyan & magenta accents)
+    sky: new THREE.Color(0x231a38),
+    fogDensity: 0.013,
+    track: new THREE.Color(0x1e1930),
+    ground: new THREE.Color(0x151022),
+    lane: new THREE.Color(0x00f0ff),
+    railL: new THREE.Color(0xff007f),
+    railR: new THREE.Color(0x00f0ff),
+    dino: new THREE.Color(0x28233c),
+    dinoEmissive: new THREE.Color(0x00f0ff),
+    dinoEmissiveInt: 0.4,
+    eye: new THREE.Color(0x00f0ff),
+    cactus: new THREE.Color(0x1a2430),
+    cactusCore: new THREE.Color(0x00f0ff),
+    cactusCoreOpacity: 0.45,
+    ptero: new THREE.Color(0x281830),
+    pteroEmissive: new THREE.Color(0xff007f),
+  },
+  { // Phase 2: Synthwave Overdrive (Rich deep purple & hot neon)
+    sky: new THREE.Color(0x140a28),
+    fogDensity: 0.014,
+    track: new THREE.Color(0x120824),
+    ground: new THREE.Color(0x0a0416),
+    lane: new THREE.Color(0x00f0ff),
+    railL: new THREE.Color(0xff007f),
+    railR: new THREE.Color(0x7000ff),
+    dino: new THREE.Color(0x181026),
+    dinoEmissive: new THREE.Color(0xff007f),
+    dinoEmissiveInt: 0.75,
+    eye: new THREE.Color(0x00ffff),
+    cactus: new THREE.Color(0x101a24),
+    cactusCore: new THREE.Color(0x00ffaa),
+    cactusCoreOpacity: 0.7,
+    ptero: new THREE.Color(0x200a20),
+    pteroEmissive: new THREE.Color(0xff0055),
+  },
+  { // Phase 3: Hyper-Chromatic Drift (Deep midnight & electric ultraviolet)
+    sky: new THREE.Color(0x0b041a),
+    fogDensity: 0.015,
+    track: new THREE.Color(0x0e0520),
+    ground: new THREE.Color(0x060210),
+    lane: new THREE.Color(0x00ffff),
+    railL: new THREE.Color(0xff1493),
+    railR: new THREE.Color(0x00e5ff),
+    dino: new THREE.Color(0x120820),
+    dinoEmissive: new THREE.Color(0x00ffff),
+    dinoEmissiveInt: 1.0,
+    eye: new THREE.Color(0xff00a0),
+    cactus: new THREE.Color(0x0b1820),
+    cactusCore: new THREE.Color(0x00f0ff),
+    cactusCoreOpacity: 0.85,
+    ptero: new THREE.Color(0x1a0520),
+    pteroEmissive: new THREE.Color(0xff007f),
+  },
+  { // Phase 4: Maximum Overdrive (Deep cosmic void, luminous cyber runway)
+    sky: new THREE.Color(0x070212),
+    fogDensity: 0.016,
+    track: new THREE.Color(0x090318),
+    ground: new THREE.Color(0x04010a),
+    lane: new THREE.Color(0x00ffff),
+    railL: new THREE.Color(0xff0080),
+    railR: new THREE.Color(0x9d00ff),
+    dino: new THREE.Color(0x0e041a),
+    dinoEmissive: new THREE.Color(0xff00bb),
+    dinoEmissiveInt: 1.3,
+    eye: new THREE.Color(0x00ffff),
+    cactus: new THREE.Color(0x081520),
+    cactusCore: new THREE.Color(0x00ffcc),
+    cactusCoreOpacity: 0.95,
+    ptero: new THREE.Color(0x160318),
+    pteroEmissive: new THREE.Color(0xff0066),
+  },
+];
+
 export class Dino3DGame {
   constructor(scene, camera, onDeath, onPhaseChange) {
     this.scene = scene;
@@ -26,38 +120,32 @@ export class Dino3DGame {
 
     this.speed = 28;
     this.minSpeed = 28;
-    this.maxSpeed = 62;
+    this.maxSpeed = 58;
     this.distance = 0;
     this.score = 0;
     this.baseFOV = 50;
 
     this.obstacles = [];
-    this.cyberGates = [];
-    this.nextObstacleZ = -40;
-    this.nextGateZ = -50;
+    this.beaconPylons = [];
     this.active = false;
     this.isDead = false;
 
     this.animTime = 0;
-    this.colorProgress = 0; // 0.0 (grey chrome) to 1.0 (full chromatic neon hyperdrive)
+    this.colorProgress = 0; // Continuous 0.0 -> 4.0 matching phases
     this.currentPhase = 0;
 
     // Camera dynamic effects
     this.camBounceY = 0;
     this.camBounceVy = 0;
-    this.camRollZ = 0;
 
-    // Particle pools
+    // Particle pools (clean & lightweight)
     this.dustParticles = [];
     this.speedStreaks = [];
-    this.trailParticles = [];
-    this.ringShockwaves = [];
 
     this.initEnvironment();
     this.buildDinoMesh();
     this.initSpeedStreaks();
-    this.initCyberGates();
-    this.initShockwaves();
+    this.initBeaconPylons();
   }
 
   prepareTransition() {
@@ -73,14 +161,14 @@ export class Dino3DGame {
     this.isDucking = false;
     this.colorProgress = 0;
     this.currentPhase = 0;
-    this.updateColors(0);
+    this.applyTheme(0);
 
     // Dino starts facing PROFILE right (Math.PI / 2), identical to the 2D side-scroller!
     this.dinoGroup.position.set(0, 0, 0);
     this.dinoGroup.rotation.set(0, Math.PI / 2, 0);
     this.dinoGroup.scale.set(1, 1, 1);
 
-    // Defeated / knocked down posture
+    // Defeated posture
     this.headGroup.position.y = 2.1;
     this.headGroup.rotation.x = 0.5;
     this.bodyMesh.position.y = 1.6;
@@ -100,8 +188,7 @@ export class Dino3DGame {
 
   updateTransition(progress) {
     if (progress < 0.25) {
-      // Shiver / shake slightly
-      const sh = (Math.random() - 0.5) * 0.06;
+      const sh = (Math.random() - 0.5) * 0.05;
       this.dinoGroup.position.x = sh;
       this.dinoGroup.rotation.y = Math.PI / 2 + sh;
       this.headGroup.position.y = 2.1;
@@ -110,82 +197,61 @@ export class Dino3DGame {
       const p = (progress - 0.25) / 0.4;
       const ease = p * p * (3 - 2 * p);
 
-      // Stand up proudly
       this.bodyMesh.position.y = 1.6 + ease * 0.5;
       this.headGroup.position.y = 2.1 + ease * 0.7;
       this.headGroup.rotation.x = (1 - ease) * 0.5;
-
-      // Reset legs
       this.leftLegGroup.rotation.x = -0.4 * (1 - ease);
       this.rightLegGroup.rotation.x = 0.6 * (1 - ease);
-
-      // Head shake / roar anticipation
-      this.headGroup.rotation.y = Math.sin(p * Math.PI * 3) * 0.25;
-
-      if (p > 0.5 && p < 0.55 && Math.random() < 0.5) {
-        this.emitDust();
-      }
+      this.headGroup.rotation.y = Math.sin(p * Math.PI * 3) * 0.2;
     } else {
       const p = (progress - 0.65) / 0.35;
       const ease = p * p * (3 - 2 * p);
 
-      // Smooth 90 degree body turn from profile to back facing camera!
       this.dinoGroup.rotation.y = (Math.PI / 2) * (1 - ease);
       this.headGroup.rotation.y = 0;
-
-      // Tail swish as he turns
-      this.tailGroup.rotation.y = Math.sin(p * Math.PI * 2) * 0.5;
-
-      // Crouch into running position
-      this.dinoGroup.position.y = Math.sin(p * Math.PI) * 0.3;
-
-      if (Math.random() < 0.3) {
-        this.emitDust();
-      }
+      this.tailGroup.rotation.y = Math.sin(p * Math.PI * 2) * 0.4;
+      this.dinoGroup.position.y = Math.sin(p * Math.PI) * 0.25;
     }
   }
 
   buildDinoMesh() {
     this.dinoGroup = new THREE.Group();
 
-    // Materials - will dynamically transition into cyberpunk neon materials!
     this.dinoMat = new THREE.MeshStandardMaterial({
       color: 0x535353,
-      roughness: 0.45,
-      metalness: 0.15,
+      roughness: 0.5,
+      metalness: 0.2,
       emissive: 0x000000,
       emissiveIntensity: 0,
     });
     this.bellyMat = new THREE.MeshStandardMaterial({
       color: 0x6e6e6e,
-      roughness: 0.5,
+      roughness: 0.6,
       metalness: 0.1,
-      emissive: 0x000000,
-      emissiveIntensity: 0,
     });
     this.eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
     this.spineMat = new THREE.MeshStandardMaterial({
-      color: 0x535353,
+      color: 0x444444,
       roughness: 0.2,
-      metalness: 0.8,
-      emissive: 0x00ffff,
+      metalness: 0.7,
+      emissive: 0x00f0ff,
       emissiveIntensity: 0.0,
     });
 
-    // Torso / Body
+    // Body
     const bodyGeom = new THREE.BoxGeometry(1.6, 2.0, 2.4);
     this.bodyMesh = new THREE.Mesh(bodyGeom, this.dinoMat);
     this.bodyMesh.position.y = 2.1;
     this.bodyMesh.castShadow = true;
     this.dinoGroup.add(this.bodyMesh);
 
-    // Cyber dorsal plates / spines (wake up with neon light!)
+    // Sleek dorsal spines
     this.spines = [];
-    const spineGeom = new THREE.ConeGeometry(0.2, 0.45, 4);
+    const spineGeom = new THREE.ConeGeometry(0.18, 0.4, 4);
     spineGeom.rotateX(Math.PI / 2);
-    for (let s = -0.8; s <= 0.8; s += 0.4) {
+    for (let s = -0.7; s <= 0.7; s += 0.35) {
       const spine = new THREE.Mesh(spineGeom, this.spineMat);
-      spine.position.set(0, 3.2, s);
+      spine.position.set(0, 3.15, s);
       spine.castShadow = true;
       this.dinoGroup.add(spine);
       this.spines.push(spine);
@@ -197,17 +263,15 @@ export class Dino3DGame {
     belly.position.set(0, 1.9, -1.25);
     this.dinoGroup.add(belly);
 
-    // Tail (segmented for swing)
+    // Tail
     this.tailGroup = new THREE.Group();
     this.tailGroup.position.set(0, 2.1, 1.2);
-    const tailGeom1 = new THREE.BoxGeometry(0.9, 0.9, 1.2);
-    const tailMesh1 = new THREE.Mesh(tailGeom1, this.dinoMat);
+    const tailMesh1 = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 1.2), this.dinoMat);
     tailMesh1.position.z = 0.6;
     tailMesh1.castShadow = true;
     this.tailGroup.add(tailMesh1);
 
-    const tailGeom2 = new THREE.BoxGeometry(0.5, 0.5, 1.0);
-    const tailMesh2 = new THREE.Mesh(tailGeom2, this.dinoMat);
+    const tailMesh2 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 1.0), this.dinoMat);
     tailMesh2.position.z = 1.6;
     tailMesh2.castShadow = true;
     this.tailGroup.add(tailMesh2);
@@ -217,25 +281,21 @@ export class Dino3DGame {
     this.headGroup = new THREE.Group();
     this.headGroup.position.set(0, 2.8, -1.0);
 
-    const neckGeom = new THREE.BoxGeometry(1.0, 1.0, 0.8);
-    const neck = new THREE.Mesh(neckGeom, this.dinoMat);
+    const neck = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.0, 0.8), this.dinoMat);
     neck.position.set(0, 0.4, -0.2);
     neck.castShadow = true;
     this.headGroup.add(neck);
 
-    const headGeom = new THREE.BoxGeometry(1.3, 1.2, 1.8);
-    const head = new THREE.Mesh(headGeom, this.dinoMat);
+    const head = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.2, 1.8), this.dinoMat);
     head.position.set(0, 1.1, -0.7);
     head.castShadow = true;
     this.headGroup.add(head);
 
-    // Snout / Jaw
-    const jawGeom = new THREE.BoxGeometry(1.1, 0.4, 1.0);
-    const jaw = new THREE.Mesh(jawGeom, this.dinoMat);
+    const jaw = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.4, 1.0), this.dinoMat);
     jaw.position.set(0, 0.6, -1.4);
     this.headGroup.add(jaw);
 
-    // Glowing Cyber Eyes
+    // Eyes
     const eyeGeom = new THREE.BoxGeometry(0.24, 0.24, 0.24);
     this.eyeL = new THREE.Mesh(eyeGeom, this.eyeMat);
     this.eyeL.position.set(-0.68, 1.3, -0.7);
@@ -246,41 +306,38 @@ export class Dino3DGame {
 
     this.dinoGroup.add(this.headGroup);
 
-    // Left Leg
+    // Legs
+    const legGeom = new THREE.BoxGeometry(0.4, 1.4, 0.5);
+    const footGeom = new THREE.BoxGeometry(0.5, 0.3, 0.8);
+
     this.leftLegGroup = new THREE.Group();
     this.leftLegGroup.position.set(-0.65, 1.4, 0);
-    const legGeom = new THREE.BoxGeometry(0.4, 1.4, 0.5);
     const leftLegMesh = new THREE.Mesh(legGeom, this.dinoMat);
     leftLegMesh.position.y = -0.7;
     leftLegMesh.castShadow = true;
     this.leftLegGroup.add(leftLegMesh);
-
-    const footGeom = new THREE.BoxGeometry(0.5, 0.3, 0.8);
     const leftFoot = new THREE.Mesh(footGeom, this.dinoMat);
     leftFoot.position.set(0, -1.35, -0.2);
     this.leftLegGroup.add(leftFoot);
     this.dinoGroup.add(this.leftLegGroup);
 
-    // Right Leg
     this.rightLegGroup = new THREE.Group();
     this.rightLegGroup.position.set(0.65, 1.4, 0);
     const rightLegMesh = new THREE.Mesh(legGeom, this.dinoMat);
     rightLegMesh.position.y = -0.7;
     rightLegMesh.castShadow = true;
     this.rightLegGroup.add(rightLegMesh);
-
     const rightFoot = new THREE.Mesh(footGeom, this.dinoMat);
     rightFoot.position.set(0, -1.35, -0.2);
     this.rightLegGroup.add(rightFoot);
     this.dinoGroup.add(this.rightLegGroup);
 
-    // Tiny T-Rex Arms
+    // Arms
     const armGeom = new THREE.BoxGeometry(0.25, 0.5, 0.25);
     const leftArm = new THREE.Mesh(armGeom, this.dinoMat);
     leftArm.position.set(-0.9, 2.0, -0.9);
     leftArm.rotation.x = -0.5;
     this.dinoGroup.add(leftArm);
-
     const rightArm = new THREE.Mesh(armGeom, this.dinoMat);
     rightArm.position.set(0.9, 2.0, -0.9);
     rightArm.rotation.x = -0.5;
@@ -288,34 +345,16 @@ export class Dino3DGame {
 
     this.group.add(this.dinoGroup);
 
-    // Create Dust / Energy Particle Pool
-    const pGeom = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-    for (let i = 0; i < 30; i++) {
-      const pMat = new THREE.MeshBasicMaterial({ color: 0x999999, transparent: true, opacity: 0.7 });
+    // Subtle Dust Particles
+    const pGeom = new THREE.BoxGeometry(0.18, 0.18, 0.18);
+    for (let i = 0; i < 20; i++) {
+      const pMat = new THREE.MeshBasicMaterial({ color: 0x999999, transparent: true, opacity: 0.6 });
       const p = new THREE.Mesh(pGeom, pMat);
       p.visible = false;
       this.group.add(p);
       this.dustParticles.push({
         mesh: p,
         mat: pMat,
-        life: 0,
-        maxLife: 0.45,
-        vx: 0,
-        vy: 0,
-        vz: 0,
-      });
-    }
-
-    // Trail photon particles (behind dino)
-    const tGeom = new THREE.SphereGeometry(0.12, 6, 6);
-    for (let i = 0; i < 40; i++) {
-      const tMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.8 });
-      const t = new THREE.Mesh(tGeom, tMat);
-      t.visible = false;
-      this.group.add(t);
-      this.trailParticles.push({
-        mesh: t,
-        mat: tMat,
         life: 0,
         maxLife: 0.35,
         vx: 0,
@@ -326,129 +365,64 @@ export class Dino3DGame {
   }
 
   initSpeedStreaks() {
-    // Speed laser streaks flying past the player
+    // Elegant, thin streaks on screen periphery (never blocking track view)
     this.speedStreakGroup = new THREE.Group();
     this.group.add(this.speedStreakGroup);
 
-    const streakGeom = new THREE.CylinderGeometry(0.04, 0.04, 5, 4);
+    const streakGeom = new THREE.CylinderGeometry(0.02, 0.02, 7, 4);
     streakGeom.rotateX(Math.PI / 2);
 
-    for (let i = 0; i < 65; i++) {
+    for (let i = 0; i < 18; i++) {
       const mat = new THREE.MeshBasicMaterial({
         color: 0x00f0ff,
         transparent: true,
         opacity: 0,
       });
       const streak = new THREE.Mesh(streakGeom, mat);
-      streak.position.set(
-        (Math.random() - 0.5) * 36,
-        1 + Math.random() * 14,
-        -Math.random() * 220
-      );
+      // Place only on far left or far right (x < -9 or x > 9)
+      const side = Math.random() < 0.5 ? -1 : 1;
+      const x = side * (10 + Math.random() * 14);
+      const y = 2 + Math.random() * 10;
+      streak.position.set(x, y, -Math.random() * 200);
       this.speedStreakGroup.add(streak);
       this.speedStreaks.push({
         mesh: streak,
         mat,
-        baseSpeed: 1.4 + Math.random() * 0.8,
-        laneOffset: (Math.random() - 0.5) * 36,
-        y: 1 + Math.random() * 14,
+        baseSpeed: 1.3 + Math.random() * 0.5,
+        side,
+        distX: 10 + Math.random() * 14,
+        y,
       });
     }
   }
 
-  initCyberGates() {
-    // Overhead glowing neon cyber-portals that the player zooms through!
-    this.gateGroup = new THREE.Group();
-    this.group.add(this.gateGroup);
+  initBeaconPylons() {
+    // Subtle neon border pylons along outer track borders (giving speed sensation without blocking view)
+    this.pylonGroup = new THREE.Group();
+    this.group.add(this.pylonGroup);
 
-    const gateMat = new THREE.MeshStandardMaterial({
-      color: 0x111111,
-      roughness: 0.2,
-      metalness: 0.8,
-      emissive: 0x00f0ff,
-      emissiveIntensity: 0.8,
-    });
-    this.gateMaterial = gateMat;
+    this.pylonMat = new THREE.MeshBasicMaterial({ color: 0xdedede });
+    const pylonGeom = new THREE.BoxGeometry(0.18, 2.2, 0.18);
 
-    for (let i = 0; i < 5; i++) {
-      const g = new THREE.Group();
-      // Left pillar
-      const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 9, 0.6), gateMat);
-      p1.position.set(-6.5, 4.5, 0);
-      g.add(p1);
-      // Right pillar
-      const p2 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 9, 0.6), gateMat);
-      p2.position.set(6.5, 4.5, 0);
-      g.add(p2);
-      // Top beam
-      const top = new THREE.Mesh(new THREE.BoxGeometry(13.6, 0.6, 0.6), gateMat);
-      top.position.set(0, 9, 0);
-      g.add(top);
-
-      // Neon glowing chevron accent
-      const chevron = new THREE.Mesh(
-        new THREE.BoxGeometry(2.4, 0.3, 0.7),
-        new THREE.MeshBasicMaterial({ color: 0xff007f })
-      );
-      chevron.position.set(0, 8.7, 0);
-      g.add(chevron);
-      g.chevronMat = chevron.material;
-
-      g.position.set(0, 0, -40 - i * 65);
-      this.gateGroup.add(g);
-      this.cyberGates.push(g);
-    }
-  }
-
-  initShockwaves() {
-    // Expanding circular shockwaves for landing impact and color bursts
-    const ringGeom = new THREE.RingGeometry(0.3, 0.6, 24);
-    ringGeom.rotateX(-Math.PI / 2);
-
-    for (let i = 0; i < 4; i++) {
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: 0x00f0ff,
-        transparent: true,
-        opacity: 0,
-        side: THREE.DoubleSide,
-      });
-      const ring = new THREE.Mesh(ringGeom, ringMat);
-      ring.position.set(0, 0.05, 0);
-      ring.visible = false;
-      this.group.add(ring);
-      this.ringShockwaves.push({
-        mesh: ring,
-        mat: ringMat,
-        scale: 1,
-        life: 0,
-        maxLife: 0.35,
+    for (let z = -200; z < 20; z += 25) {
+      [-7.6, 7.6].forEach((px) => {
+        const pylon = new THREE.Mesh(pylonGeom, this.pylonMat);
+        pylon.position.set(px, 1.1, z);
+        this.pylonGroup.add(pylon);
+        this.beaconPylons.push(pylon);
       });
     }
-  }
-
-  triggerShockwave(x, colorHex = 0x00f0ff) {
-    const sw = this.ringShockwaves.find((r) => !r.mesh.visible);
-    if (!sw) return;
-    sw.mesh.position.set(x, 0.06, 0);
-    sw.mesh.scale.set(1, 1, 1);
-    sw.mat.color.setHex(colorHex);
-    sw.mat.opacity = 0.9;
-    sw.life = 0;
-    sw.mesh.visible = true;
   }
 
   initEnvironment() {
     const trackWidth = 14;
     const trackLength = 280;
 
-    // Track Material (will dynamically gain animated neon grid lines)
     const trackGeom = new THREE.PlaneGeometry(trackWidth, trackLength, 1, 30);
     this.trackMat = new THREE.MeshStandardMaterial({
       color: 0xf5f5f5,
-      roughness: 0.8,
-      metalness: 0.2,
-      emissive: 0x000000,
-      emissiveIntensity: 0,
+      roughness: 0.85,
+      metalness: 0.15,
     });
     this.trackMesh = new THREE.Mesh(trackGeom, this.trackMat);
     this.trackMesh.rotation.x = -Math.PI / 2;
@@ -456,38 +430,37 @@ export class Dino3DGame {
     this.trackMesh.receiveShadow = true;
     this.group.add(this.trackMesh);
 
-    // Glowing Neon Side Rails
-    const railGeom = new THREE.BoxGeometry(0.2, 0.3, trackLength);
+    // Clean glowing border rails
+    const railGeom = new THREE.BoxGeometry(0.15, 0.25, trackLength);
     this.railMatL = new THREE.MeshBasicMaterial({ color: 0xdedede });
     this.railMatR = new THREE.MeshBasicMaterial({ color: 0xdedede });
 
     const railL = new THREE.Mesh(railGeom, this.railMatL);
-    railL.position.set(-trackWidth / 2, 0.15, -trackLength / 2 + 10);
+    railL.position.set(-trackWidth / 2, 0.12, -trackLength / 2 + 10);
     this.group.add(railL);
 
     const railR = new THREE.Mesh(railGeom, this.railMatR);
-    railR.position.set(trackWidth / 2, 0.15, -trackLength / 2 + 10);
+    railR.position.set(trackWidth / 2, 0.12, -trackLength / 2 + 10);
     this.group.add(railR);
 
-    // Desert / Synthwave Outer Ground
-    const groundGeom = new THREE.PlaneGeometry(220, trackLength, 20, 20);
+    // Ground plane
+    const groundGeom = new THREE.PlaneGeometry(220, trackLength, 1, 1);
     this.outerGroundMat = new THREE.MeshStandardMaterial({
       color: 0xededed,
       roughness: 0.95,
-      metalness: 0.1,
-      wireframe: false,
+      metalness: 0.05,
     });
     this.outerGround = new THREE.Mesh(groundGeom, this.outerGroundMat);
     this.outerGround.rotation.x = -Math.PI / 2;
     this.outerGround.position.set(0, -0.05, -trackLength / 2 + 10);
     this.group.add(this.outerGround);
 
-    // Lane division markers (subtle dashes that turn into laser strips)
+    // Lane division dashes
     this.laneLines = [];
     this.laneMat = new THREE.MeshBasicMaterial({ color: 0xdedede });
-    for (let z = -220; z < 20; z += 12) {
+    for (let z = -220; z < 20; z += 14) {
       [-1.9, 1.9].forEach((lx) => {
-        const lineGeom = new THREE.PlaneGeometry(0.18, 4.2);
+        const lineGeom = new THREE.PlaneGeometry(0.15, 4.0);
         const line = new THREE.Mesh(lineGeom, this.laneMat);
         line.rotation.x = -Math.PI / 2;
         line.position.set(lx, 0.02, z);
@@ -496,39 +469,22 @@ export class Dino3DGame {
       });
     }
 
-    // Clouds in the 3D sky (fade into cyber aurora / stars as dimension transforms)
+    // Atmospheric clouds / distant shapes
     this.clouds3D = [];
     this.cloudMat = new THREE.MeshBasicMaterial({ color: 0xdbdbdb });
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < 14; i++) {
       const cg = new THREE.Group();
-      const numPuffs = 3 + Math.floor(Math.random() * 3);
+      const numPuffs = 3 + Math.floor(Math.random() * 2);
       for (let p = 0; p < numPuffs; p++) {
-        const puffGeom = new THREE.BoxGeometry(
-          2.5 + Math.random() * 2,
-          1.2 + Math.random() * 0.8,
-          2.5 + Math.random() * 2
-        );
+        const puffGeom = new THREE.BoxGeometry(3 + Math.random() * 2, 1.2, 3 + Math.random() * 2);
         const puff = new THREE.Mesh(puffGeom, this.cloudMat);
         puff.position.set((p - numPuffs / 2) * 2, 0, (Math.random() - 0.5) * 2);
         cg.add(puff);
       }
-      cg.position.set(
-        (Math.random() - 0.5) * 90,
-        14 + Math.random() * 12,
-        -Math.random() * 200
-      );
+      cg.position.set((Math.random() - 0.5) * 110, 16 + Math.random() * 10, -Math.random() * 220);
       this.group.add(cg);
       this.clouds3D.push(cg);
     }
-
-    // Dynamic colored point lights that dance alongside the player
-    this.neonLightL = new THREE.PointLight(0x00f0ff, 0, 25);
-    this.neonLightL.position.set(-6, 3, 0);
-    this.group.add(this.neonLightL);
-
-    this.neonLightR = new THREE.PointLight(0xff007f, 0, 25);
-    this.neonLightR.position.set(6, 3, 0);
-    this.group.add(this.neonLightR);
   }
 
   start(initialScore = 0) {
@@ -548,23 +504,19 @@ export class Dino3DGame {
     this.colorProgress = 0;
     this.currentPhase = 0;
 
-    // Reset dino posture
     this.dinoGroup.position.set(0, 0, 0);
     this.dinoGroup.rotation.set(0, 0, 0);
     this.dinoGroup.scale.set(1, 1, 1);
 
-    // Clear existing obstacles
     for (const obs of this.obstacles) {
       this.group.remove(obs.mesh);
     }
     this.obstacles = [];
 
-    // Pre-populate several obstacles ahead
-    for (let z = -50; z > -180; z -= 30) {
+    for (let z = -50; z > -180; z -= 32) {
       this.spawnObstacleAtZ(z);
     }
 
-    // Start dynamic synthwave music!
     sounds.startMusic();
   }
 
@@ -574,9 +526,6 @@ export class Dino3DGame {
       this.currentLane--;
       this.targetX = this.lanes[this.currentLane];
       sounds.playWhoosh();
-      // Dynamic camera roll bump
-      this.camRollZ = 0.04;
-      this.emitTurnSparks();
     }
   }
 
@@ -586,9 +535,6 @@ export class Dino3DGame {
       this.currentLane++;
       this.targetX = this.lanes[this.currentLane];
       sounds.playWhoosh();
-      // Dynamic camera roll bump
-      this.camRollZ = -0.04;
-      this.emitTurnSparks();
     }
   }
 
@@ -598,8 +544,7 @@ export class Dino3DGame {
       this.playerVy = this.jumpForce;
       this.isGrounded = false;
       sounds.playJump();
-      this.triggerShockwave(this.playerX, this.getCurrentNeonColor(0));
-      this.emitDust(8);
+      this.emitDust(4);
     }
   }
 
@@ -607,24 +552,14 @@ export class Dino3DGame {
     if (!this.active || this.isDead) return;
     this.isDucking = ducking;
     if (ducking && !this.isGrounded) {
-      this.playerVy -= 16; // Fast dive
-      this.camBounceVy = -0.2;
+      this.playerVy -= 16;
     }
-  }
-
-  getCurrentNeonColor(offset = 0) {
-    // Dynamic synthwave / chromatic color palette based on time and color progress
-    const t = this.animTime * 0.4 + offset;
-    const hue = (t * 0.15) % 1.0;
-    const col = new THREE.Color();
-    col.setHSL(hue, 1.0, 0.55);
-    return col.getHex();
   }
 
   spawnObstacleAtZ(z) {
     const lane = Math.floor(Math.random() * 3);
     const laneX = this.lanes[lane];
-    const isPtero = this.score > 160 && Math.random() < 0.38;
+    const isPtero = this.score > 350 && Math.random() < 0.35;
 
     if (isPtero) {
       const pteroGroup = this.createPteroMesh();
@@ -658,33 +593,30 @@ export class Dino3DGame {
 
   createCactusMesh() {
     const group = new THREE.Group();
-    // Material starts classic grey and becomes an obsidian/emerald glowing crystal!
     const cactusMat = new THREE.MeshStandardMaterial({
       color: 0x535353,
-      roughness: 0.3,
-      metalness: 0.3,
+      roughness: 0.35,
+      metalness: 0.2,
       emissive: 0x000000,
       emissiveIntensity: 0,
     });
     group.cactusMat = cactusMat;
 
     const height = 2.6 + Math.random() * 0.8;
-    // Central stem
     const stemGeom = new THREE.BoxGeometry(0.8, height, 0.8);
     const stem = new THREE.Mesh(stemGeom, cactusMat);
     stem.position.y = height / 2;
     stem.castShadow = true;
     group.add(stem);
 
-    // Glowing core crystal
-    const coreGeom = new THREE.BoxGeometry(0.3, height * 0.8, 0.3);
-    const coreMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0 });
+    // Glowing core crystal (sleek, un-cluttered)
+    const coreGeom = new THREE.BoxGeometry(0.25, height * 0.75, 0.25);
+    const coreMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0 });
     const core = new THREE.Mesh(coreGeom, coreMat);
     core.position.y = height / 2;
     group.add(core);
     group.coreMat = coreMat;
 
-    // Left arm
     const armGeomH = new THREE.BoxGeometry(0.8, 0.5, 0.5);
     const armGeomV = new THREE.BoxGeometry(0.5, 0.9, 0.5);
 
@@ -695,7 +627,6 @@ export class Dino3DGame {
     group.add(leftArmH);
     group.add(leftArmV);
 
-    // Right arm
     const rightArmH = new THREE.Mesh(armGeomH, cactusMat);
     rightArmH.position.set(0.6, height * 0.55, 0);
     const rightArmV = new THREE.Mesh(armGeomV, cactusMat);
@@ -710,26 +641,23 @@ export class Dino3DGame {
     const group = new THREE.Group();
     const pteroMat = new THREE.MeshStandardMaterial({
       color: 0x535353,
-      roughness: 0.3,
-      metalness: 0.4,
+      roughness: 0.35,
+      metalness: 0.3,
       emissive: 0x000000,
       emissiveIntensity: 0,
     });
     group.pteroMat = pteroMat;
 
-    // Body
     const bodyGeom = new THREE.BoxGeometry(0.6, 0.6, 1.6);
     const body = new THREE.Mesh(bodyGeom, pteroMat);
     group.add(body);
 
-    // Head and Beak facing player
     const headGeom = new THREE.BoxGeometry(0.5, 0.5, 1.2);
     const head = new THREE.Mesh(headGeom, pteroMat);
     head.position.set(0, 0.2, 1.1);
     group.add(head);
 
-    // Glowing laser eyes
-    const eyeGeom = new THREE.BoxGeometry(0.12, 0.12, 0.3);
+    const eyeGeom = new THREE.BoxGeometry(0.12, 0.12, 0.25);
     const pteroEyeMat = new THREE.MeshBasicMaterial({ color: 0xff0055 });
     const pEyeL = new THREE.Mesh(eyeGeom, pteroEyeMat);
     pEyeL.position.set(-0.26, 0.35, 1.2);
@@ -739,14 +667,12 @@ export class Dino3DGame {
     group.add(pEyeR);
     group.eyeMat = pteroEyeMat;
 
-    // Left Wing (with neon laser leading edge)
     const wingGeom = new THREE.BoxGeometry(2.0, 0.15, 0.9);
     const leftWing = new THREE.Mesh(wingGeom, pteroMat);
     leftWing.position.set(-1.1, 0.2, 0);
     group.add(leftWing);
     group.leftWing = leftWing;
 
-    // Right Wing
     const rightWing = new THREE.Mesh(wingGeom, pteroMat);
     rightWing.position.set(1.1, 0.2, 0);
     group.add(rightWing);
@@ -762,180 +688,108 @@ export class Dino3DGame {
       p.mesh.visible = true;
       p.life = 0;
       p.mesh.position.set(
-        this.playerX + (Math.random() - 0.5) * 0.9,
-        0.12,
+        this.playerX + (Math.random() - 0.5) * 0.6,
+        0.1,
         0.6 + Math.random() * 0.4
       );
-      p.vx = (Math.random() - 0.5) * 3;
-      p.vy = Math.random() * 2.5 + 1.2;
-      p.vz = 4 + Math.random() * 5;
-
-      // Color tints with progress
-      if (this.colorProgress > 0.15) {
-        const hex = this.getCurrentNeonColor(Math.random());
-        p.mat.color.setHex(hex);
-      } else {
-        p.mat.color.setHex(0x999999);
-      }
+      p.vx = (Math.random() - 0.5) * 2;
+      p.vy = Math.random() * 1.5 + 1.0;
+      p.vz = 3 + Math.random() * 3;
+      p.mat.color.set(this.laneMat.color);
     }
   }
 
-  emitTurnSparks() {
-    for (let i = 0; i < 6; i++) {
-      const p = this.dustParticles.find((part) => !part.mesh.visible);
-      if (!p) break;
-      p.mesh.visible = true;
-      p.life = 0;
-      p.mesh.position.set(
-        this.playerX + (Math.random() - 0.5) * 0.4,
-        0.2,
-        (Math.random() - 0.5) * 0.6
-      );
-      const dir = (this.targetX - this.playerX) > 0 ? 1 : -1;
-      p.vx = dir * (Math.random() * 4 + 2);
-      p.vy = Math.random() * 2 + 1;
-      p.vz = Math.random() * 3 + 2;
-
-      const hex = this.colorProgress > 0.2 ? this.getCurrentNeonColor(i * 0.2) : 0xcccccc;
-      p.mat.color.setHex(hex);
-    }
-  }
-
-  emitTrailPhoton() {
-    const t = this.trailParticles.find((p) => !p.mesh.visible);
-    if (!t) return;
-    t.mesh.visible = true;
-    t.life = 0;
-    t.mesh.position.set(
-      this.playerX + (Math.random() - 0.5) * 0.6,
-      this.playerY + 0.5 + Math.random() * 1.4,
-      1.8 + Math.random() * 0.4
-    );
-    t.vx = (Math.random() - 0.5) * 0.8;
-    t.vy = (Math.random() - 0.5) * 0.8;
-    t.vz = this.speed * 0.4;
-
-    const hex = this.getCurrentNeonColor(this.animTime * 0.5);
-    t.mat.color.setHex(hex);
-  }
-
+  /**
+   * Continuous, buttery-smooth color palette interpolation.
+   * Longer phases:
+   * Phase 0: 0 -> 300
+   * Phase 1: 300 -> 850
+   * Phase 2: 850 -> 1600
+   * Phase 3: 1600 -> 2600
+   * Phase 4: 2600+
+   */
   updateColors(dt) {
-    // Score determines color progress:
-    // 0 -> 0.0 (Pure Chrome monochrome)
-    // 80 -> 0.2 (Neon Dawn)
-    // 250 -> 0.5 (Synthwave Overdrive)
-    // 550 -> 0.8 (Hyper-Chromatic Drift)
-    // 900+ -> 1.0 (Maximum Overdrive)
-    const targetColorProgress = Math.min(1.0, this.score / 750);
-    this.colorProgress += (targetColorProgress - this.colorProgress) * Math.min(1.0, dt * 2.0);
+    // Calculate continuous phase index (0.0 to 4.0)
+    let targetProgress = 0;
+    if (this.score < 300) {
+      targetProgress = this.score / 300; // 0.0 -> 1.0
+    } else if (this.score < 850) {
+      targetProgress = 1.0 + (this.score - 300) / 550; // 1.0 -> 2.0
+    } else if (this.score < 1600) {
+      targetProgress = 2.0 + (this.score - 850) / 750; // 2.0 -> 3.0
+    } else if (this.score < 2600) {
+      targetProgress = 3.0 + (this.score - 1600) / 1000; // 3.0 -> 4.0
+    } else {
+      targetProgress = 4.0;
+    }
 
-    const cp = this.colorProgress;
+    // Smooth low-pass damping (no sudden jumps!)
+    this.colorProgress += (targetProgress - this.colorProgress) * Math.min(1.0, dt * 1.5);
 
-    // Check phase transition
-    let phase = 0;
-    if (this.score >= 800) phase = 4;
-    else if (this.score >= 480) phase = 3;
-    else if (this.score >= 220) phase = 2;
-    else if (this.score >= 70) phase = 1;
+    const cp = Math.max(0, Math.min(4.0, this.colorProgress));
+    this.applyTheme(cp);
 
+    // Discrete phase index for HUD and Lyria Music
+    const phase = Math.floor(cp);
     if (phase !== this.currentPhase) {
       this.currentPhase = phase;
       sounds.playPhaseUp();
-      this.triggerShockwave(this.playerX, 0xffffff);
       if (this.onPhaseChange) {
         this.onPhaseChange(phase, this.getPhaseName(phase));
       }
     }
+  }
 
-    // Sky & Fog dynamic transition:
-    // Start: #f7f7f7 (white/grey Chrome)
-    // End: #0b0716 (deep synthwave indigo/purple night)
-    const skyDay = new THREE.Color(0xf7f7f7);
-    const skyNight = new THREE.Color(0x0c0718);
-    const currentSky = skyDay.clone().lerp(skyNight, Math.min(1.0, cp * 1.2));
-    this.scene.background = currentSky;
+  applyTheme(progress) {
+    const idx0 = Math.floor(progress);
+    const idx1 = Math.min(THEMES.length - 1, idx0 + 1);
+    const t = progress - idx0;
+
+    const t0 = THEMES[idx0];
+    const t1 = THEMES[idx1];
+
+    // Lerp Sky & Fog
+    const skyCol = t0.sky.clone().lerp(t1.sky, t);
+    this.scene.background = skyCol;
     if (this.scene.fog) {
-      this.scene.fog.color = currentSky;
-      // Thicken fog slightly at high speed for tunnel feel
-      this.scene.fog.density = 0.012 + cp * 0.005;
+      this.scene.fog.color = skyCol;
+      this.scene.fog.density = t0.fogDensity + (t1.fogDensity - t0.fogDensity) * t;
     }
 
-    // Track surface: transitions from #f5f5f5 to #120e24 synthwave tarmac
-    const trackDay = new THREE.Color(0xf5f5f5);
-    const trackCyber = new THREE.Color(0x130e24);
-    this.trackMat.color.lerpColors(trackDay, trackCyber, cp);
-    this.trackMat.roughness = 0.85 - cp * 0.35; // Becomes sleek and reflective!
-    this.trackMat.metalness = 0.15 + cp * 0.45;
+    // Lerp Track & Ground
+    this.trackMat.color.lerpColors(t0.track, t1.track, t);
+    this.outerGroundMat.color.lerpColors(t0.ground, t1.ground, t);
 
-    // Outer Ground: transitions from #ededed to #07050d
-    const groundDay = new THREE.Color(0xededed);
-    const groundCyber = new THREE.Color(0x080511);
-    this.outerGroundMat.color.lerpColors(groundDay, groundCyber, cp);
+    // Lerp Lane & Rails
+    this.laneMat.color.lerpColors(t0.lane, t1.lane, t);
+    this.railMatL.color.lerpColors(t0.railL, t1.railL, t);
+    this.railMatR.color.lerpColors(t0.railR, t1.railR, t);
+    this.pylonMat.color.lerpColors(t0.lane, t1.lane, t);
 
-    // Glowing Neon Lane Dashes: transition from #dedede to pulsating cyan/magenta
-    const neonCyan = new THREE.Color(0x00f0ff);
-    const neonPink = new THREE.Color(0xff007f);
-    const lineDay = new THREE.Color(0xdedede);
+    // Lerp Dino Body & Spines
+    this.dinoMat.color.lerpColors(t0.dino, t1.dino, t);
+    const dinoEmissive = t0.dinoEmissive.clone().lerp(t1.dinoEmissive, t);
+    const dinoEmissiveInt = t0.dinoEmissiveInt + (t1.dinoEmissiveInt - t0.dinoEmissiveInt) * t;
+    this.spineMat.emissive.copy(dinoEmissive);
+    this.spineMat.emissiveIntensity = dinoEmissiveInt;
+    this.eyeMat.color.lerpColors(t0.eye, t1.eye, t);
 
-    // Pulse wave along track
-    const lineCol = lineDay.clone().lerp(neonCyan, Math.min(1.0, cp * 1.5));
-    this.laneMat.color.copy(lineCol);
+    // Lerp Obstacles
+    const cactusCol = t0.cactus.clone().lerp(t1.cactus, t);
+    const cactusCoreCol = t0.cactusCore.clone().lerp(t1.cactusCore, t);
+    const cactusCoreOp = t0.cactusCoreOpacity + (t1.cactusCoreOpacity - t0.cactusCoreOpacity) * t;
+    const pteroEmissive = t0.pteroEmissive.clone().lerp(t1.pteroEmissive, t);
 
-    // Side Rails glow
-    const railColL = lineDay.clone().lerp(neonPink, Math.min(1.0, cp * 1.4));
-    const railColR = lineDay.clone().lerp(neonCyan, Math.min(1.0, cp * 1.4));
-    this.railMatL.color.copy(railColL);
-    this.railMatR.color.copy(railColR);
-
-    // Dino Cyber Transformation:
-    // Torso transitions from charcoal #535353 to sleek cyber obsidian #181926
-    const dinoGrey = new THREE.Color(0x535353);
-    const dinoCyber = new THREE.Color(0x1a1c29);
-    this.dinoMat.color.lerpColors(dinoGrey, dinoCyber, cp);
-    this.dinoMat.metalness = 0.15 + cp * 0.55;
-    this.dinoMat.roughness = 0.45 - cp * 0.25;
-
-    // Dino Glowing Spines
-    const spineColor = new THREE.Color();
-    const spineHue = (this.animTime * 0.3) % 1.0;
-    spineColor.setHSL(spineHue, 1.0, 0.6);
-    this.spineMat.emissive.copy(spineColor);
-    this.spineMat.emissiveIntensity = cp * 1.8;
-
-    // Dino Glowing Eyes: from white to vibrant laser cyan/magenta
-    const eyeDay = new THREE.Color(0xffffff);
-    const eyeCyber = new THREE.Color(0x00ffff);
-    this.eyeMat.color.lerpColors(eyeDay, eyeCyber, cp);
-
-    // Dynamic point lights: intensity scales with color progress!
-    const lightIntensity = cp * 3.5;
-    this.neonLightL.intensity = lightIntensity;
-    this.neonLightR.intensity = lightIntensity;
-
-    const tLight = this.animTime * 1.2;
-    this.neonLightL.position.set(-6, 3 + Math.sin(tLight) * 1.5, Math.cos(tLight) * 8);
-    this.neonLightR.position.set(6, 3 + Math.cos(tLight) * 1.5, -Math.sin(tLight) * 8);
-
-    // Cyber Gates emissive glow & chevrons
-    const gateCol = new THREE.Color();
-    gateCol.setHSL((this.animTime * 0.2) % 1.0, 1.0, 0.55);
-    this.gateMaterial.emissive.copy(gateCol);
-    this.gateMaterial.emissiveIntensity = 0.3 + cp * 1.2;
-
-    // Update obstacles dynamic neon colors
     for (const obs of this.obstacles) {
       if (obs.type === 'cactus' && obs.mesh.cactusMat) {
-        const cCol = dinoGrey.clone().lerp(new THREE.Color(0x08261e), cp);
-        obs.mesh.cactusMat.color.copy(cCol);
-        obs.mesh.cactusMat.emissive.copy(spineColor);
-        obs.mesh.cactusMat.emissiveIntensity = cp * 0.6;
+        obs.mesh.cactusMat.color.copy(cactusCol);
         if (obs.mesh.coreMat) {
-          obs.mesh.coreMat.opacity = cp * 0.85;
-          obs.mesh.coreMat.color.copy(spineColor);
+          obs.mesh.coreMat.opacity = cactusCoreOp;
+          obs.mesh.coreMat.color.copy(cactusCoreCol);
         }
       } else if (obs.type === 'ptero' && obs.mesh.pteroMat) {
-        obs.mesh.pteroMat.emissive.setHex(0xff0044);
-        obs.mesh.pteroMat.emissiveIntensity = cp * 0.8;
+        obs.mesh.pteroMat.emissive.copy(pteroEmissive);
+        obs.mesh.pteroMat.emissiveIntensity = dinoEmissiveInt * 0.7;
       }
     }
   }
@@ -955,10 +809,9 @@ export class Dino3DGame {
     if (!this.active) return;
 
     if (this.isDead) {
-      // Tumble / ragdoll on death
-      this.dinoGroup.rotation.x += dt * 6;
-      this.dinoGroup.rotation.z += dt * 4;
-      this.dinoGroup.position.y = Math.max(0, this.dinoGroup.position.y - dt * 6);
+      this.dinoGroup.rotation.x += dt * 5;
+      this.dinoGroup.rotation.z += dt * 3;
+      this.dinoGroup.position.y = Math.max(0, this.dinoGroup.position.y - dt * 5);
       return;
     }
 
@@ -971,26 +824,26 @@ export class Dino3DGame {
     const newHundreds = Math.floor(this.score / 100);
     if (newHundreds > oldHundreds && newHundreds > 0) {
       sounds.playScore();
-      this.triggerShockwave(this.playerX, 0xffff00);
     }
 
-    // Speed progression: accelerates up to maxSpeed
-    this.speed = Math.min(this.maxSpeed, this.minSpeed + (this.score / 280) * 3);
+    // Gentle, progressive speed curve (capped for clean gameplay)
+    this.speed = Math.min(this.maxSpeed, this.minSpeed + (this.score / 500) * 2.5);
 
-    // Update dynamic procedural or Lyria music with current speed & color progress & phase
+    // Update music with current phase and speed
     const speedRatio = this.speed / this.minSpeed;
-    sounds.updateMusic(speedRatio, this.colorProgress, this.currentPhase);
+    const intensity = Math.min(1.0, this.colorProgress / 4.0);
+    sounds.updateMusic(speedRatio, intensity, this.currentPhase);
 
-    // Smooth lane interpolation
-    const laneSmoothing = 15;
+    // Smooth lane movement
+    const laneSmoothing = 14;
     this.playerX += (this.targetX - this.playerX) * Math.min(1, dt * laneSmoothing);
 
-    // Dino Banking / roll tilt when switching lanes
+    // Subtle, elegant Dino lean
     const laneDelta = this.targetX - this.playerX;
-    this.dinoGroup.rotation.z = -laneDelta * 0.18;
-    this.dinoGroup.rotation.y = laneDelta * 0.12;
+    this.dinoGroup.rotation.z = -laneDelta * 0.12;
+    this.dinoGroup.rotation.y = laneDelta * 0.08;
 
-    // Jump / Gravity physics
+    // Jump & Gravity physics
     if (!this.isGrounded) {
       this.playerVy += this.gravity * dt;
       this.playerY += this.playerVy * dt;
@@ -998,58 +851,45 @@ export class Dino3DGame {
         this.playerY = 0;
         this.playerVy = 0;
         this.isGrounded = true;
-
-        // Meaty landing juice!
         sounds.playLand();
-        this.camBounceVy = -0.15; // Camera dip & rebound
-        this.triggerShockwave(this.playerX, this.getCurrentNeonColor(0));
-        this.emitDust(6);
+        this.camBounceVy = -0.1;
+        this.emitDust(4);
       }
     }
 
-    // Camera bounce physics (spring-damper)
-    this.camBounceVy += (-this.camBounceY * 35) * dt;
-    this.camBounceVy *= Math.pow(0.05, dt);
+    // Camera vertical landing bump (subtle spring)
+    this.camBounceVy += (-this.camBounceY * 30) * dt;
+    this.camBounceVy *= Math.pow(0.08, dt);
     this.camBounceY += this.camBounceVy;
 
-    // Camera roll recovery
-    this.camRollZ *= Math.pow(0.01, dt);
-
-    // Ducking squash & stretch
+    // Ducking
     if (this.isDucking && this.isGrounded) {
-      this.dinoGroup.scale.set(1.25, 0.52, 1.35);
-      this.headGroup.position.y = 1.35;
-      this.bodyMesh.position.y = 1.05;
+      this.dinoGroup.scale.set(1.2, 0.55, 1.3);
+      this.headGroup.position.y = 1.4;
+      this.bodyMesh.position.y = 1.1;
     } else {
       this.dinoGroup.scale.set(1.0, 1.0, 1.0);
       this.headGroup.position.y = 2.8;
       this.bodyMesh.position.y = 2.1;
     }
 
-    // Position Dino
     this.dinoGroup.position.x = this.playerX;
     this.dinoGroup.position.y = this.playerY;
 
-    // Leg running cycle & tail animation
+    // Running animation
     if (this.isGrounded) {
-      const legAngle = Math.sin(this.animTime) * 0.9;
+      const legAngle = Math.sin(this.animTime) * 0.85;
       this.leftLegGroup.rotation.x = legAngle;
       this.rightLegGroup.rotation.x = -legAngle;
-      this.tailGroup.rotation.y = Math.sin(this.animTime * 0.5) * 0.35;
-      this.headGroup.position.y = (this.isDucking ? 1.35 : 2.8) + Math.abs(Math.sin(this.animTime)) * 0.18;
+      this.tailGroup.rotation.y = Math.sin(this.animTime * 0.5) * 0.3;
+      this.headGroup.position.y = (this.isDucking ? 1.4 : 2.8) + Math.abs(Math.sin(this.animTime)) * 0.14;
 
-      // Dust & trail particles
-      if (Math.random() < 0.45) {
+      if (Math.random() < 0.35) {
         this.emitDust(1);
       }
     } else {
-      this.leftLegGroup.rotation.x = -0.65;
-      this.rightLegGroup.rotation.x = 0.45;
-    }
-
-    // Emit photon trail when in color phases
-    if (this.colorProgress > 0.2 && Math.random() < 0.7) {
-      this.emitTrailPhoton();
+      this.leftLegGroup.rotation.x = -0.6;
+      this.rightLegGroup.rotation.x = 0.4;
     }
 
     // Update Dust Particles
@@ -1060,64 +900,22 @@ export class Dino3DGame {
       p.mesh.position.y += p.vy * dt;
       p.mesh.position.z += p.vz * dt;
       const progress = p.life / p.maxLife;
-      p.mat.opacity = (1 - progress) * 0.75;
-      p.mesh.scale.setScalar(1 + progress * 0.9);
+      p.mat.opacity = (1 - progress) * 0.6;
       if (p.life >= p.maxLife) {
         p.mesh.visible = false;
       }
     }
 
-    // Update Trail Photon Particles
-    for (const t of this.trailParticles) {
-      if (!t.mesh.visible) continue;
-      t.life += dt;
-      t.mesh.position.x += t.vx * dt;
-      t.mesh.position.y += t.vy * dt;
-      t.mesh.position.z += t.vz * dt;
-      const progress = t.life / t.maxLife;
-      t.mat.opacity = (1 - progress) * 0.85;
-      t.mesh.scale.setScalar((1 - progress * 0.5) * (1 + this.colorProgress * 0.5));
-      if (t.life >= t.maxLife) {
-        t.mesh.visible = false;
-      }
-    }
-
-    // Update Ring Shockwaves
-    for (const sw of this.ringShockwaves) {
-      if (!sw.mesh.visible) continue;
-      sw.life += dt;
-      const p = sw.life / sw.maxLife;
-      sw.mesh.scale.setScalar(1 + p * 6);
-      sw.mat.opacity = (1 - p) * 0.85;
-      if (sw.life >= sw.maxLife) {
-        sw.mesh.visible = false;
-      }
-    }
-
-    // Update Speed Streaks (dynamic warp tunnel effect)
-    const streakOpacity = Math.max(0, (this.colorProgress - 0.1) * 1.2);
+    // Update Subtle Peripheral Speed Streaks
+    const streakOpacity = Math.max(0, Math.min(0.45, (this.colorProgress - 0.5) * 0.3));
     for (const s of this.speedStreaks) {
       s.mesh.position.z += (this.speed * s.baseSpeed) * dt;
-      s.mat.opacity = streakOpacity * 0.65;
-      if (this.colorProgress > 0.25) {
-        s.mat.color.setHex(this.getCurrentNeonColor(s.mesh.position.y));
-      }
+      s.mat.opacity = streakOpacity;
+      s.mat.color.copy(this.laneMat.color);
       if (s.mesh.position.z > 15) {
         s.mesh.position.z = -180 - Math.random() * 80;
-        s.mesh.position.x = s.laneOffset;
+        s.mesh.position.x = s.side * s.distX;
         s.mesh.position.y = s.y;
-      }
-    }
-
-    // Update Cyber Gates
-    for (const g of this.cyberGates) {
-      g.position.z += this.speed * dt;
-      // Pulse gate chevrons
-      if (g.chevronMat) {
-        g.chevronMat.color.setHex(this.getCurrentNeonColor(g.position.z * 0.05));
-      }
-      if (g.position.z > 20) {
-        g.position.z -= 320;
       }
     }
 
@@ -1129,23 +927,31 @@ export class Dino3DGame {
       }
     }
 
-    // Move Clouds
-    for (const cloud of this.clouds3D) {
-      cloud.position.z += this.speed * 0.2 * dt;
-      if (cloud.position.z > 25) {
-        cloud.position.z = -200 - Math.random() * 50;
-        cloud.position.x = (Math.random() - 0.5) * 90;
+    // Scroll Beacon Pylons
+    for (const pylon of this.beaconPylons) {
+      pylon.position.z += this.speed * dt;
+      if (pylon.position.z > 15) {
+        pylon.position.z -= 220;
       }
     }
 
-    // Spawn new obstacles as needed
+    // Scroll Clouds
+    for (const cloud of this.clouds3D) {
+      cloud.position.z += this.speed * 0.15 * dt;
+      if (cloud.position.z > 25) {
+        cloud.position.z = -200 - Math.random() * 50;
+        cloud.position.x = (Math.random() - 0.5) * 110;
+      }
+    }
+
+    // Spawn new obstacles
     const minZ = Math.min(...this.obstacles.map((o) => o.mesh.position.z), 0);
     if (minZ > -180) {
-      const nextZ = minZ - (26 + Math.random() * 22);
+      const nextZ = minZ - (28 + Math.random() * 24);
       this.spawnObstacleAtZ(nextZ);
     }
 
-    // Update Obstacles & Collision Check
+    // Collision Check
     const dinoHitbox = {
       x: this.playerX,
       y: this.playerY + (this.isDucking ? 0.65 : 1.4),
@@ -1159,14 +965,12 @@ export class Dino3DGame {
       const obs = this.obstacles[i];
       obs.mesh.position.z += this.speed * dt;
 
-      // Pterodactyl wing flapping
       if (obs.type === 'ptero') {
-        const flap = Math.sin(this.animTime * 1.6) * 0.75;
+        const flap = Math.sin(this.animTime * 1.5) * 0.7;
         obs.mesh.leftWing.rotation.z = flap;
         obs.mesh.rightWing.rotation.z = -flap;
       }
 
-      // Check collision
       const dz = Math.abs(obs.mesh.position.z - dinoHitbox.z);
       const dx = Math.abs(obs.mesh.position.x - dinoHitbox.x);
 
@@ -1186,33 +990,32 @@ export class Dino3DGame {
         return;
       }
 
-      // Remove obstacles behind camera
       if (obs.mesh.position.z > 20) {
         this.group.remove(obs.mesh);
         this.obstacles.splice(i, 1);
       }
     }
 
-    // Update Dynamic Colors & Shaders
+    // Smooth Continuous Color Transitions
     this.updateColors(dt);
 
-    // Dynamic Camera FOV: expands from 50 to 65 at high speeds!
-    const targetFOV = this.baseFOV + (this.speed - this.minSpeed) * 0.42;
-    this.camera.fov += (targetFOV - this.camera.fov) * dt * 4;
+    // Subtle FOV widening (50 -> 58)
+    const targetFOV = this.baseFOV + (this.speed - this.minSpeed) * 0.25;
+    this.camera.fov += (targetFOV - this.camera.fov) * dt * 3;
     this.camera.updateProjectionMatrix();
 
-    // Camera follow Dino smoothly with banking and bounce
-    const targetCamX = this.playerX * 0.42;
-    this.camera.position.x += (targetCamX - this.camera.position.x) * dt * 9;
-    this.camera.position.y = 5.2 + (this.playerY * 0.3) + this.camBounceY;
+    // Silky smooth camera follow
+    const targetCamX = this.playerX * 0.38;
+    this.camera.position.x += (targetCamX - this.camera.position.x) * dt * 8;
+    this.camera.position.y = 5.2 + (this.playerY * 0.25) + this.camBounceY;
     this.camera.position.z = 8.5;
 
-    // Camera roll tilt
-    this.camera.rotation.z = this.camRollZ + (-laneDelta * 0.03);
+    // Reset roll to ensure crystal-clear stability
+    this.camera.rotation.z = 0;
 
     this.camera.lookAt(
-      this.playerX * 0.25,
-      2.2 + this.playerY * 0.2 + this.camBounceY * 0.5,
+      this.playerX * 0.2,
+      2.2 + this.playerY * 0.15 + this.camBounceY * 0.5,
       -10
     );
   }
@@ -1221,7 +1024,6 @@ export class Dino3DGame {
     this.isDead = true;
     sounds.playHit();
     sounds.stopMusic(true);
-    this.triggerShockwave(this.playerX, 0xff0044);
     if (this.onDeath) {
       this.onDeath(this.score);
     }
