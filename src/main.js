@@ -26,6 +26,7 @@ import { RunnerView } from './view/RunnerView.js';
 import { Particles } from './view/Particles.js';
 import { CameraRig } from './view/CameraRig.js';
 import { BeatFx } from './view/BeatFx.js';
+import { AtmosphereFx } from './view/AtmosphereFx.js';
 import { Input } from './input/Input.js';
 import { Sfx, bindSfx } from './audio/Sfx.js';
 import { LyriaEngine } from './audio/music/LyriaEngine.js';
@@ -62,6 +63,7 @@ const views = [
   // (RivalView ajoutée plus bas, une fois le multijoueur créé)
   new RunnerView(ctx),
   new Particles(ctx),
+  new AtmosphereFx(ctx), // particules d'ambiance par monde + traînées de vitesse
   new CameraRig(ctx),
 ];
 
@@ -94,7 +96,7 @@ function play() {
   }
   menus.show(null);
   game.start({ ...shop.prepareRun(), respawn: true }); // solo aussi : une chute coûte une vie, on réapparaît
-  bots.start(Skins.ids()); // solo : 3 dinos IA pour se battre
+  bots.start(Skins.ids(), profile.data.skin); // solo : 3 dinos IA, tous différents (et différents du tien)
 }
 
 const lobby = new Lobby({ mp, bots, menus, hud, onLaunch: () => play() });

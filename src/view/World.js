@@ -51,14 +51,49 @@ export class World {
 
   setPalette(palette) { this.palette = palette; }
 
+  // Ciel en shader (aucun coût CPU) : dégradé, brume lumineuse à l'horizon, soleil + halo (qui
+  // "bave" grâce au bloom), voiles de cirrus qui défilent, et étoiles scintillantes si le ciel est sombre.
   #buildSky() {
+    this.skyUniforms = {
+      top: { value: this.colors.skyTop }, bottom: { value: this.colors.sky },
+      sunColor: { value: new THREE.Color(0xfff1d0) }, sunDir: { value: new THREE.Vector3(-0.35, 0.2, 1).normalize() },
+      cirrus: { value: this.colors.cloud }, time: { value: 0 }, stars: { value: 0 },
+    };
     this.sky = new THREE.Mesh(
-      new THREE.SphereGeometry(380, 32, 16),
+      new THREE.SphereGeometry(380, 48, 24),
       new THREE.ShaderMaterial({
         side: THREE.BackSide, depthWrite: false, fog: false,
-        uniforms: { top: { value: this.colors.skyTop }, bottom: { value: this.colors.sky } },
+        uniforms: this.skyUniforms,
         vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-        fragmentShader: 'uniform vec3 top; uniform vec3 bottom; varying vec3 vP; void main(){ float h = smoothstep(-0.05, 0.55, vP.y); gl_FragColor = vec4(mix(bottom, top * .78, h), 1.0); }',
+        fragmentShader: `
+          uniform vec3 top, bottom, sunColor, sunDir, cirrus; uniform float time, stars; varying vec3 vP;
+          float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+          float noise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f);
+            return mix(mix(hash(i), hash(i+vec2(1,0)), f.x), mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y); }
+          float fbm(vec2 p){ float v = 0., a = .5; for (int i = 0; i < 4; i++) { v += a * noise(p); p *= 2.03; a *= .5; } return v; }
+          void main(){
+            vec3 d = normalize(vP);
+            float h = smoothstep(-0.05, 0.55, d.y);
+            vec3 c = mix(bottom, top * .78, h);
+            // brume lumineuse à l'horizon, teintée par le soleil
+            float sd = max(dot(d, sunDir), 0.);
+            c += sunColor * pow(1. - abs(d.y), 6.) * .18 * (.4 + sd);
+            // voiles de cirrus (projetés sur un plafond, défilent lentement)
+            if (d.y > 0.02) {
+              vec2 uv = d.xz / (d.y + .25) * 1.6 + vec2(time * .006, time * .0025);
+              float w = smoothstep(.52, .82, fbm(uv * vec2(1., 3.2)));
+              c = mix(c, cirrus * 1.05 + sunColor * sd * .15, w * .42 * smoothstep(.02, .3, d.y));
+            }
+            // étoiles (ciel sombre)
+            if (stars > .01 && d.y > .05) {
+              vec2 g = floor(d.xz / (d.y + .6) * 180.);
+              float st = step(.9965, hash(g)) * (.6 + .4 * sin(time * 2.5 + hash(g + 7.) * 40.));
+              c += vec3(st) * stars * smoothstep(.05, .4, d.y);
+            }
+            // soleil : disque + halo (valeurs > 1 → bloom)
+            c += sunColor * (smoothstep(.9985, .9993, sd) * 2.2 + pow(sd, 350.) * 1.1 + pow(sd, 18.) * .22);
+            gl_FragColor = vec4(c, 1.);
+          }`,
       }),
     );
     this.sky.renderOrder = -1;
@@ -113,6 +148,12 @@ export class World {
     this.cloudMaterial.emissive.copy(c.cloud);
     const cam = this.camera.position;
     this.sky.position.copy(cam);
+    // ciel : soleil de la couleur de la zone, cirrus aux couleurs des nuages, étoiles si le ciel est sombre
+    const u = this.skyUniforms;
+    u.time.value += dt;
+    u.sunColor.value.copy(this.sun.color);
+    const darkness = 1 - (c.skyTop.r * .2126 + c.skyTop.g * .7152 + c.skyTop.b * .0722);
+    u.stars.value += (THREE.MathUtils.smoothstep(darkness, .7, .9) - u.stars.value) * Math.min(1, dt);
     for (const cl of this.clouds) {
       cl.g.visible = p.clouds !== false;
       cl.a += dt * 0.004;

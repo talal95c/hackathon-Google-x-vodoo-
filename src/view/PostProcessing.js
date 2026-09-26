@@ -46,6 +46,13 @@ export class PostProcessing {
           vec2 edge=vUv-.5;
           vec2 split=edge*dot(edge,edge)*(.001+ rush*.010);
           vec3 c=vec3(texture2D(tDiffuse,vUv+split).r,texture2D(tDiffuse,vUv).g,texture2D(tDiffuse,vUv-split).b);
+          // flou radial de vitesse (sprint) : plus fort sur les bords, nul au centre
+          if (rush > .01) {
+            vec2 dir = edge * min(rush, .8) * .017 * smoothstep(.05, .4, length(edge));
+            vec3 acc = c;
+            for (int i = 1; i <= 4; i++) acc += texture2D(tDiffuse, vUv - dir * float(i) * .25).rgb;
+            c = acc / 5.;
+          }
           float l=dot(c,vec3(.2126,.7152,.0722));
           c=mix(vec3(l),c,1.08);
           c=(c-.5)*1.055+.5;
