@@ -11,6 +11,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   </head>
   <body>
+    <!-- Floating Lyria DJ Status / Toggle Button -->
+    <div id="lyria-top-bar">
+      <button id="btn-lyria-toggle" class="btn-lyria">
+        <span class="lyria-icon">✨</span>
+        <span id="lyria-btn-label">DeepMind Lyria DJ : OFF</span>
+      </button>
+    </div>
+
     <!-- Real Google Chrome Offline Page wrapper -->
     <div id="chrome-page-container">
       <div id="chrome-main">
@@ -42,6 +50,7 @@
     <header id="ui-3d-hud" class="hidden">
       <div class="hud-top">
         <div id="hud-badge" class="badge badge-3d">DIMENSION 3D : RUN DU DINO</div>
+        <div id="lyria-hud-badge" class="badge badge-lyria hidden">🔴 LYRIA AI DJ</div>
         <div id="score-display">SCORE : 0</div>
         <div id="speed-display" class="badge badge-speed">⚡ 1.0x</div>
       </div>
@@ -63,6 +72,41 @@
         <button id="btn-jump" class="touch-btn btn-primary" aria-label="Sauter">▲ SAUT</button>
         <button id="btn-duck" class="touch-btn" aria-label="Baisser">▼ GLISSE</button>
         <button id="btn-right" class="touch-btn" aria-label="Droite">DROITE ▶</button>
+      </div>
+    </div>
+
+    <!-- Lyria Configuration Modal -->
+    <div id="modal-lyria" class="modal-backdrop hidden">
+      <div class="modal-card modal-lyria-card">
+        <h2 class="lyria-modal-title">✨ Google DeepMind Lyria RealTime</h2>
+        <p class="lyria-modal-desc">
+          Générez une bande-son <strong>live en streaming par IA</strong> grâce au modèle
+          <code>models/lyria-realtime-exp</code> de DeepMind via le SDK <code>@google/genai</code> !
+          La musique s'adapte en temps réel à chaque phase et à la vitesse du Dino.
+        </p>
+
+        <div class="lyria-input-group">
+          <label for="input-gemini-key" class="lyria-label">Clé API Google Gemini / DeepMind :</label>
+          <input
+            type="password"
+            id="input-gemini-key"
+            class="lyria-input"
+            placeholder="AIzaSy..."
+            autocomplete="off"
+          />
+          <span class="lyria-hint">
+            Obtenez une clé gratuite sur <a href="https://aistudio.google.com/" target="_blank" rel="noopener">Google AI Studio</a>.
+          </span>
+        </div>
+
+        <div id="lyria-status-box" class="lyria-status-box">
+          Mode actuel : Synthwave Web Audio procédural (sans clé requise).
+        </div>
+
+        <div class="lyria-btn-group">
+          <button id="btn-connect-lyria" class="btn-action btn-lyria-connect">CONNECTER LYRIA LIVE</button>
+          <button id="btn-close-lyria" class="btn-action btn-secondary">FERMER</button>
+        </div>
       </div>
     </div>
 

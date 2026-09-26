@@ -1,4 +1,8 @@
-// Synthesized Web Audio sound effects and procedural dynamic synthwave music engine
+// Synthesized Web Audio sound effects and Google DeepMind Lyria RealTime music integration
+import { LyriaLiveDJ } from './lyriaMusic.js';
+
+export const lyriaDJ = new LyriaLiveDJ(null);
+
 class SoundEffects {
   constructor() {
     this.ctx = null;
@@ -21,9 +25,10 @@ class SoundEffects {
     }
     if (!this.masterMusicGain && this.ctx) {
       this.masterMusicGain = this.ctx.createGain();
-      this.masterMusicGain.gain.setValueAtTime(0.22, this.ctx.currentTime);
+      this.masterMusicGain.gain.setValueAtTime(0.24, this.ctx.currentTime);
       this.masterMusicGain.connect(this.ctx.destination);
     }
+    lyriaDJ.setAudioContext(this.ctx);
   }
 
   // --- Retro 2D and general SFX ---
@@ -306,31 +311,45 @@ class SoundEffects {
     osc.stop(now + 0.28);
   }
 
-  // --- Dynamic Procedural Synthwave Music Engine ---
+  // --- Dynamic Music Engine (Lyria RealTime + Procedural Fallback) ---
 
   startMusic() {
     this.init();
-    if (!this.ctx || this.musicPlaying) return;
+    if (this.musicPlaying) return;
 
     this.musicPlaying = true;
     this.musicBpm = 120;
     this.musicIntensity = 0.05;
     this.currentStep = 0;
-    this.nextNoteTime = this.ctx.currentTime + 0.05;
 
-    if (this.masterMusicGain) {
-      this.masterMusicGain.gain.cancelScheduledValues(this.ctx.currentTime);
-      this.masterMusicGain.gain.setValueAtTime(0.24, this.ctx.currentTime);
+    // If Lyria AI is connected, play live stream
+    if (lyriaDJ.isConnected) {
+      lyriaDJ.play();
+      // Keep master procedural gain very low or muted to let Lyria shine
+      if (this.masterMusicGain) {
+        this.masterMusicGain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+      }
+    } else {
+      if (this.masterMusicGain) {
+        this.masterMusicGain.gain.cancelScheduledValues(this.ctx.currentTime);
+        this.masterMusicGain.gain.setValueAtTime(0.24, this.ctx.currentTime);
+      }
     }
 
-    this.scheduler();
+    if (this.ctx) {
+      this.nextNoteTime = this.ctx.currentTime + 0.05;
+      this.scheduler();
+    }
   }
 
-  updateMusic(speedFactor = 1.0, intensity = 0.0) {
-    // speedFactor roughly 1.0 to 1.8
-    // intensity 0.0 to 1.0 (phase and score progression)
+  updateMusic(speedFactor = 1.0, intensity = 0.0, phase = 0) {
     this.musicBpm = Math.min(148, 118 + (speedFactor - 1.0) * 35);
     this.musicIntensity = Math.max(0, Math.min(1.0, intensity));
+
+    // Dynamic steering with Google DeepMind Lyria RealTime model
+    if (lyriaDJ.isConnected) {
+      lyriaDJ.steerPhase(phase, this.musicBpm, this.musicIntensity);
+    }
   }
 
   scheduler() {
@@ -516,6 +535,10 @@ class SoundEffects {
   }
 
   stopMusic(slowdown = true) {
+    if (lyriaDJ.isConnected) {
+      lyriaDJ.stop();
+    }
+
     if (!this.musicPlaying) return;
     this.musicPlaying = false;
     clearTimeout(this.musicTimer);
@@ -523,7 +546,6 @@ class SoundEffects {
     if (this.ctx && this.masterMusicGain) {
       const now = this.ctx.currentTime;
       if (slowdown) {
-        // Dramatic tape-stop pitch dive and fade
         this.masterMusicGain.gain.setValueAtTime(this.masterMusicGain.gain.value, now);
         this.masterMusicGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
       } else {

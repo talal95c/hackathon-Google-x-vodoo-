@@ -175,6 +175,165 @@ body, html {
   box-shadow: 0 0 12px rgba(0, 255, 204, 0.25);
 }
 
+.badge-lyria {
+  background: #2a0845;
+  color: #ff007f;
+  border: 1px solid #ff007f;
+  box-shadow: 0 0 14px rgba(255, 0, 127, 0.4);
+  animation: pulseNeon 1.5s infinite alternate;
+}
+
+@keyframes pulseNeon {
+  from { opacity: 0.8; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1.03); box-shadow: 0 0 20px rgba(255, 0, 127, 0.8); }
+}
+
+/* Floating Lyria DJ Header Bar */
+#lyria-top-bar {
+  position: fixed;
+  top: 18px;
+  right: 20px;
+  z-index: 100;
+}
+
+.btn-lyria {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 30px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(10px);
+  color: #333;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+.btn-lyria:hover {
+  transform: translateY(-2px);
+  border-color: #ff007f;
+  box-shadow: 0 6px 20px rgba(255, 0, 127, 0.25);
+}
+
+.btn-lyria.active {
+  background: #190c2e;
+  border-color: #00f0ff;
+  color: #00f0ff;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+}
+
+/* Lyria Modal Styles */
+.modal-lyria-card {
+  max-width: 520px;
+  text-align: left;
+}
+
+.lyria-modal-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #111;
+  margin-bottom: 10px;
+  background: linear-gradient(90deg, #6c5ce7, #ff007f);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.lyria-modal-desc {
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
+.lyria-modal-desc code {
+  background: #f0f0f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.82rem;
+  color: #6c5ce7;
+}
+
+.lyria-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.lyria-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #444;
+}
+
+.lyria-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 0.9rem;
+  font-family: monospace;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.lyria-input:focus {
+  border-color: #6c5ce7;
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+}
+
+.lyria-hint {
+  font-size: 0.75rem;
+  color: #777;
+}
+
+.lyria-hint a {
+  color: #6c5ce7;
+  text-decoration: underline;
+}
+
+.lyria-status-box {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  font-size: 0.82rem;
+  color: #495057;
+  margin-bottom: 20px;
+}
+
+.lyria-btn-group {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-lyria-connect {
+  background: linear-gradient(135deg, #6c5ce7, #ff007f);
+  color: white;
+  flex: 2;
+}
+
+.btn-lyria-connect:hover {
+  background: linear-gradient(135deg, #5b4cc4, #e00070);
+}
+
+.btn-secondary {
+  background: #eaeaea;
+  color: #333;
+  flex: 1;
+}
+
+.btn-secondary:hover {
+  background: #d8d8d8;
+}
+
 #score-display {
   font-family: 'Press Start 2P', monospace;
   font-size: 0.85rem;

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import confetti from 'canvas-confetti';
-import { sounds } from './audio.js';
+import { sounds, lyriaDJ } from './audio.js';
 import { Dino2DGame } from './dino2d.js';
 import { ShatterEffect } from './shatterEffect.js';
 import { Dino3DGame } from './dino3d.js';
@@ -35,6 +35,16 @@ class GameDirector {
     this.phasePopupTitle = document.getElementById('phase-popup-title');
     this.phasePopupName = document.getElementById('phase-popup-name');
     this.modalGameOver = document.getElementById('modal-gameover');
+
+    // Lyria UI Elements
+    this.btnLyriaToggle = document.getElementById('btn-lyria-toggle');
+    this.lyriaBtnLabel = document.getElementById('lyria-btn-label');
+    this.lyriaHudBadge = document.getElementById('lyria-hud-badge');
+    this.modalLyria = document.getElementById('modal-lyria');
+    this.inputGeminiKey = document.getElementById('input-gemini-key');
+    this.btnConnectLyria = document.getElementById('btn-connect-lyria');
+    this.btnCloseLyria = document.getElementById('btn-close-lyria');
+    this.lyriaStatusBox = document.getElementById('lyria-status-box');
 
     this.initThree();
     this.init2D();
@@ -345,7 +355,70 @@ class GameDirector {
   }
 
   initUI() {
-    // Hidden initially
+    // Populate saved key if any
+    if (this.inputGeminiKey) {
+      this.inputGeminiKey.value = lyriaDJ.apiKey || '';
+    }
+
+    // Lyria status callback
+    lyriaDJ.onStatusChange((status, message) => {
+      if (this.lyriaStatusBox) {
+        this.lyriaStatusBox.textContent = message;
+      }
+
+      if (status === 'CONNECTED' || status === 'PLAYING') {
+        if (this.lyriaBtnLabel) this.lyriaBtnLabel.textContent = 'Lyria DJ : ACTIF 🎶';
+        this.btnLyriaToggle?.classList.add('active');
+        this.lyriaHudBadge?.classList.remove('hidden');
+      } else if (status === 'CONNECTING' || status === 'STEERING') {
+        if (this.lyriaBtnLabel) this.lyriaBtnLabel.textContent = 'Lyria : Sync...';
+      } else {
+        if (this.lyriaBtnLabel) this.lyriaBtnLabel.textContent = 'DeepMind Lyria DJ : OFF';
+        this.btnLyriaToggle?.classList.remove('active');
+        this.lyriaHudBadge?.classList.add('hidden');
+      }
+    });
+
+    // Lyria modal trigger
+    this.btnLyriaToggle?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.modalLyria?.classList.remove('hidden');
+    });
+
+    this.btnCloseLyria?.addEventListener('click', () => {
+      this.modalLyria?.classList.add('hidden');
+    });
+
+    this.btnConnectLyria?.addEventListener('click', async () => {
+      sounds.init();
+      const key = this.inputGeminiKey?.value?.trim() || '';
+      lyriaDJ.setApiKey(key);
+
+      if (!key) {
+        if (this.lyriaStatusBox) {
+          this.lyriaStatusBox.textContent = 'Mode Synthwave procédural actif (aucune clé fournie).';
+        }
+        return;
+      }
+
+      this.btnConnectLyria.disabled = true;
+      this.btnConnectLyria.textContent = 'CONNEXION EN COURS...';
+
+      const ok = await lyriaDJ.connect();
+      this.btnConnectLyria.disabled = false;
+      this.btnConnectLyria.textContent = ok ? 'CONNECTÉ AVEC SUCCÈS' : 'RÉESSAYER LA CONNEXION';
+
+      if (ok) {
+        setTimeout(() => {
+          this.modalLyria?.classList.add('hidden');
+        }, 1200);
+      }
+    });
+
+    // Auto-connect if API key already stored
+    if (lyriaDJ.hasApiKey()) {
+      lyriaDJ.connect().catch(() => {});
+    }
   }
 
   updateHUD() {}

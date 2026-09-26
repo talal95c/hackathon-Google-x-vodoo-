@@ -9,8 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "three": "^0.170.0",
-    "canvas-confetti": "^1.9.4"
+    "@google/genai": "^2.22.0",
+    "canvas-confetti": "^1.9.4",
+    "three": "^0.170.0"
   },
   "devDependencies": {
     "vite": "^6.0.0"

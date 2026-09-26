@@ -977,9 +977,9 @@ export class Dino3DGame {
     // Speed progression: accelerates up to maxSpeed
     this.speed = Math.min(this.maxSpeed, this.minSpeed + (this.score / 280) * 3);
 
-    // Update dynamic procedural music with current speed & color progress
+    // Update dynamic procedural or Lyria music with current speed & color progress & phase
     const speedRatio = this.speed / this.minSpeed;
-    sounds.updateMusic(speedRatio, this.colorProgress);
+    sounds.updateMusic(speedRatio, this.colorProgress, this.currentPhase);
 
     // Smooth lane interpolation
     const laneSmoothing = 15;
