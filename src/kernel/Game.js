@@ -88,6 +88,7 @@ export class Game {
     this.pausedRaceState = null;
     this.worldJump = null;
     this.nextWorld = 1;
+    this.worldWarn = null;
     this.track.update(this.runner.z);
   }
 
@@ -192,9 +193,17 @@ export class Game {
     r.cruise = S.get('baseSpeed') * this.tempo.ratio;
     while (!this.worldJump && this.nextWorld < ZONES.length && r.z > this.nextWorld * TRACK.zoneLength + WORLD_JUMP.tail) this.nextWorld++;
     const boundary = this.nextWorld * TRACK.zoneLength;
+    if (!this.worldJump && this.nextWorld < ZONES.length) {
+      const seconds = Math.ceil((boundary - WORLD_JUMP.lead - r.z) / Math.max(r.speed, 1));
+      if (seconds >= 1 && seconds <= GAME.worldWarning && seconds < (this.worldWarn ?? Infinity)) {
+        this.worldWarn = seconds;
+        this.emit('world:soon', { to: ZONES[this.nextWorld], seconds });
+      }
+    }
     if (!this.worldJump && this.nextWorld < ZONES.length && r.z >= boundary - WORLD_JUMP.lead) {
       this.worldJump = { from: this.zoneIndex, to: this.nextWorld, start: boundary - WORLD_JUMP.lead, end: boundary + WORLD_JUMP.tail, x: r.x, y: Math.max(0, r.y), progress: 0 };
       r.drifting = false; r.manual = false; r.stumble = 0; r.latV = 0; r.push = 0;
+      this.worldWarn = null;
       this.emit('world:jump', { from: this.zone, to: ZONES[this.nextWorld] });
       this.nextWorld++;
     }

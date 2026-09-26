@@ -178,6 +178,7 @@ function frame(now) {
   music.update(dt);
   hud.update(dt);
   world.update(dt, ctx.focus);
+  world.adapt(wallDt);
   clubView.update(dt, time);
   clubHud.update();
   world.render(club.active ? clubView.hitKick : (ctx.fx?.pulse ?? 0), club.active ? clubView.postFx : ctx.transition);
