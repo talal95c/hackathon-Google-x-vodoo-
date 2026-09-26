@@ -219,7 +219,10 @@ body:not(.in-game) #hud { opacity: 0; }
   #best { font-size: 18px; }
   #danger { top: calc(max(12px, env(safe-area-inset-top)) + 108px); width: min(280px, 80vw); padding: 8px 12px; }
   #journey { top: calc(max(12px, env(safe-area-inset-top)) + 160px); width: min(280px, 80vw); padding: 7px 12px; }
-  #feverGauge { top: calc(max(12px, env(safe-area-inset-top)) + 210px); width: min(280px, 80vw); padding: 7px 12px; }
+  #feverGauge {
+    top: calc(max(12px, env(safe-area-inset-top)) + 210px);
+    left: 12px; width: min(142px, 37vw); padding: 7px 10px; transform: none; font-size: 10px;
+  }
   #challengeHud { top: calc(max(12px, env(safe-area-inset-top)) + 260px); left: auto; right: 12px; width: 42vw; padding: 7px; transform: none; font-size: 10px; }
   #boss { top: calc(max(12px, env(safe-area-inset-top)) + 335px); }
   #buffs { top: calc(max(12px, env(safe-area-inset-top)) + 335px); left: 12px; }
@@ -259,6 +262,7 @@ body:not(.in-game) #hud { opacity: 0; }
   .panel-head h2 { font-size: 23px; }
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .card { padding: 11px; }
+  .card .name { font-size: 14px; overflow-wrap: anywhere; }
   .tabs button { padding: 9px 4px; font-size: 11px; }
 }
 @media (max-width: 350px) {
@@ -287,6 +291,13 @@ body:not(.in-game) #hud { opacity: 0; }
   #start h1 { font-size: 46px; }
   .menu-footer { flex-direction: row; }
   .menu-footer .buttons { width: 100%; }
+  #danger { top: calc(max(12px, env(safe-area-inset-top)) + 75px); }
+  #journey, #banner { top: calc(max(12px, env(safe-area-inset-top)) + 125px); }
+  #feverGauge { top: calc(max(12px, env(safe-area-inset-top)) + 85px); width: 120px; }
+  #challengeHud { top: calc(max(12px, env(safe-area-inset-top)) + 85px); width: 140px; }
+  #boss { top: calc(max(12px, env(safe-area-inset-top)) + 180px); }
+  #buffs { top: calc(max(12px, env(safe-area-inset-top)) + 180px); }
+  #boss:not(.hidden) ~ #buffs { top: calc(max(12px, env(safe-area-inset-top)) + 235px); }
   #touchHint.active { bottom: calc(max(12px, env(safe-area-inset-bottom)) + 56px); }
 }
 @media (prefers-reduced-motion: reduce) {
