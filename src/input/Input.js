@@ -1,5 +1,5 @@
 // Clavier (QWERTY + AZERTY) et tactile → "intention" lue par le kernel à chaque frame :
-//   { steer: -1..1 (+1 = gauche), throttle: 0/1 (courir), drift, slideStraight, brake, jump (front montant), shove }
+//   { steer: -1..1 (+1 = gauche), throttle: 0/1 (courir), drift, brake, jump (front montant), shove, slideStraight? }
 // onAction(fn) : fn('confirm') sur ESPACE / ENTRÉE / tap (démarrer, réessayer).
 //
 // Tactile : un doigt posé = courir ; glisser à gauche / droite = direction analogique (ancre flottante :
@@ -124,6 +124,6 @@ export class Input {
     this.#jump = false; this.#shove = false;
     // courir : ↑ / W / Z maintenu (tactile : un doigt posé)
     const throttle = k.has('ArrowUp') || k.has('KeyW') || k.has('KeyZ') || touching ? 1 : 0;
-    return { steer: this.steer, throttle, drift, slideStraight, brake: k.has('ArrowDown') || k.has('KeyS'), jump, shove };
+    return { steer: this.steer, throttle, drift, brake: k.has('ArrowDown') || k.has('KeyS'), jump, shove, ...(slideStraight && { slideStraight }) };
   }
 }
