@@ -17,6 +17,7 @@ export class Hud {
       'worldName', 'worldProgress', 'buffs', 'driftFill', 'driftLabel', 'vignette', 'flash', 'banner', 'music'].map((id) => [id, $(id)]));
     this.setBest(profile.data.best);
 
+    this.el.speed.addEventListener('animationend', (e) => { if (e.animationName === 'speed-pop') this.el.speed.classList.remove('pop'); });
     const on = (t, fn) => game.on(t, fn);
     on('game:start', () => { this.#lives(false); this.el.boss.classList.add('hidden'); });
     on('tempo', ({ level }) => { if (level > 0) { this.banner(`SPEED ×${game.tempo.ratio.toFixed(1)}`, 1.4); this.#pop(this.el.speed); } });
@@ -55,10 +56,7 @@ export class Hud {
     this.#bannerTimer = seconds;
   }
 
-  #pop(el) {
-    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
-    el.addEventListener('animationend', (e) => { if (e.animationName === 'speed-pop') el.classList.remove('pop'); }, { once: true });
-  }
+  #pop(el) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
 
   #lives(hit) {
     const g = this.game, max = g.runner.stats.get('maxLives');
