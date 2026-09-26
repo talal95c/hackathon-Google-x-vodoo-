@@ -104,3 +104,42 @@ Models.register('laserBolt', () => {
   m.scale.set(0.25, 0.25, 2.2);
   return m;
 });
+
+// Ptérodactyle pixel (jeu Chrome) : ailes qui battent
+Models.register('ptero', () => {
+  const g = new THREE.Group(), body = new THREE.Group();
+  g.add(body);
+  cube(body, GREY, 0.6, 0.5, 2.2, 0, 0, 0);          // corps
+  cube(body, GREY, 0.5, 0.45, 0.9, 0, 0.25, 1.3);     // tête
+  cube(body, GREY, 0.3, 0.2, 0.9, 0, 0.15, 2.1);      // bec
+  cube(body, GREY, 0.2, 0.3, 0.6, 0, 0.5, 0.9);       // crête
+  const wings = [-1, 1].map((sd) => {
+    const w = new THREE.Group(); w.position.set(sd * 0.3, 0.1, 0.1); body.add(w);
+    cube(w, GREY, 1.8, 0.12, 1.0, sd * 0.9, 0, 0);
+    cube(w, GREY, 1.0, 0.12, 0.6, sd * 2.1, 0, -0.2);
+    return { w, sd };
+  });
+  g.rotation.y = Math.PI; // vole vers le dino
+  return { object: g, update(e, dt, t) { for (const { w, sd } of wings) w.rotation.z = sd * Math.sin(t * 12 + e.id) * 0.6; body.position.y = Math.sin(t * 6) * 0.15; } };
+});
+
+// Roue de chargement qui roule vers le dino
+Models.register('spinner', () => {
+  const g = new THREE.Group(), side = new THREE.Group(), wheel = new THREE.Group();
+  side.position.y = 1.6; side.rotation.y = Math.PI / 2;
+  g.add(side); side.add(wheel);
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    const c = cube(wheel, i < 2 ? 0x1a73e8 : 0xc8d3e0, 0.45, 0.45, 0.5, Math.cos(a) * 1.2, Math.sin(a) * 1.2, 0);
+    c.rotation.z = a;
+  }
+  return { object: g, update(e, dt, t) { wheel.rotation.z = e.charging ? -t * 9 : -t * 3; } };
+});
+
+// Pop-up qui fonce : même visuel que le pop-up mobile, penché vers l'avant quand il charge
+Models.register('popupCharger', () => {
+  const p = popup();
+  cube(p.object, 0xff9100, 4.1, 0.15, 0.35, 0, 3.2, 0, false);
+  const base = p.update;
+  return { object: p.object, update(e, dt, t) { base(e, dt, t); p.object.rotation.x = e.charging ? -0.25 : 0; } };
+});

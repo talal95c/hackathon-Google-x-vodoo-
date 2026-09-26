@@ -16,6 +16,8 @@ import { Profile } from './meta/Profile.js';
 import { Shop } from './meta/Shop.js';
 import { World } from './view/World.js';
 import { TrackView } from './view/TrackView.js';
+import { SideLightShow } from './view/SideLightShow.js';
+import { WorldDecorView } from './view/WorldDecorView.js';
 import { EntityViews } from './view/EntityViews.js';
 import { RunnerView } from './view/RunnerView.js';
 import { ChaserView } from './view/ChaserView.js';
@@ -43,6 +45,8 @@ const ctx = { game, world, focus: new THREE.Vector3(), skin: profile.data.skin }
 const views = [
   new BeatFx(ctx),      // en premier : fournit ctx.fx et ctx.beatMaterials
   new TrackView(ctx),
+  new WorldDecorView(ctx),
+  new SideLightShow(ctx),
   new EntityViews(ctx),
   new RunnerView(ctx),
   new ChaserView(ctx),
@@ -100,7 +104,7 @@ function frame(now) {
   music.update(dt);
   hud.update(dt);
   world.update(dt, ctx.focus);
-  world.render(ctx.fx?.pulse ?? 0);
+  world.render(ctx.fx?.pulse ?? 0, game.worldJump ? Math.sin(game.worldJump.progress * Math.PI) : game.runner.boost > 0 ? .8 : 0);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

@@ -1,12 +1,12 @@
-import { DIRECTOR, TRACK, RUNNER } from './config.js';
+import { DIRECTOR, TRACK } from './config.js';
 import { Entities } from './Registry.js';
 import { ZONES } from '../content/zones.js';
 import { Track } from './Track.js';
+import { isWorldSafe, intersectsWorldSafe } from './WorldJourney.js';
 
 // Le Director décide QUOI apparaît et QUAND : tables de spawn pondérées par zone,
-// difficulté croissante, arène de boss en fin de zone (si la zone en a un)… et RYTHME :
-// les apparitions sont espacées en temps musicaux, puis aimantées pour que le dino
-// les atteigne pile sur un temps (snapToBeat), même si sa vitesse change.
+// difficulté croissante, et arène de boss en fin de zone (si la zone en a un).
+// Le gameplay ne dépend pas de la musique (pas de latence possible) : seul le décor pulse au rythme.
 //
 // Table de spawn d'une zone (content/zones.js) :
 //   spawns: [
@@ -33,10 +33,12 @@ export class Director {
   populate(chunk) {
     const g = this.game, r = g.rng, zone = ZONES[chunk.zone];
     const diff = Math.min(1, chunk.s0 / 4000);
+    const gap = DIRECTOR.gapEasy + (DIRECTOR.gapHard - DIRECTOR.gapEasy) * diff;
     const arena = zone.boss ? this.arenaStart(chunk.s0) : Infinity;
     const f = {};
     let s = Math.max(chunk.s0, DIRECTOR.firstSpawn) + r.range(4, 14);
     while (s < chunk.s1 - 4) {
+      if (isWorldSafe(s) || isWorldSafe(s + 45)) { s += 12; continue; }
       const W = g.track.frame(s, f).w;
       if (s >= arena) {
         // Arène : pas d'obstacles (le boss s'en charge), des armes et des pièces
@@ -46,39 +48,12 @@ export class Director {
         s += 30;
         continue;
       }
-      const beat = this.beatLength(s);
+      if (g.track.hardTurnAt(s, 25)) { s += 10; continue; } // rien dans les virages durs : le défi, c'est le virage
       const entry = this.#pick(zone.spawns, s);
-      s += entry.pattern ? PATTERNS[entry.pattern](g, chunk, s, W, { ...entry, spacing: Math.max(2.2, beat / 2) }) : this.#spawnOne(entry.type, chunk, s, W);
-      s += beat * r.pick(r.chance(diff) ? DIRECTOR.gapBeatsHard : DIRECTOR.gapBeatsEasy);
-    }
-  }
-
-  // Distance parcourue pendant un temps musical, à la vitesse de croisière prévue en s
-  beatLength(s) {
-    // au palier prévu en s, vitesse ET tempo sont multipliés par ratio : la distance d'un temps
-    // vaut donc baseSpeed × ratio × (60 / (bpm0 × ratio)) = baseSpeed × période au palier 0
-    const g = this.game, ratioNow = g.tempo?.ratio ?? 1;
-    return RUNNER.baseSpeed * g.beat.period * ratioNow;
-  }
-
-  // Aimante les entités proches pour que leur arrivée tombe sur un temps (def.snap = subdivision,
-  // 1 = temps, 2 = croches ; false = jamais). Les groupes (rangées de pièces) bougent ensemble.
-  snapToBeat(h) {
-    const g = this.game, r = g.runner, clock = g.beat;
-    const [near, far] = DIRECTOR.snapWindow, maxStep = DIRECTOR.snapRate * h;
-    const speed = Math.max(8, r.speed);
-    for (const e of g.entities) {
-      if (!e.alive || e.def.snap === false || e.kind === 'projectile' || e.kind === 'boss') continue;
-      if (e.snapGroup && e.snapGroup[0] !== e) continue; // seul le meneur du groupe calcule
-      const ahead = e.s - r.z;
-      if (ahead < near || ahead > far) continue;
-      // temps d'arrivée actuel → temps d'arrivée sur la subdivision la plus proche
-      const eta = ahead / speed;
-      const target = r.z + clock.snapDelay(eta, e.def.snap ?? 1) * speed;
-      const delta = target - e.s;
-      const step = Math.max(-maxStep, Math.min(maxStep, delta));
-      if (e.snapGroup) { for (const m of e.snapGroup) m.s += step; }
-      else e.s += step;
+      const span = entry.pattern ? (entry.count ?? 8) * (entry.spacing ?? 3) : 0;
+      if (intersectsWorldSafe(s, s + span)) { s += 12; continue; }
+      s += entry.pattern ? PATTERNS[entry.pattern](g, chunk, s, W, entry) : this.#spawnOne(entry.type, chunk, s, W);
+      s += gap * r.range(0.7, 1.3);
     }
   }
 
@@ -111,13 +86,13 @@ export class Director {
 const PATTERNS = {
   coinRow(g, chunk, s, W, { count = 5, type = 'coin', spacing = 2.6 } = {}) {
     const d = g.rng.range(-W / 2 + 1.5, W / 2 - 1.5), group = [];
-    for (let k = 0; k < count; k++) group.push(g.spawn(type, s + k * spacing, d, { chunk: chunk.index, snapGroup: group }));
+    for (let k = 0; k < count; k++) group.push(g.spawn(type, s + k * spacing, d, { chunk: chunk.index, group }));
     return count * spacing;
   },
   // Rangée de pièces qui serpente (suit une sinusoïde)
   coinSnake(g, chunk, s, W, { count = 8, type = 'coin', spacing = 3 } = {}) {
     const amp = W / 2 - 2, ph = g.rng.range(0, 6), group = [];
-    for (let k = 0; k < count; k++) group.push(g.spawn(type, s + k * spacing, Math.sin(ph + k * 0.5) * amp, { chunk: chunk.index, snapGroup: group }));
+    for (let k = 0; k < count; k++) group.push(g.spawn(type, s + k * spacing, Math.sin(ph + k * 0.5) * amp, { chunk: chunk.index, group }));
     return count * spacing;
   },
 };

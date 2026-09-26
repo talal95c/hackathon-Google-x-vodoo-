@@ -61,7 +61,7 @@ export class RunnerView extends View {
     else if (r.stumble > 0) state = 'stumble';
     else if (!r.grounded) state = 'jump';
     else if (r.drifting) state = 'slide';
-    return { state, speed: g.state === 'menu' ? 14 : Math.max(0, r.speed), gait: g.state === 'menu' ? g.beat.beats * Math.PI * 2 : r.gait, steer: r.steer, grounded: r.grounded || g.state === 'menu', vy: r.vy, boost: r.boost > 0, driftCharge: r.driftCharge };
+    return { state, speed: g.state === 'menu' ? 14 : Math.max(0, r.speed), gait: g.state === 'menu' ? performance.now() / 1000 * 6 : r.gait, steer: r.steer, grounded: r.grounded || g.state === 'menu', vy: r.vy, boost: r.boost > 0, driftCharge: r.driftCharge };
   }
 
   update(dt, time) {
@@ -79,14 +79,14 @@ export class RunnerView extends View {
       this.root.position.set(f.x + f.lx * r.x, r.Y, f.z + f.lz * r.x);
       this.root.rotation.y = f.th + this.yaw;
       this.root.rotation.x = r.grounded ? -Math.atan(f.slope) * 0.6 : this.root.rotation.x * 0.9;
-      this.blob.visible = true;
+      this.blob.visible = !g.worldJump;
       this.blob.position.set(this.root.position.x, f.y + 0.05, this.root.position.z);
       this.blob.rotation.set(-Math.atan(f.slope), f.th, 0);
       const sc = Math.max(0.3, 1 - r.y * 0.15);
       this.blob.scale.set(sc, 1, sc);
     }
     // clignote pendant l'invulnérabilité
-    this.root.visible = r.invul <= 0 || g.state !== 'playing' || Math.floor(r.invul * 16) % 2 === 0;
+    this.root.visible = !!g.worldJump || r.invul <= 0 || g.state !== 'playing' || Math.floor(r.invul * 16) % 2 === 0;
 
     this.model.update?.(this.pose(), dt, time);
     if (this.weaponModel && this.weapon) this.weaponModel.update?.(this.weapon, dt, time);

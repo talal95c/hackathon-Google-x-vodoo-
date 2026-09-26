@@ -1,4 +1,5 @@
-import { GAME } from './config.js';
+import { GAME, TRACK } from './config.js';
+import { WORLD_JUMP } from './WorldJourney.js';
 import { EventBus } from './EventBus.js';
 import { Random } from './Random.js';
 import { Entities } from './Registry.js';
@@ -22,8 +23,9 @@ import { ZONES } from '../content/zones.js';
 export class Game {
   constructor({ seed, bus } = {}) {
     this.bus = bus ?? new EventBus();
-    this.rng = new Random(seed ?? 1);
-    this.track = new Track(this.bus, this.rng);
+    this.rng = new Random(seed ?? 1);        // apparitions, comportements
+    this.trackRng = new Random(seed ?? 1);   // forme de la route : flux séparé → même graine = même route,
+    this.track = new Track(this.bus, this.trackRng); // quel que soit l'ordre génération / apparitions
     this.runner = new Runner(this);
     this.chaser = new Chaser();
     this.director = new Director(this);
@@ -65,6 +67,7 @@ export class Game {
   #resetWorld(seed, modifiers = []) {
     this.seed = seed;
     this.rng.seed(seed);
+    this.trackRng.seed(`route-${seed}`);
     for (const e of this.entities) e.destroy('despawn');
     this.entities = [];
     this.track.reset();
@@ -78,10 +81,11 @@ export class Game {
     this.sMax = this.runner.z;
     this.zoneIndex = 0;
     this.tempo = this.tempoAt(0);
-    this.pendingTempo = null;
     this.acc = 0;
     this.pendingJump = false;
     this.fall = null;
+    this.worldJump = null;
+    this.nextWorld = 1;
     this.chaser.reset(this.sMax);
     this.track.update(this.runner.z);
   }
@@ -90,15 +94,6 @@ export class Game {
     const prev = this.state;
     this.state = state;
     this.emit('state', { state, prev });
-  }
-
-  // Applique le palier demandé (appelé par la musique au moment du drop)
-  commitTempo() {
-    if (!this.pendingTempo) return;
-    const { level, ratio } = this.pendingTempo;
-    this.tempo = { level, ratio };
-    this.pendingTempo = null;
-    this.emit('tempo', this.tempo);
   }
 
   // --- API pour les entités / armes / Director
@@ -146,15 +141,20 @@ export class Game {
     if (this.state !== 'playing') return;
     const r = this.runner, S = r.stats, f = this._f || (this._f = {});
 
-    const target = this.tempoAt(this.sMax);
-    if (target.level > (this.pendingTempo ?? this.tempo).level) {
-      this.pendingTempo = { ...target, waited: 0 };
-      this.emit('tempo:request', target);
-    }
-    if (this.pendingTempo && (this.pendingTempo.waited += h) > GAME.tempoCommitTimeout) this.commitTempo();
+    const tempo = this.tempoAt(this.sMax);
+    if (tempo.level !== this.tempo.level) { this.tempo = tempo; this.emit('tempo', tempo); }
     r.cruise = S.get('baseSpeed') * this.tempo.ratio;
+    while (!this.worldJump && this.nextWorld < ZONES.length && r.z > this.nextWorld * TRACK.zoneLength + WORLD_JUMP.tail) this.nextWorld++;
+    const boundary = this.nextWorld * TRACK.zoneLength;
+    if (!this.worldJump && this.nextWorld < ZONES.length && r.z >= boundary - WORLD_JUMP.lead) {
+      this.worldJump = { from: this.zoneIndex, to: this.nextWorld, start: boundary - WORLD_JUMP.lead, end: boundary + WORLD_JUMP.tail, x: r.x, y: Math.max(0, r.y), progress: 0 };
+      r.drifting = false; r.manual = false; r.stumble = 0; r.latV = 0; r.push = 0;
+      this.emit('world:jump', { from: this.zone, to: ZONES[this.nextWorld] });
+      this.nextWorld++;
+    }
+    if (this.worldJump) return this.#stepWorldJump(h);
     this.track.frame(r.z, f);
-    r.update(h, intent, { y: f.y, vy: f.slope * r.speed, slope: f.slope, k: f.k });
+    r.update(h, intent, { y: f.y, vy: f.slope * r.speed, slope: f.slope, k: f.k, hard: !!this.track.hardTurnAt(r.z) });
     this.track.frame(r.z, f);
     if (r.grounded) { r.Y = f.y; r.y = 0; }
     this.sMax = Math.max(this.sMax, r.z);
@@ -184,8 +184,38 @@ export class Game {
     if (this.chaser.gap(this.sMax) <= 0) return this.#gameOver('caught');
 
     this.director.update(h);
-    this.director.snapToBeat(h);
     this.track.update(r.z);
+  }
+
+  #stepWorldJump(h) {
+    const jump = this.worldJump, r = this.runner;
+    r.speed += (Math.max(36, r.cruise) - r.speed) * Math.min(1, h * 4);
+    r.z = Math.min(jump.end, r.z + r.speed * h);
+    const p = jump.progress = Math.max(0, Math.min(1, (r.z - jump.start) / (jump.end - jump.start)));
+    const f = this.track.frame(r.z, this._f || (this._f = {}));
+    const previousY = r.Y;
+    r.x = jump.x * (1 - p) ** 3;
+    r.y = Math.sin(p * Math.PI) * WORLD_JUMP.height + jump.y * (1 - p);
+    r.Y = f.y + r.y;
+    r.vy = (r.Y - previousY) / h;
+    r.grounded = false; r.steer = 0; r.gait += h * r.speed * .42;
+    this.sMax = Math.max(this.sMax, r.z);
+    const index = Track.zoneIndex(r.z);
+    if (index !== this.zoneIndex) {
+      this.zoneIndex = index;
+      this.emit('zone', { index, number: index, zone: this.zone });
+    }
+    this.chaser.update(h, this.sMax, r.cruise);
+    this.track.update(r.z);
+    // The short cinematic pauses obstacles, power-ups and damage. Input resumes
+    // only once the dino is safely on the destination road.
+    if (p >= 1) {
+      r.grounded = true; r.y = 0; r.Y = f.y; r.vy = f.slope * r.speed;
+      r.prevRoadVy = r.vy; r.coyote = 0; r.jumpBuf = 0; r.invul = Math.max(r.invul, .6);
+      this.worldJump = null;
+      this.emit('world:land', { zone: this.zone });
+      this.emit('runner:land', { impact: .45 });
+    }
   }
 
   #startFall(f) {

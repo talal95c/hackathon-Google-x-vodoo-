@@ -19,6 +19,8 @@ export class Particles extends View {
     const edge = () => this.game.zone.palette.edge;
     const at = (e, h = 1) => this.track.point(e.s, e.d, e.y + h, this.#p);
     const P = this.focus;
+    this.listen('world:jump', () => this.emit(P.x, P.y + 1, P.z, 0x55ccff, 30, 14, 12, .3, 1));
+    this.listen('world:land', () => this.emit(P.x, P.y + .3, P.z, edge(), 28, 15, 9, .28, .9));
     this.listen('runner:land', () => this.emit(P.x, P.y + 0.2, P.z, edge(), 6, 6, 3, 0.25, 0.4));
     this.listen('runner:hit', () => this.emit(P.x, P.y + 1, P.z, edge(), 12, 12, 9, 0.22, 0.7));
     this.listen('weapon:fire', () => this.emit(P.x, P.y + 2.6, P.z, 0xff1744, 2, 3, 2, 0.15, 0.2));

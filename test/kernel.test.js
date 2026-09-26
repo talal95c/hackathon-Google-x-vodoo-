@@ -107,52 +107,28 @@ test('boutique : acheter un skin, un thème consommable et une amélioration', (
   assert.ok(Math.abs(g.runner.stats.get('weaponDuration') - 1.15) < 1e-9);
 });
 
-test('rythme : un obstacle est aimanté pour arriver sur un temps', () => {
-  const g = new Game({ seed: 2 });
-  g.start({ seed: 2 });
-  for (const e of g.entities) e.destroy();
-  g.entities = [];
-  g.beat.setBpm(128);
-  const r = g.runner;
-  const cactus = g.spawn('cactus', r.z + 60, 5); // sur le côté : on ne le touche pas
-  run(g, 1.2, pilot);
-  const eta = (cactus.s - r.z) / r.speed;
-  const beatsAtArrival = g.beat.beats + g.beat.beatsIn(eta);
-  const offBeat = Math.abs(beatsAtArrival - Math.round(beatsAtArrival));
-  assert.ok(offBeat < 0.06, `arrivée à ${offBeat.toFixed(3)} temps d'un temps fort`);
-});
-
-test('rythme : la foulée suit le tempo (2 pas par temps)', () => {
-  const g = new Game({ seed: 2 });
-  g.start({ seed: 2 });
-  g.beat.setBpm(120);
-  let steps = 0;
-  g.on('runner:step', () => steps++);
-  run(g, 4, pilot); // 4 s à 120 BPM = 8 temps = 16 pas
-  assert.ok(Math.abs(steps - 16) <= 2, `${steps} pas`);
-});
-
-test('paliers de tempo : demandé, puis appliqué au drop (ou seul après un délai)', () => {
+test('paliers de vitesse : appliqués dès la distance atteinte (sans attendre la musique)', () => {
   const g = new Game({ seed: 4 });
   g.start({ seed: 4 });
-  const req = [], applied = [];
-  g.on('tempo:request', (t) => req.push(t));
-  g.on('tempo', (t) => applied.push(t));
+  const tempos = [];
+  g.on('tempo', (t) => tempos.push(t));
   g.runner.z = 460; g.sMax = 460; g.chaser.reset(460);
-  run(g, 0.5, pilot);
-  assert.equal(req.at(-1)?.level, 1, 'palier demandé');
-  assert.equal(g.tempo.level, 0, 'pas encore appliqué : on attend le drop');
-  g.commitTempo(); // la musique confirme au drop
-  assert.equal(g.tempo.level, 1);
-  run(g, 0.1, pilot);
+  run(g, 0.2, pilot);
+  assert.equal(tempos.at(-1)?.level, 1);
   assert.ok(Math.abs(g.runner.cruise - 34 * 1.1) < 1e-9, `cruise ${g.runner.cruise}`);
+});
 
-  // sans musique : appliqué tout seul après le délai
-  const h = new Game({ seed: 4 });
-  h.start({ seed: 4 });
-  h.runner.z = 1150; h.sMax = 1150; h.chaser.reset(1150);
-  run(h, 9, pilot);
-  assert.equal(h.tempo.level, 2);
+test('la foulée suit la vitesse, pas la musique', () => {
+  const g = new Game({ seed: 2 });
+  g.start({ seed: 2 });
+  let steps = 0;
+  g.on('runner:step', () => steps++);
+  g.beat.setBpm(60);  // un tempo absurde ne doit rien changer
+  run(g, 2, pilot);
+  const slow = steps; steps = 0;
+  g.beat.setBpm(200);
+  run(g, 2, pilot);
+  assert.ok(Math.abs(steps - slow) <= 3, `${slow} puis ${steps} pas`);
 });
 
 test('la glissade est limitée par une jauge', () => {
@@ -168,4 +144,80 @@ test('la glissade est limitée par une jauge', () => {
     if (g.state !== 'playing') break;
   }
   assert.ok(slid > 0.5 && slid < 1.8, `glissade tenue ${slid.toFixed(2)} s malgré SHIFT maintenu`);
+});
+
+test('virages durs : présents de temps en temps, jouables, sans obstacle dedans', () => {
+  const g = new Game({ seed: 11 });
+  g.start({ seed: 11 });
+  g.track.ensure(6000);
+  const turns = g.track.hardTurns;
+  assert.ok(turns.length >= 3, `${turns.length} virages durs sur 6 km`);
+  for (let i = 1; i < turns.length; i++) assert.ok(turns[i].s - turns[i - 1].s >= 250, 'espacés d\'au moins 250 m');
+  const { Z } = g.track;
+  for (let i = 1; i < Z.length; i++) assert.ok(Z[i] > Z[i - 1], 'la route ne revient jamais en arrière');
+  // pas d'obstacle dans le premier virage dur
+  const t = turns[0];
+  g.runner.z = t.s - 200; g.sMax = g.runner.z; g.chaser.reset(g.runner.z);
+  run(g, 1, pilot);
+  assert.ok(!g.entities.some((e) => e.kind === 'enemy' && e.s >= t.s - 20 && e.s <= t.end), 'aucun ennemi dans le virage');
+});
+
+test('même graine = même route, même si on génère la route loin devant avant de jouer', () => {
+  const a = new Game({ seed: 12 }); a.start({ seed: 12 }); a.track.ensure(3000);
+  const b = new Game({ seed: 12 }); b.start({ seed: 12 });
+  b.runner.z = 1200; b.sMax = 1200; b.chaser.reset(1200);
+  run(b, 1, pilot); // b peuple des morceaux au fil de l'eau
+  b.track.ensure(3000);
+  assert.deepEqual(a.track.X.slice(0, 1400), b.track.X.slice(0, 1400));
+});
+
+test('virages durs : il faut tenir la direction (lâcher = sortir), jouable au clavier avec retard', () => {
+  const tally = { hold: 0, late: 0, release: 0 }; let n = 0;
+  for (const seed of [11, 12, 13, 14]) {
+    const g = new Game({ seed }); g.start({ seed }); g.track.ensure(4000);
+    for (const t of g.track.hardTurns.slice(0, 3)) {
+      for (const mode of ['hold', 'late', 'release']) {
+        const h = new Game({ seed }); h.start({ seed }); const r = h.runner;
+        r.z = t.s - 60; h.sMax = r.z; h.chaser.reset(r.z); r.speed = 34 * h.tempoAt(r.z).ratio;
+        let inTurn = 0, key = 0;
+        for (let k = 0; k < 400 && h.state === 'playing' && r.z < t.end + 30; k++) {
+          r.invul = 99;
+          let target = Math.sign(Math.round((-r.x * 3 - r.push) / 6)); // clavier en tout ou rien
+          if (r.manual) {
+            inTurn += 1 / 60;
+            const dir = Math.sign(h.track.frame(r.z).k);
+            if (mode === 'release') target = 0;
+            else if (mode === 'late' && inTurn < 0.25) target = 0;           // réagit 0,25 s en retard
+            else target = r.x * dir > 5 ? 0 : dir;                          // maintient la touche du virage
+          }
+          key += (target - key) * Math.min(1, 10 / 60);
+          h.update(1 / 60, { steer: key, drift: false, brake: false, jump: false });
+        }
+        if (h.state === 'playing') tally[mode]++;
+      }
+      n++;
+    }
+  }
+  assert.equal(tally.hold, n, `en maintenant : ${tally.hold}/${n}`);
+  assert.ok(tally.late >= n - 1, `avec 0,25 s de retard : ${tally.late}/${n}`);
+  assert.ok(tally.release <= n / 3, `en lâchant : ${tally.release}/${n} passés`);
+});
+
+test('les ennemis qui foncent avancent vers le dino ; le ptérodactyle ne se saute pas', () => {
+  const g = new Game({ seed: 3 });
+  g.start({ seed: 3 });
+  for (const e of g.entities) e.destroy();
+  g.entities = [];
+  const r = g.runner;
+  const p = g.spawn('ptero', r.z + 60, r.x);
+  const s0 = p.s;
+  let hit = false;
+  g.on('runner:hit', () => { hit = true; });
+  // on saute juste avant l'impact : le ptérodactyle vole trop haut pour passer dessous ou dessus
+  for (let t = 0; t < 2 && !hit; t += 1 / 60) {
+    const jump = p.alive && p.s - r.z < 7 && p.s - r.z > 5;
+    g.update(1 / 60, { steer: 0, drift: false, brake: false, jump });
+  }
+  assert.ok(s0 - p.s > 5 || !p.alive, 'le ptérodactyle a avancé');
+  assert.ok(hit, 'sauter ne suffit pas : il faut esquiver');
 });

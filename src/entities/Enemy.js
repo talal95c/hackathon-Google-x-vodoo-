@@ -36,21 +36,28 @@ export class Enemy extends Entity {
 export class Obstacle extends Enemy {}
 
 // Ennemi qui bouge. Mouvement par défaut piloté par def.motion :
-//   { lateral: amplitude, freq }   → oscille de gauche à droite
-//   { roll: vitesse }              → roule vers le dino (s diminue)
+//   { lateral: amplitude, freq }   → oscille de gauche à droite (reste sur la route)
+//   { roll: vitesse, wake: m }     → fonce vers le dino (s diminue) quand il est à moins de `wake` m
+//   { fly: hauteur }               → vole à cette hauteur (hitbox relative à y)
 // Pour un comportement sur mesure : sous-classer et surcharger update().
 export class MovingEnemy extends Enemy {
   constructor(game, def, opts) {
     super(game, def, opts);
     this.d0 = this.d;
     this.phase = game.rng.range(0, Math.PI * 2);
+    if (def.motion?.fly) this.y = def.motion.fly;
   }
+
+  get charging() { return !!this.def.motion?.roll && this.s - this.runner.z < (this.def.motion.wake ?? 80); }
 
   update(dt) {
     super.update(dt);
     const m = this.def.motion || {};
-    if (m.lateral) this.d = this.d0 + Math.sin(this.t * (m.freq ?? 1.5) + this.phase) * m.lateral;
-    // ne roule que quand le dino approche (sinon il partirait avant d'être vu)
-    if (m.roll && this.s - this.runner.z < 70) this.s -= m.roll * dt;
+    if (m.lateral) {
+      const half = this.game.track.frame(this.s, this._f || (this._f = {})).w / 2 - this.hitbox.hx - 0.3;
+      this.d = Math.max(-half, Math.min(half, this.d0 + Math.sin(this.t * (m.freq ?? 1.5) + this.phase) * m.lateral));
+    }
+    // ne fonce que quand le dino approche (sinon il partirait avant d'être vu)
+    if (this.charging) this.s -= m.roll * dt;
   }
 }

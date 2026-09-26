@@ -51,6 +51,7 @@ S'abonner : `game.on('type', (payload) => …)`, ou `game.on('*', (type, payload
 | `state` | `{ state, prev }` : `menu`, `playing`, `falling`, `over` |
 | `game:start` / `game:over` | `{ loadout, seed }` / `{ reason: 'fall'\|'dead'\|'caught', distance, coins, score, zone }` |
 | `zone` | `{ index, number, zone }` |
+| `tempo` | `{ level, ratio }` : nouveau palier de vitesse |
 | `chunk:add` / `chunk:remove` | morceau de route `{ index, i0, i1, s0, s1, zone }` |
 | `entity:spawn` | l'entité |
 | `entity:destroy` | `{ entity, reason: 'collected'\|'killed'\|'smashed'\|'hit'\|'despawn'\|'escaped'\|'expired' }` |
@@ -62,7 +63,7 @@ S'abonner : `game.on('type', (payload) => …)`, ou `game.on('*', (type, payload
 | `runner:hit` | `{ source }` |
 | `life:lost` | `{ reason, lives }` (chocs uniquement : une chute = game over direct) |
 | `coins` | `{ amount, total }` |
-| `beat` | `{ index, bar, downbeat }` : à chaque temps de la musique |
+| `beat` | `{ index, bar, downbeat }` : à chaque temps de la musique (effets visuels uniquement) |
 | `pad:used` | `{ entity }` |
 | `weapon:equip` / `weapon:fire` / `weapon:expire` | `{ weapon }` |
 | `effect:add` / `effect:expire` | `{ effect }` |
@@ -173,12 +174,13 @@ Ajoute une entrée dans `content/zones.js` : `palette`, `decor` (clé `decor:<no
 `spawns` (table pondérée, avec `minDistance` optionnel) et `boss`.
 
 ## Rythme et musique
-- `game.beat` (`kernel/BeatClock.js`) compte les temps. Le `MusicDirector` lui impose le tempo envoyé à Lyria et
-  la recale sur la musique réelle : le `BeatTracker` analyse le PCM de Lyria avant sa lecture
-  (tempo et phase, précis à environ 10 ms). Pour le synthé, les heures des kicks sont connues exactement.
-- Le `Director` espace les apparitions en temps musicaux (`DIRECTOR.gapBeats*`) puis les **aimante**
-  (`snapToBeat`) pour que le dino les atteigne sur un temps. Réglage par entité : `snap: 1` (temps), `2` (croches) ou `false`.
-- La foulée du dino suit l'horloge (2 pas par temps). `BeatFx` fait pulser les bordures, la caméra et le curseur.
+- **Le gameplay ne dépend jamais de la musique** : aucune latence audio ne peut gêner le joueur.
+  Les paliers de vitesse (`GAME.tempoLevels`) s'appliquent dès la distance atteinte (événement `tempo`).
+- La musique **suit** : `MusicDirector` passe le palier à Lyria (tempo du thème × ratio) avec une transition
+  DJ calée sur les mesures (filtre doux + fondu enchaîné). Le synthé de secours accélère progressivement.
+- **L'environnement pulse au rythme** : `game.beat` (`kernel/BeatClock.js`) est recalé sur la musique
+  réelle (le `BeatTracker` analyse le PCM de Lyria avant lecture). `BeatFx` fait pulser les bordures
+  de route, le curseur et, légèrement, la caméra (`ctx.fx.pulse` / `ctx.fx.down`).
 - Latence audio : réglage « Synchro musique ↔ jeu » dans le menu Musique (`music.offsetMs`).
 
 ## Règles

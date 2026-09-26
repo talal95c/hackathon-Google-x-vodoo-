@@ -9,8 +9,14 @@ boss, boutique (skins, musiques, améliorations) et musique générée en direct
 - **Riddim**, le dino reggae low poly, est disponible dès le départ. Le bouton « Dino reggae »
   l'équipe aussi sur les anciennes sauvegardes, sans effacer la progression.
 - Son thème Reggae est inclus tant qu'il est équipé ; les autres thèmes et achats restent disponibles.
-- Décor original du navigateur : zone Hors ligne grise, onglets, cookies et publicités.
-- Post-traitement HDR : bloom léger réactif au rythme, couleurs originales, vignette, tone mapping ACES
+- Cinq mondes : désert hors ligne, navigateur, Windows, hardware, cloud. Cactus et mesas,
+  onglets et pop-ups, dossiers du bureau, circuits et ventilateurs, serveurs sur les nuages.
+- Tous les 720 m, un saut guidé franchit un portail vers le monde suivant. Le contrôle revient
+  à l'atterrissage ; les zones de départ et d'arrivée sont dégagées. Le cloud se poursuit à l'infini.
+- Néons réactifs au rythme, décors fusionnés par matériau et libérés derrière le joueur.
+- Rendu : éclairages cyan/corail, faisceaux animés, sculptures de données, matériaux réfléchissants,
+  variantes de décors par monde. Post-traitement : ombres de contact GTAO sur ordinateur, bloom HDR,
+  contraste coloré, grain fin, vignette et décomposition chromatique pendant les sprints et portails, tone mapping ACES
   et anticrénelage MSAA. La résolution est plafonnée pour limiter le coût sur mobile.
 - Le jury saisit sa propre clé Gemini dans le menu Musique. Aucun relais serveur n'est nécessaire.
 

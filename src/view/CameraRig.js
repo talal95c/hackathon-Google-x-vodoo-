@@ -40,7 +40,8 @@ export class CameraRig extends View {
     }
     if (cam.view?.enabled) cam.clearViewOffset();
     if (g.state === 'playing') {
-      const back = 8 + speed * 0.04;
+      const flight = g.worldJump ? Math.sin(g.worldJump.progress * Math.PI) : 0;
+      const back = 8 + speed * 0.04 + flight * 5;
       const fc = this.track.frame(Math.max(0, r.z - back), this.#fc);
       const fl = this.track.frame(r.z + 14, this.#fl);
       const bob = r.grounded ? Math.abs(Math.cos(r.gait)) * 0.07 : 0;
@@ -59,7 +60,7 @@ export class CameraRig extends View {
     cam.position.x += (Math.random() - 0.5) * this.shake * 0.8;
     cam.position.y += (Math.random() - 0.5) * this.shake * 0.8;
     cam.lookAt(this.look);
-    const fov = 62 + Math.max(0, speed - 30) * 0.45 + (r.boost > 0 ? 8 : 0);
+    const fov = 62 + (g.worldJump ? Math.sin(g.worldJump.progress * Math.PI) * 10 : 0) + Math.max(0, speed - 30) * 0.45 + (r.boost > 0 ? 8 : 0);
     cam.fov += (fov - cam.fov) * Math.min(1, dt * 4);
     cam.fov += (this.ctx.fx?.down ?? 0) * 0.35; // "kick" de caméra sur le temps fort
     cam.updateProjectionMatrix();

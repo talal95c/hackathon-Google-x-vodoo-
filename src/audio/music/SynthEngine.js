@@ -1,7 +1,6 @@
 
 
-// Musique de secours (sans clé API) : petit séquenceur WebAudio qui suit le tempo
-// et ajoute des couches avec l'intensité (kick → hats → basse → arpèges).
+// Musique de secours (sans clé API) : séquenceur WebAudio entraînant qui suit le tempo du jeu.
 // La couleur vient de theme.synth : { wave, scale (demi-tons), root (note MIDI) }.
 const midi = (n) => 440 * 2 ** ((n - 69) / 12);
 
@@ -36,7 +35,7 @@ export class SynthEngine {
 
   setIntensity(x) { this.x = x; } // nombre de couches (kick → hats → basse → arpèges)
 
-  // Nouveau palier : bascule au début de la prochaine mesure (dans le séquenceur) puis onDrop
+  // Nouveau palier : accélération progressive à partir de la prochaine mesure
   setTempo(tempo) {
     if (!this.playing) { this.ratio = tempo.ratio; return false; }
     this.pendingRatio = tempo.ratio;
@@ -51,7 +50,6 @@ export class SynthEngine {
       if (this.pendingRatio && this.step % 16 === 0) { // début de mesure : accélération sur 1 mesure
         this.glide = { from: this.ratio, to: this.pendingRatio, step: 0 };
         this.pendingRatio = null;
-        this.onDrop?.(this.nextTime);
       }
       if (this.glide) {
         const g = this.glide, k = ++g.step / 16;
@@ -65,15 +63,32 @@ export class SynthEngine {
     }
   }
 
+  // Groove "tube" : kick 4/4, claps sur 2 et 4, charlestons en doubles croches, basse à
+  // contretemps bondissante et mélodie accrocheuse (theme.synth.hook) qui revient toutes les 2 mesures.
+  // L'intensité (palier) ajoute la charleston ouverte, les arpèges puis un kick renforcé.
   #play(i, t, dt16) {
-    const x = this.x, s = i % 16, bar = Math.floor(i / 16);
-    const { wave = 'sawtooth', scale = [0, 3, 5, 7, 10], root = 45 } = this.theme.synth || {};
-    if (s % 4 === 0) { this.#kick(t); this.onKick?.(t); } // heure exacte du temps → synchro parfaite
-    if (s % 4 === 2) this.#hat(t, 0.25);
-    if (x > 0.45 && s % 2 === 1) this.#hat(t, 0.1);
-    if (x > 0.25 && (s === 4 || s === 12)) this.#snare(t);
-    if (x > 0.15 && s % 2 === 0) this.#tone(midi(root + scale[(bar + (s >> 2)) % scale.length]), t, dt16 * 1.8, wave, 0.35, 700);
-    if (x > 0.6) this.#tone(midi(root + 24 + scale[(i * 3) % scale.length]), t, dt16 * 0.9, 'square', 0.12, 3000);
+    const x = this.x, s = i % 16, bar = Math.floor(i / 16) % 4;
+    const { wave = 'sawtooth', scale = [0, 3, 5, 7, 10], root = 45, hook } = this.theme.synth || {};
+    const note = (deg, oct = 0) => midi(root + 12 * oct + scale[((deg % scale.length) + scale.length) % scale.length] + 12 * Math.floor(deg / scale.length));
+    const chord = [0, 0, 3, 4][bar]; // petite grille qui tourne sur 4 mesures
+
+    if (s % 4 === 0) this.#kick(t);
+    if (s === 4 || s === 12) this.#clap(t);
+    this.#hat(t, s % 2 ? 0.08 : 0.16);                                     // doubles croches
+    if (x > 0.4 && s % 4 === 2) this.#noiseHit(t, 0.12, 0.18, 'highpass', 6000); // charleston ouverte
+    if (s % 4 === 2 || s % 4 === 3) this.#tone(note(chord), t, dt16 * 0.9, wave, 0.4, 900); // basse à contretemps
+    const h = hook ?? [0, 2, 4, 2, 0, 2, 4, 5, 0, 2, 4, 2, 7, 5, 4, 2];
+    const step = (i % 32) >> 1;                                              // mélodie en croches sur 2 mesures
+    if (s % 2 === 0 && h[step] !== undefined && (s % 8 !== 6 || x > 0.3)) {
+      const deg = Math.round(h[step] / 2) + chord;
+      this.#tone(note(deg, 2), t, dt16 * 1.6, 'square', 0.13, 3200);
+    }
+    if (x > 0.6) this.#tone(note(chord + (i % 3) * 2, 3), t, dt16 * 0.7, 'square', 0.07, 5000); // arpèges
+    if (x > 0.8 && s % 4 === 0) this.#kick(t + 0.001);                        // kick renforcé
+  }
+
+  #clap(t) {
+    for (const d of [0, 0.012, 0.025]) this.#noiseHit(t + d, 0.09, 0.3, 'bandpass', 1500);
   }
 
   #kick(t) {
@@ -90,8 +105,7 @@ export class SynthEngine {
     src.connect(f).connect(g).connect(this.out); src.start(t); src.stop(t + dur);
   }
 
-  #hat(t, vol) { this.#noiseHit(t, 0.05, vol, 'highpass', 7000); }
-  #snare(t) { this.#noiseHit(t, 0.15, 0.4, 'bandpass', 1800); }
+  #hat(t, vol) { this.#noiseHit(t, 0.04, vol, 'highpass', 8000); }
 
   #tone(freq, t, dur, type, vol, cutoff) {
     const o = this.ctx.createOscillator(), f = this.ctx.createBiquadFilter(), g = this.ctx.createGain();

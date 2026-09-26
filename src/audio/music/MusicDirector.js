@@ -24,14 +24,8 @@ export class MusicDirector {
     this.engine = null;
     this.tempo = { level: 0, ratio: 1 };
     game.on('game:start', ({ loadout }) => { this.tempo = game.tempo; this.play(MusicThemes.get(loadout.theme || 'techno')); });
-    // Le jeu demande un palier → transition DJ → au drop, le jeu accélère (commitTempo)
-    game.on('tempo:request', (tempo) => {
-      this.tempo = tempo;
-      if (!this.engine?.setTempo(tempo)) game.commitTempo();
-    });
-    const onDrop = (t) => setTimeout(() => game.commitTempo(), Math.max(0, (t - this.ctx.currentTime) * 1000));
-    lyria.onDrop = onDrop;
-    synth.onDrop = onDrop;
+    // Le jeu passe un palier de vitesse → la musique suit avec une transition DJ (le jeu ne l'attend pas)
+    game.on('tempo', (tempo) => { this.tempo = tempo; this.engine?.setTempo(tempo); });
     // Grille de mesures / temps en heure audio (pour caler les transitions)
     lyria.nextBarTime = (t) => this.#gridTime(t, 4);
     lyria.nextBeatTime = (t) => this.#gridTime(t, 1);
@@ -105,7 +99,7 @@ export class MusicDirector {
 
   stop() { this.engine?.stop(); this.engine = null; }
 
-  #layers() { return 0.25 + (this.game.tempo?.level ?? 0) * 0.19; }
+  #layers() { return 0.35 + (this.game.tempo?.level ?? 0) * 0.17; } // dès le départ : groove complet
 
   update(dt) {
     const g = this.game;
