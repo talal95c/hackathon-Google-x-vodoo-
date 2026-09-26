@@ -42,6 +42,7 @@ export class Lobby {
     mp.on('lobby', () => { this.render(); this.board(); });
     mp.on('status', (t) => this.status(t));
     mp.on('results', () => this.board());
+    mp.game.on('game:start', () => { if (this.rows) { $('mpBoard').innerHTML = ''; this.rows = null; } }); // nouvelle course : pas de ▲/▼ hérités
 
     // Lien partagé : ?partie=CODE → rejoint directement
     const code = new URLSearchParams(location.search).get('partie');

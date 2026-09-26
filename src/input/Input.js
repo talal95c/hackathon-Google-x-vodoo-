@@ -24,7 +24,7 @@ export class Input {
     target.addEventListener('keyup', (e) => this.#keys.delete(e.code));
     target.addEventListener('blur', () => this.#keys.clear());
     const onTouch = (e) => {
-      if (e.target.closest?.('button, input, .panel')) return;
+      if (e.target.closest?.('button, input, .panel, #mpBoard')) return;
       e.preventDefault();
       this.#touches.clear();
       for (const t of e.touches) this.#touches.set(t.identifier, t.clientX < window.innerWidth / 2 ? 1 : -1);
