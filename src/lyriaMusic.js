@@ -1,9 +1,55 @@
 import { GoogleGenAI } from '@google/genai';
 
 /**
+ * Definition of prompt signatures and acoustic profiles per game phase.
+ */
+export const LYRIA_PHASE_PROFILES = [
+  {
+    phase: 0,
+    name: 'Chrome Awakening',
+    text: 'Minimal electronic beat, 8-bit retro gaming rhythm, subtle kick drum, low-fi synth pulse',
+    baseBpm: 118,
+    density: 0.35,
+    brightness: 0.4,
+  },
+  {
+    phase: 1,
+    name: 'Neon Emergence',
+    text: 'Melodic neon synthwave, 80s analog synthesizers, punchy electronic drums, smooth bassline',
+    baseBpm: 124,
+    density: 0.55,
+    brightness: 0.58,
+  },
+  {
+    phase: 2,
+    name: 'Synthwave Overdrive',
+    text: 'Cyberpunk synthwave, aggressive analog synth leads, energetic arpeggios, heavy sidechain kick, retro future electro',
+    baseBpm: 132,
+    density: 0.72,
+    brightness: 0.72,
+  },
+  {
+    phase: 3,
+    name: 'Hyper-Chromatic Drift',
+    text: 'High-octane drum and bass synthwave, rapid breakbeats, searing laser synths, maximum adrenaline video game score',
+    baseBpm: 140,
+    density: 0.88,
+    brightness: 0.85,
+  },
+  {
+    phase: 4,
+    name: 'Maximum Overdrive',
+    text: 'Ultra-fast hyper-speed cyber rave, explosive bass drops, frantic cosmic synth arpeggios, transcendent neon runner soundtrack',
+    baseBpm: 148,
+    density: 1.0,
+    brightness: 0.95,
+  },
+];
+
+/**
  * Google DeepMind Lyria RealTime Music Manager
  * Connects via WebSocket to 'models/lyria-realtime-exp'
- * Decodes 48kHz / 44.1kHz 16-bit PCM stereo chunks and plays them gaplessly via Web Audio API.
+ * Smoothly morphs music using Weighted Prompt Cross-Fading in real-time.
  */
 export class LyriaLiveDJ {
   constructor(audioCtx) {
@@ -12,7 +58,7 @@ export class LyriaLiveDJ {
     this.client = null;
     this.isConnected = false;
     this.isPlaying = false;
-    this.currentPhase = -1;
+    this.currentPhase = 0;
     this.currentBpm = 118;
     this.statusListeners = [];
 
@@ -20,6 +66,11 @@ export class LyriaLiveDJ {
     this.nextChunkPlayTime = 0;
     this.activeSources = [];
     this.musicGain = null;
+
+    // Cross-fading transition state
+    this.transitionTimer = null;
+    this.isTransitioning = false;
+    this.lastConfigUpdateTime = 0;
 
     // Load saved API key if present
     this.apiKey = localStorage.getItem('gemini_api_key') || (import.meta.env ? import.meta.env.VITE_GEMINI_API_KEY : '') || '';
@@ -91,8 +142,20 @@ export class LyriaLiveDJ {
       this.isConnected = true;
       this.notifyStatus('CONNECTED', 'Lyria Live DJ prêt');
 
-      // Set initial Phase 0 sound profile
-      await this.steerPhase(0, 118, 0.35);
+      // Initialize with Phase 0 profile
+      const p0 = LYRIA_PHASE_PROFILES[0];
+      await this.session.setWeightedPrompts({
+        weightedPrompts: [{ text: p0.text, weight: 1.0 }],
+      });
+      await this.session.setMusicGenerationConfig({
+        musicGenerationConfig: {
+          bpm: p0.baseBpm,
+          density: p0.density,
+          brightness: p0.brightness,
+          guidance: 4.0,
+        },
+      });
+
       return true;
     } catch (err) {
       console.warn('[Lyria RealTime] Impossible de se connecter:', err);
@@ -117,7 +180,6 @@ export class LyriaLiveDJ {
 
   enqueueChunk(base64Data) {
     try {
-      // Decode base64 to binary
       const binaryString = atob(base64Data);
       const len = binaryString.length;
       const bytes = new Uint8Array(len);
@@ -125,7 +187,6 @@ export class LyriaLiveDJ {
         bytes[i] = binaryString.charCodeAt(i);
       }
 
-      // Convert 16-bit PCM stereo (48000 Hz default)
       const int16 = new Int16Array(bytes.buffer);
       const numFrames = Math.floor(int16.length / 2);
       if (numFrames <= 0) return;
@@ -140,10 +201,8 @@ export class LyriaLiveDJ {
         right[i] = int16[i * 2 + 1] / 32768.0;
       }
 
-      // Gapless audio scheduling
       const now = this.audioCtx.currentTime;
       if (this.nextChunkPlayTime < now) {
-        // Buffer lead-time cushion to avoid clicks
         this.nextChunkPlayTime = now + 0.05;
       }
 
@@ -163,74 +222,116 @@ export class LyriaLiveDJ {
     }
   }
 
-  async steerPhase(phase, bpm = 120, density = 0.5) {
+  /**
+   * Smooth Weighted Cross-Fading between Phase Styles.
+   * Rather than an abrupt cut, this morphs prompt weights over several seconds,
+   * allowing Lyria's AI to seamlessly blend instruments, rhythms, and harmony.
+   */
+  async steerPhase(targetPhase, targetBpm, targetDensity) {
     if (!this.session || !this.isConnected) return;
-    this.currentPhase = phase;
-    this.currentBpm = bpm;
 
-    let prompts = [];
-    let brightness = 0.5;
+    // Constrain phase
+    targetPhase = Math.max(0, Math.min(LYRIA_PHASE_PROFILES.length - 1, targetPhase));
 
-    switch (phase) {
-      case 0:
-        prompts = [
-          { text: 'Minimal electronic beat, 8-bit retro gaming rhythm, subtle kick drum, low-fi synth pulse', weight: 1.0 },
-        ];
-        brightness = 0.35;
-        break;
-
-      case 1:
-        prompts = [
-          { text: 'Melodic neon synthwave, 80s analog synthesizers, punchy electronic drums, smooth bassline', weight: 1.0 },
-          { text: 'Future retro arcade groove', weight: 0.5 },
-        ];
-        brightness = 0.55;
-        break;
-
-      case 2:
-        prompts = [
-          { text: 'Cyberpunk synthwave, aggressive analog synth leads, energetic arpeggios, heavy sidechain kick, retro future electro', weight: 1.0 },
-          { text: 'French electro dance rhythm', weight: 0.6 },
-        ];
-        brightness = 0.72;
-        break;
-
-      case 3:
-        prompts = [
-          { text: 'High-octane drum and bass synthwave, rapid breakbeats, searing laser synths, maximum adrenaline video game score', weight: 1.0 },
-          { text: 'Hyperpop rave energy', weight: 0.7 },
-        ];
-        brightness = 0.85;
-        break;
-
-      case 4:
-      default:
-        prompts = [
-          { text: 'Ultra-fast hyper-speed cyber rave, explosive bass drops, frantic cosmic synth arpeggios, transcendent neon runner soundtrack', weight: 1.0 },
-          { text: 'Eurobeat cyber drift', weight: 0.8 },
-        ];
-        brightness = 0.95;
-        break;
+    // If phase has not changed, only throttle-update continuous config (bpm / density)
+    if (targetPhase === this.currentPhase) {
+      const now = Date.now();
+      if (now - this.lastConfigUpdateTime > 2000 && !this.isTransitioning) {
+        this.lastConfigUpdateTime = now;
+        try {
+          const profile = LYRIA_PHASE_PROFILES[targetPhase];
+          await this.session.setMusicGenerationConfig({
+            musicGenerationConfig: {
+              bpm: Math.round(targetBpm),
+              density: Math.min(1.0, Math.max(0.1, targetDensity)),
+              brightness: profile.brightness,
+              guidance: 4.0,
+            },
+          });
+        } catch (e) {}
+      }
+      return;
     }
 
-    try {
-      this.notifyStatus('STEERING', `Lyria DJ : Phase ${phase + 1} (${bpm} BPM)`);
-
-      await this.session.setWeightedPrompts({
-        weightedPrompts: prompts,
-      });
-
-      await this.session.setMusicGenerationConfig({
-        musicGenerationConfig: {
-          bpm: Math.round(bpm),
-          density: Math.min(1.0, Math.max(0.1, density)),
-          brightness,
-          guidance: 4.0,
-        },
-      });
-    } catch (err) {
-      console.warn('[Lyria RealTime] Erreur steerPhase:', err);
+    // Cancel any ongoing transition
+    if (this.transitionTimer) {
+      clearInterval(this.transitionTimer);
+      this.transitionTimer = null;
     }
+
+    const oldPhase = this.currentPhase;
+    this.currentPhase = targetPhase;
+    this.isTransitioning = true;
+
+    const oldProfile = LYRIA_PHASE_PROFILES[oldPhase];
+    const newProfile = LYRIA_PHASE_PROFILES[targetPhase];
+
+    this.notifyStatus('STEERING', `Lyria DJ : Transition live vers ${newProfile.name}... 🎚️`);
+
+    // Cross-fade parameters: 6 steps spaced 600ms apart (total 3.6 seconds morphing)
+    const totalSteps = 6;
+    let step = 0;
+
+    const runStep = async () => {
+      step++;
+      const progress = step / totalSteps; // 0.16 -> 1.0
+
+      if (progress >= 1.0) {
+        // Final step: 100% new profile
+        clearInterval(this.transitionTimer);
+        this.transitionTimer = null;
+        this.isTransitioning = false;
+
+        try {
+          await this.session.setWeightedPrompts({
+            weightedPrompts: [{ text: newProfile.text, weight: 1.0 }],
+          });
+          await this.session.setMusicGenerationConfig({
+            musicGenerationConfig: {
+              bpm: Math.round(targetBpm || newProfile.baseBpm),
+              density: Math.min(1.0, Math.max(0.1, targetDensity || newProfile.density)),
+              brightness: newProfile.brightness,
+              guidance: 4.0,
+            },
+          });
+          this.notifyStatus('PLAYING', `Lyria DJ : ${newProfile.name} 🎶`);
+        } catch (err) {
+          console.warn('[Lyria RealTime] Erreur fin cross-fade:', err);
+        }
+        return;
+      }
+
+      // Intermediate step: Blend prompt weights smoothly
+      const oldWeight = +(1.0 - progress).toFixed(2);
+      const newWeight = +progress.toFixed(2);
+      const currentBpm = Math.round(oldProfile.baseBpm + (newProfile.baseBpm - oldProfile.baseBpm) * progress);
+      const currentDensity = +(oldProfile.density + (newProfile.density - oldProfile.density) * progress).toFixed(2);
+      const currentBrightness = +(oldProfile.brightness + (newProfile.brightness - oldProfile.brightness) * progress).toFixed(2);
+
+      try {
+        await this.session.setWeightedPrompts({
+          weightedPrompts: [
+            { text: oldProfile.text, weight: Math.max(0.05, oldWeight) },
+            { text: newProfile.text, weight: Math.max(0.05, newWeight) },
+          ],
+        });
+
+        await this.session.setMusicGenerationConfig({
+          musicGenerationConfig: {
+            bpm: currentBpm,
+            density: currentDensity,
+            brightness: currentBrightness,
+            guidance: 4.0,
+          },
+        });
+      } catch (err) {
+        console.warn('[Lyria RealTime] Erreur step cross-fade:', err);
+      }
+    };
+
+    // Execute first blend step immediately, then schedule remaining steps
+    await runStep();
+    this.transitionTimer = setInterval(runStep, 600);
   }
 
   async play() {
@@ -247,7 +348,12 @@ export class LyriaLiveDJ {
 
   stop() {
     this.isPlaying = false;
-    // Fade out and stop any buffered chunks
+    if (this.transitionTimer) {
+      clearInterval(this.transitionTimer);
+      this.transitionTimer = null;
+    }
+    this.isTransitioning = false;
+
     for (const src of this.activeSources) {
       try {
         src.stop();
