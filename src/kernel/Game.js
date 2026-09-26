@@ -1,4 +1,4 @@
-import { GAME, TRACK } from './config.js';
+import { GAME, RUNNER, TRACK } from './config.js';
 import { WORLD_JUMP } from './WorldJourney.js';
 import { EventBus } from './EventBus.js';
 import { Random } from './Random.js';
@@ -81,12 +81,41 @@ export class Game {
     this.zoneIndex = 0;
     this.tempo = this.tempoAt(0);
     this.acc = 0;
+    this.nearMisses = 0;
+    this.timeWarp = { left: 0, scale: 1 };
     this.pendingJump = false;
     this.fall = null;
     this.pausedRaceState = null;
     this.worldJump = null;
     this.nextWorld = 1;
     this.track.update(this.runner.z);
+  }
+
+  slow(seconds, scale) {
+    if (this.timeWarp.left > 0 && this.timeWarp.scale < scale) return;
+    this.timeWarp = { left: seconds, scale };
+  }
+
+  // Frôlement : plus petit écart mesuré pendant le croisement, sans contact ni protection
+  #trackNearMiss(e, r) {
+    const h = e.hitbox;
+    if (e.nearMissDone) return;
+    if (Math.abs(r.z - e.s) < h.hz + 0.6) {
+      if (r.isInvulnerable) { e.nearMissDone = true; return; }
+      const margin = Math.max(
+        Math.abs(r.x - e.d) - (h.hx + RUNNER.radius * 0.8),
+        r.y - (e.y + h.top - 0.3),
+        e.y + h.bottom - (r.y + RUNNER.height),
+      );
+      e.closest = Math.min(e.closest ?? Infinity, margin);
+      return;
+    }
+    if (e.s > r.z || e.closest === undefined) return;
+    e.nearMissDone = true;
+    if (e.closest < 0 || e.closest > GAME.nearMissMargin) return;
+    this.nearMisses++;
+    this.slow(GAME.nearMissSlowMo, GAME.nearMissTimeScale);
+    this.emit('runner:nearMiss', { entity: e, margin: e.closest, total: this.nearMisses });
   }
 
   #setState(state) {
@@ -135,11 +164,14 @@ export class Game {
   }
 
   // --- Boucle (pas fixe → physique identique quel que soit le FPS)
-  update(dt, intent) {
+  // wallDt : temps réel écoulé (non plafonné), pour la durée des ralentis
+  update(dt, intent, wallDt = dt) {
     this.beat.update(Math.min(dt, 0.25)); // l'horloge musicale tourne en temps réel, même au menu
     if (intent.jump) this.pendingJump = true;
     if (this.state !== 'playing' && this.state !== 'falling') return;
-    this.acc += Math.min(dt, 0.25);
+    const scale = this.timeWarp.left > 0 ? this.timeWarp.scale : 1;
+    this.timeWarp.left = Math.max(0, this.timeWarp.left - wallDt);
+    this.acc += Math.min(dt, 0.25) * scale;
     let n = 0;
     while (this.acc >= GAME.fixedDt && n < GAME.maxSubSteps) {
       this.#step(GAME.fixedDt, { ...intent, jump: this.pendingJump });
@@ -190,6 +222,7 @@ export class Game {
       e.update(h);
       if (e.alive && Math.abs(e.s - r.z) < 12 && e.overlapsRunner(r)) e.onContact(r);
       if (this.state !== 'playing') return;
+      if (e.alive && e.kind === 'enemy') this.#trackNearMiss(e, r);
       if (e.alive && e.kind !== 'boss' && e.s < r.z - 40) e.destroy('despawn');
     }
     this.entities = list.filter((e) => e.alive);

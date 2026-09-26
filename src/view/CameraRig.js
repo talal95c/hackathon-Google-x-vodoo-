@@ -23,6 +23,7 @@ export class CameraRig extends View {
       this.addShake(e.local === 'received' ? .3 : .18);
     });
     this.listen('runner:hit', () => this.addShake(1));
+    this.listen('runner:nearMiss', () => this.addShake(0.25));
     this.listen('runner:land', ({ impact }) => this.addShake(impact * 0.4));
     this.listen('runner:boost', () => this.addShake(0.25));
     this.listen('world:jump', () => this.addShake(0.45));
