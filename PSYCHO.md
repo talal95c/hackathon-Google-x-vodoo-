@@ -65,3 +65,9 @@
     *   **Biais cognitif :** Effet de récence.
     *   **Objectif :** S'assurer que la dernière émotion de la session soit un pic d'adrénaline, garantissant un souvenir positif du jeu.
     *   **Concept :** Remplacer l'écran statique de "Niveau Terminé" par un mini-jeu de "tap" frénétique chronométré (3 sec) pour multiplier le score final en repoussant un météore ou un boss géant.
+
+    ## 6. Profondeur de Gameplay (Easy to learn, hard to master)
+*   **La Parade Offensive (Tap-to-Smash / Perfect Timing) :**
+    *   **Biais cognitif :** Haut risque / Haute récompense (Conditionnement opérant).
+    *   **Objectif :** Valoriser la maîtrise absolue du jeu et transformer le joueur passif (qui subit la course) en prédateur agressif. Cela fidélise les joueurs vétérans en leur offrant un axe de progression infini.
+    *   **Concept :** Outre le balayage pour esquiver, un simple tapotement (tap) permet de détruire un obstacle mortel spécifique, mais exige un timing parfait au millième de seconde. Un succès fige l'écran (Hitstop de 0,2s) avec un son lourd et lâche des récompenses premium. Une erreur de timing lance une animation dans le vide (cooldown) qui condamne le joueur à s'écraser, rendant la prise de risque extrêmement grisante.
