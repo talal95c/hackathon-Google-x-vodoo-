@@ -197,6 +197,10 @@ body:not(.in-game) #hud { opacity: 0; }
 .rarity-rare { color: #147d70; }
 .rarity-epic { color: #8750b1; }
 
+@media (pointer: coarse) {
+  .desktop-controls { display: none; }
+  .touch-controls { display: block; }
+}
 @media (max-width: 759px) {
   #start { background: linear-gradient(0deg, #e9f5f1 0%, #e9f5f1ef 20%, #e9f5f1c9 43%, #e9f5f100 75%); }
   .menu-brand { top: max(15px, env(safe-area-inset-top)); left: 16px; right: 16px; font-size: 11px; }
@@ -329,6 +333,18 @@ body:not(.in-game) #hud { opacity: 0; }
     transform: none;
     font-size: 11px;
     line-height: 14px;
+  }
+}
+@media (max-height: 430px) and (min-width: 760px) {
+  #journey { top: 100px; left: 24px; width: 210px; transform: none; }
+  #feverGauge { top: 175px; left: 24px; width: 210px; transform: none; }
+  #challengeHud { top: 100px; left: auto; right: 24px; width: 210px; transform: none; }
+  #buffs { top: 255px; right: 24px; grid-template-columns: repeat(2, 146px); justify-content: space-between; }
+  #banner {
+    top: 175px; left: auto; right: 24px; width: 210px; min-height: 39px;
+    padding: 8px 10px; border: 1px solid #ffffffb8; border-radius: 16px;
+    background: var(--surface); color: var(--ink); box-shadow: 0 6px 20px #123f3919;
+    font-size: 12px; line-height: 16px; text-shadow: none; white-space: normal; overflow-wrap: break-word;
   }
 }
 @media (prefers-reduced-motion: reduce) {
