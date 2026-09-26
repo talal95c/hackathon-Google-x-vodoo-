@@ -240,56 +240,12 @@ body:not(.in-game) #hud { opacity: 0; }
   #mpBoard .av { width: 22px; height: 22px; font-size: 10px; } #mpBoard .nm { font-size: 11.5px; } #mpBoard em { font-size: 10px; } #mpBoard .bar { left: 30px; }
 }
 
-/* --- Écran de lancement « No internet » (src/ui/Boot.js) --- */
-#boot { position: fixed; inset: 0; z-index: 100; color: #535353; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; overflow: hidden; }
-.boot-sheet, .boot-shard { position: absolute; inset: 0; }
-.boot-sheet { background: #fff; }
-.boot-shard { will-change: transform, opacity; filter: drop-shadow(0 0 1px #20212455); }
-.boot-cracks { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; fill: none; stroke: #202124; stroke-linecap: round; stroke-linejoin: round; }
-.boot-cracks polyline { stroke-dasharray: 3000; stroke-dashoffset: 3000; animation: boot-crack .3s cubic-bezier(.2, .8, .3, 1) forwards; }
-#boot.crack .boot-sheet { animation: boot-hit .3s steps(6); }
-.boot-page { position: absolute; left: 50%; top: 18vh; width: min(600px, 86vw); transform: translateX(-50%); }
-.boot-stage { position: relative; height: 80px; margin-bottom: 34px; }
-.boot-dino { position: absolute; left: 24px; bottom: 6px; width: 44px; height: 48px; z-index: 2; transform-origin: 50% 60%; will-change: transform; }
-.boot-dino .leg-b, .boot-dino.step .leg-a { opacity: 0; }
-.boot-dino.step .leg-b { opacity: 1; }
-.boot-dino.air .leg-b { opacity: 0; } .boot-dino.air .leg-a { opacity: 1; }
-.boot-cactus { position: absolute; left: 0; bottom: 6px; width: 20px; height: 28px; display: none; }
-.boot-cactus.live { display: block; }
-.boot-cactus.tall { width: 24px; height: 36px; }
-.boot-ground { position: absolute; left: 0; right: 0; bottom: 6px; height: 2px; background: repeating-linear-gradient(90deg, #535353 0 18px, transparent 18px 22px, #535353 22px 30px, transparent 30px 34px); background-size: 34px 2px; }
-.boot-score { position: absolute; right: 0; top: 0; font: 700 13px ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: 2px; color: #757575; opacity: 0; transition: opacity .3s; }
-#boot.run .boot-score { opacity: 1; }
-.boot-title { font-size: 24px; font-weight: 500; color: #202124; margin: 0 0 14px; }
-.boot-try { font-size: 15px; margin: 0 0 6px; color: #5f6368; }
-.boot-list { margin: 0 0 22px 22px; padding: 0; font-size: 15px; line-height: 1.7; color: #5f6368; }
-.boot-code { font-size: 12px; letter-spacing: .6px; color: #5f6368; margin: 0; }
-.boot-skip { position: absolute; left: 0; right: 0; bottom: 28px; text-align: center; font-size: 12px; color: #9aa0a6; letter-spacing: .4px; opacity: 0; animation: boot-fade .4s 1s forwards; }
-#boot .t-on { display: none; }
-#boot.mega .t-off { display: none; }
-#boot.mega .t-on { display: inline; animation: boot-pop .3s cubic-bezier(.3, 1.6, .5, 1); }
-#boot.mega .boot-code .t-on { color: #1a73e8; font-weight: 700; }
-#boot.mega .boot-page > :not(.boot-stage), #boot.mega .boot-skip { transition: opacity .35s .1s, transform .35s .1s; opacity: .35; transform: scale(.98); }
-.boot-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 3; }
-#boot.boom { pointer-events: none; }
-#boot.boom > .boot-sheet, #boot.boom > .boot-cracks { visibility: hidden; }
-#boot.boom .boot-flash { animation: boot-flash .22s ease-out forwards; }
-body.booted { animation: boot-shake .38s steps(8); }
-
-@keyframes boot-pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-@keyframes boot-fade { to { opacity: 1; } }
-@keyframes boot-crack { to { stroke-dashoffset: 0; } }
-@keyframes boot-hit { 0%, 100% { translate: 0 0; } 25% { translate: -5px 3px; } 50% { translate: 4px -3px; } 75% { translate: -2px 2px; } }
-@keyframes boot-flash { 0% { opacity: .8; } 100% { opacity: 0; } }
-@keyframes boot-shake { 0%, 100% { translate: 0 0; } 20% { translate: -7px 4px; } 40% { translate: 6px -5px; } 60% { translate: -4px 3px; } 80% { translate: 2px -2px; } }
-
-/* entrée du menu après l'intro */
-body.booting #start .menu-brand, body.booting #start .hero-copy > *, body.booting #start .menu-footer { opacity: 0; }
-body.booted #start .menu-brand, body.booted #start .hero-copy > *, body.booted #start .menu-footer { animation: menu-in .55s cubic-bezier(.2, .9, .3, 1.15) both; }
-body.booted #start .hero-copy > :nth-child(1) { animation-delay: .05s; }
-body.booted #start .hero-copy > :nth-child(2) { animation-delay: .12s; }
-body.booted #start .hero-copy > :nth-child(3) { animation-delay: .19s; }
-body.booted #start .menu-footer { animation-delay: .26s; }
+/* entrée du menu au chargement */
+#start .menu-brand, #start .hero-copy > *, #start .menu-footer { animation: menu-in .55s cubic-bezier(.2, .9, .3, 1.15) both; }
+#start .hero-copy > :nth-child(1) { animation-delay: .05s; }
+#start .hero-copy > :nth-child(2) { animation-delay: .12s; }
+#start .hero-copy > :nth-child(3) { animation-delay: .19s; }
+#start .menu-footer { animation-delay: .26s; }
 @keyframes menu-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 /* --- Boutons --- */
@@ -311,8 +267,7 @@ button .i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentCo
 .menu-footer button .i { width: 15px; height: 15px; }
 @keyframes icon-clash { 40% { transform: rotate(-12deg) scale(1.12); } 100% { transform: none; } }
 @media (prefers-reduced-motion: reduce) {
-  #boot *, #boot.boom, body.booted { animation: none !important; }
-  body.booted #start .menu-brand, body.booted #start .hero-copy > *, body.booted #start .menu-footer { animation: none; }
+  #start .menu-brand, #start .hero-copy > *, #start .menu-footer { animation: none; }
 }
 
 /* sortie du menu au lancement d'une partie */
