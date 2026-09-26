@@ -8,6 +8,8 @@ import './skins.css';
 const $ = (id) => document.getElementById(id);
 const hex = (n) => `#${n.toString(16).padStart(6, '0')}`;
 
+const LEAVE_MS = 520; // durée de la sortie animée du menu au lancement d'une partie
+
 export class Menus {
   tab = 'skin';
 
@@ -47,7 +49,15 @@ export class Menus {
 
   show(name) {
     document.body.classList.toggle('in-game', !name);
-    for (const [k, el] of Object.entries(this.screens)) el.classList.toggle('hidden', k !== name);
+    const start = this.screens.start;
+    clearTimeout(this.leaving);
+    start.classList.remove('leaving');
+    const leave = !name && !start.classList.contains('hidden');
+    for (const [k, el] of Object.entries(this.screens)) if (!(leave && el === start)) el.classList.toggle('hidden', k !== name);
+    if (leave) {
+      start.classList.add('leaving');
+      this.leaving = setTimeout(() => start.classList.replace('leaving', 'hidden'), LEAVE_MS);
+    }
     if (!name) this.closePanels();
     this.refresh();
   }
@@ -57,7 +67,7 @@ export class Menus {
 
   // multi : le bouton de retour ramène au salon plutôt qu'au menu
   showGameOver(result, { isBest, best }, { multiplayer = false } = {}) {
-    $('overBack').textContent = multiplayer ? '⚔ BACK TO LOBBY' : '↩ BACK TO MENU';
+    $('overBack').querySelector('span').textContent = multiplayer ? 'Back to lobby' : 'Back to menu';
     const TXT = {
       fall: ['ERR_404 — the dino fell off the page', 'Page not found.'],
       dead: ['ERR_TOO_MANY_HITS — out of lives', 'The dino crashed.'],
