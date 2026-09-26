@@ -210,10 +210,11 @@ body:not(.in-game) #hud { opacity: 0; }
   #top > div { padding: 9px 12px; }
   #score { font-size: 22px; }
   #best { font-size: 18px; }
-  #danger { top: calc(max(12px, env(safe-area-inset-top)) + 68px); width: min(280px, 80vw); padding: 8px 12px; }
-  #journey { top: calc(max(12px, env(safe-area-inset-top)) + 116px); width: min(280px, 80vw); padding: 7px 12px; }
-  #boss { top: calc(max(12px, env(safe-area-inset-top)) + 160px); }
-  #buffs { top: calc(max(12px, env(safe-area-inset-top)) + 170px); left: 12px; }
+  #danger { top: calc(max(12px, env(safe-area-inset-top)) + 108px); width: min(280px, 80vw); padding: 8px 12px; }
+  #journey { top: calc(max(12px, env(safe-area-inset-top)) + 160px); width: min(280px, 80vw); padding: 7px 12px; }
+  #boss { top: calc(max(12px, env(safe-area-inset-top)) + 210px); }
+  #buffs { top: calc(max(12px, env(safe-area-inset-top)) + 214px); left: 12px; }
+  #boss:not(.hidden) ~ #buffs { top: calc(max(12px, env(safe-area-inset-top)) + 270px); }
   #bottom { bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; right: 12px; }
   #speed { font-size: 24px; }
   #driftbox { width: 145px; }
@@ -230,9 +231,13 @@ body:not(.in-game) #hud { opacity: 0; }
   .panel-head h2 { font-size: 23px; }
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .card { padding: 11px; }
-  .tabs button { font-size: 11px; }
+  .tabs button { padding: 9px 4px; font-size: 11px; }
 }
-@media (max-width: 350px) { .reggae-button { font-size: 0; gap: 0; } .reggae-stripes { width: 22px; height: 22px; } }
+@media (max-width: 350px) {
+  .reggae-button { font-size: 0; gap: 0; }
+  .reggae-stripes { width: 22px; height: 22px; }
+  .tabs button { font-size: 10px; }
+}
 @keyframes hint-out { 0%, 55% { opacity: 1; } 100% { opacity: 0; } }
 @media (max-height: 650px) and (max-width: 759px) {
   .hero-copy { bottom: calc(104px + env(safe-area-inset-bottom)); }

@@ -13,6 +13,7 @@ export class Hud {
   constructor(game, profile) {
     this.game = game;
     this.profile = profile;
+    this.touch = window.matchMedia('(pointer: coarse)').matches;
     this.el = Object.fromEntries(['hud', 'score', 'coins', 'lives', 'best', 'speed', 'dangerTxt', 'dangerFill', 'boss', 'bossName', 'bossFill',
       'worldName', 'worldProgress', 'buffs', 'touchHint', 'driftFill', 'driftLabel', 'vignette', 'flash', 'banner', 'music'].map((id) => [id, $(id)]));
     this.setBest(profile.data.best);
@@ -85,7 +86,7 @@ export class Hud {
     el.driftFill.style.background = r.boost > 0 ? '#34a853' : r.drifting ? (r.driftCharge > 1 ? '#ff9800' : r.driftCharge > 0.35 ? '#42a5f5' : '#90caf9')
       : r.slideGauge < r.stats.get('slideMin') ? '#bdbdbd' : '#1a73e8';
     this.#set('drift', (v) => { el.driftLabel.textContent = v; }, r.boost > 0 ? 'SPRINT !' : r.drifting ? (r.driftCharge > 1 ? 'GLISSADE MAX' : 'GLISSADE…')
-      : r.slideGauge < r.stats.get('slideMin') ? 'RECHARGE…' : 'GLISSADE (SHIFT)');
+      : r.slideGauge < r.stats.get('slideMin') ? 'RECHARGE…' : this.touch ? 'GLISSE · 2 DOIGTS' : 'GLISSADE (SHIFT)');
 
     // arme + bonus actifs avec leur minuteur
     const buffs = [];
