@@ -103,6 +103,20 @@ test('frôler un obstacle sans le toucher déclenche un ralenti et remplit la Fr
   assert.equal(far.nearMissDone, true);
 });
 
+test('pas de frôlement récompensé si le dino était protégé pendant le croisement', () => {
+  const g = new Game({ seed: 11 });
+  g.start({ seed: 11 });
+  for (const e of g.entities) e.destroy();
+  g.entities = [];
+  let count = 0;
+  g.on('runner:nearMiss', () => count++);
+  g.spawn('cactus', g.runner.z + 1.5, g.runner.x + 1.1 + 0.85 * 0.8 + 0.3);
+  g.runner.invul = 0.05;
+  run(g, 1);
+  assert.equal(count, 0);
+  assert.equal(g.fever, 0);
+});
+
 test('Frénésie : la collecte remplit une jauge temporaire, sans la recharger pendant son effet', () => {
   const g = new Game({ seed: 12 });
   g.start({ seed: 12 });

@@ -241,6 +241,7 @@ export class Game {
     const h = e.hitbox;
     if (e.nearMissDone) return;
     if (Math.abs(r.z - e.s) < h.hz + 0.6) {
+      if (r.isInvulnerable) { e.nearMissDone = true; return; }
       const margin = Math.max(
         Math.abs(r.x - e.d) - (h.hx + RUNNER.radius * 0.8),
         r.y - (e.y + h.top - 0.3),
@@ -251,7 +252,7 @@ export class Game {
     }
     if (e.s > r.z || e.closest === undefined) return;
     e.nearMissDone = true;
-    if (r.isInvulnerable || e.closest < 0 || e.closest > GAME.nearMissMargin) return;
+    if (e.closest < 0 || e.closest > GAME.nearMissMargin) return;
     this.nearMisses++;
     this.addFever(GAME.nearMissFever);
     this.slow(GAME.nearMissSlowMo, GAME.nearMissTimeScale);
