@@ -37,7 +37,8 @@ export class LyriaEngine {
       saved = localStorage.getItem(KEY_STORAGE) || '';
       this.vocals = localStorage.getItem(VOCALS_STORAGE) !== '0';
     } catch { /* stockage bloqué */ }
-    this.apiKey = saved || (import.meta.env?.DEV ? import.meta.env.VITE_GEMINI_API_KEY || '' : '');
+    // import.meta.env.DEV (sans « ?. ») est remplacé par false au build : la branche et la clé disparaissent
+    this.apiKey = saved || (import.meta.env.DEV ? import.meta.env.VITE_GEMINI_API_KEY || '' : '');
   }
 
   // Tempo imposé à Lyria = bpm du thème × ratio du palier du jeu

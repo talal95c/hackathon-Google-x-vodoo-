@@ -15,25 +15,31 @@ const STUN = [
   { urls: 'stun:stun.cloudflare.com:3478' },
 ];
 
+// ⚠ Toujours lire les variables UNE PAR UNE : `import.meta.env` en entier serait remplacé par
+// TOUTES les variables VITE_* au build (clé Gemini comprise) → fuite dans le jeu publié.
+// (try/catch : sous Node, dans les tests, import.meta.env n'existe pas)
+const read = (f) => { try { return f(); } catch { return undefined; } };
+const TURN_URLS = read(() => import.meta.env.VITE_TURN_URLS);
+const TURN_USERNAME = read(() => import.meta.env.VITE_TURN_USERNAME);
+const TURN_CREDENTIAL = read(() => import.meta.env.VITE_TURN_CREDENTIAL);
+const METERED_APP = read(() => import.meta.env.VITE_METERED_APP);
+const METERED_API_KEY = read(() => import.meta.env.VITE_METERED_API_KEY);
+
 async function iceServers() {
-  const env = import.meta.env || {};
   const servers = [...STUN];
-  if (env.VITE_TURN_URLS && env.VITE_TURN_USERNAME) {
-    servers.push({ urls: env.VITE_TURN_URLS.split(',').map((u) => u.trim()), username: env.VITE_TURN_USERNAME, credential: env.VITE_TURN_CREDENTIAL });
+  if (TURN_URLS && TURN_USERNAME) {
+    servers.push({ urls: TURN_URLS.split(',').map((u) => u.trim()), username: TURN_USERNAME, credential: TURN_CREDENTIAL });
   }
-  if (env.VITE_METERED_APP && env.VITE_METERED_API_KEY) {
+  if (METERED_APP && METERED_API_KEY) {
     try {
-      const res = await fetch(`https://${env.VITE_METERED_APP}.metered.live/api/v1/turn/credentials?apiKey=${env.VITE_METERED_API_KEY}`);
+      const res = await fetch(`https://${METERED_APP}.metered.live/api/v1/turn/credentials?apiKey=${METERED_API_KEY}`);
       servers.push(...(await res.json()));
     } catch (e) { console.warn('[Net] TURN Metered indisponible', e); }
   }
   return servers;
 }
 
-export const hasTurn = () => {
-  const env = import.meta.env || {};
-  return !!((env.VITE_TURN_URLS && env.VITE_TURN_USERNAME) || (env.VITE_METERED_APP && env.VITE_METERED_API_KEY));
-};
+export const hasTurn = () => !!((TURN_URLS && TURN_USERNAME) || (METERED_APP && METERED_API_KEY));
 
 export async function connect(roomId, { onPeerJoin, onPeerLeave } = {}) {
   const room = joinRoom({ appId: APP_ID, rtcConfig: { iceServers: await iceServers() } }, roomId);

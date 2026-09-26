@@ -4,4 +4,6 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   base: './',
   build: { target: 'es2020', chunkSizeWarningLimit: 1000 },
+  // aperçu partageable via un tunnel public (npm run share)
+  preview: { allowedHosts: true },
 });

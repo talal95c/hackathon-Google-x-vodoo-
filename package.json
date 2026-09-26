@@ -7,8 +7,9 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
-    "zip": "vite build && cd dist && rm -f ../dino-escape-itch.zip && zip -r ../dino-escape-itch.zip .",
-    "test": "node --test test/*.test.js"
+    "zip": "vite build && node scripts/check-secrets.mjs && cd dist && rm -f ../dino-escape-itch.zip && zip -qr ../dino-escape-itch.zip .",
+    "test": "node --test test/*.test.js",
+    "share": "vite build && node scripts/check-secrets.mjs && (vite preview --port 4180 --strictPort & npx -y cloudflared tunnel --url http://localhost:4180)"
   },
   "dependencies": {
     "@google/genai": "^2.24.0",
