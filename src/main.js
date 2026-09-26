@@ -37,7 +37,6 @@ import { LyriaEngine } from './audio/music/LyriaEngine.js';
 import { SynthEngine } from './audio/music/SynthEngine.js';
 import { MusicDirector } from './audio/music/MusicDirector.js';
 import { Hud } from './ui/Hud.js';
-import { boot } from './ui/Boot.js';
 import { Menus } from './ui/Menus.js';
 import { Multiplayer } from './net/Multiplayer.js';
 import { Lobby } from './ui/Lobby.js';
@@ -52,7 +51,6 @@ import { Skins } from './kernel/Registry.js';
 import { MusicThemes } from './kernel/Registry.js';
 
 // --- Logique
-boot();
 
 const game = new Game({ seed: (Math.random() * 2 ** 32) >>> 0 }); // le menu aussi change à chaque chargement
 const profile = new Profile(new LocalStorage());
