@@ -153,3 +153,28 @@ test('participant : reçoit objet, l\'utilise, subit une attaque et renvoie le r
   p.handle({ t: 'elim', id: 'me', place: 2 });
   assert.equal(g.state, 'over'); assert.equal(p.phase, 'out');
 });
+
+test('pouce : glisser = direction analogique, coup vers le haut = saut, bas = glissade, coup latéral = poussée, 2e doigt = objet', async () => {
+  const { ThumbGestures } = await import('../src/input/ThumbInput.js');
+  const g = new ThumbGestures();
+  g.down(1, 200, 300, 0);
+  g.move(1, 170, 300, 300);
+  assert.ok(g.steer > 0.4 && g.steer < 0.6, 'moitié à gauche');
+  g.move(1, 50, 300, 600);                 // ancre entraînée
+  g.move(1, 80, 300, 900);
+  assert.ok(g.steer < 0.6, 'l\'ancre a suivi : revenir un peu réduit tout de suite la direction');
+  g.move(1, 82, 240, 960);
+  assert.equal(g.take().jump, true);
+  g.move(1, 82, 300, 1300);
+  assert.equal(g.drift, true);
+  g.move(1, 82, 250, 1600);
+  assert.equal(g.drift, false);
+  g.move(1, 20, 250, 1660);
+  assert.equal(g.take().shove, 1, 'coup vers la gauche');
+  g.down(2, 600, 300, 1700);
+  assert.equal(g.take().item, true);
+  g.up(1, 20, 250, 1800);
+  assert.equal(g.steer, 0);
+  g.down(3, 500, 300, 2000); g.up(3, 502, 301, 2100);
+  assert.equal(g.take().item, true, 'tap bref seul = objet');
+});
