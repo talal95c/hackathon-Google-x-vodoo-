@@ -76,7 +76,6 @@ export class Lobby {
         li.innerHTML = '<b class="rk"></b><span class="av"></span><span class="nm"></span><em></em><i class="bar"><i></i></i><span class="delta"></span>';
         el.appendChild(li);
         r = { li, rank: i, q: (s) => li.querySelector(s), html: {} };
-        r.li.style.setProperty('--c', p.color);
         rows.set(key, r);
         li.classList.add('enter');
         li.addEventListener('animationend', () => li.classList.remove('enter'), { once: true });
@@ -91,6 +90,7 @@ export class Lobby {
         r.rank = i;
       }
       r.li.style.setProperty('--y', `${i * 34}px`);
+      r.li.style.setProperty('--c', p.color);
       r.li.className = r.li.className.replace(/\b(p[123]|me|out)\b/g, '').trim();
       if (p.alive && i < 3) r.li.classList.add(`p${i + 1}`);
       if (p.me) r.li.classList.add('me');
