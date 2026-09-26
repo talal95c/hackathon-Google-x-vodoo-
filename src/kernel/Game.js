@@ -44,6 +44,14 @@ export class Game {
   get zone() { return ZONES[this.zoneIndex]; }
   get boss() { return this.director.bossActive ? this.director.boss : null; }
 
+  // Palier de tempo à la distance s → { level, ratio }
+  tempoAt(s) {
+    const L = GAME.tempoLevels;
+    let i = 0;
+    while (i + 1 < L.length && s >= L[i + 1].at) i++;
+    return { level: i, ratio: L[i].ratio };
+  }
+
   // loadout : { seed?, modifiers?: [{source, add, mul}], skin?, theme? } (préparé par meta/)
   start(loadout = {}) {
     this.loadout = loadout;
@@ -51,6 +59,7 @@ export class Game {
     this.#setState('playing');
     this.emit('game:start', { loadout, seed: this.seed });
     this.emit('zone', { index: 0, number: 0, zone: this.zone });
+    this.emit('tempo', this.tempo);
   }
 
   #resetWorld(seed, modifiers = []) {
@@ -68,6 +77,8 @@ export class Game {
     this.coins = 0;
     this.sMax = this.runner.z;
     this.zoneIndex = 0;
+    this.tempo = this.tempoAt(0);
+    this.pendingTempo = null;
     this.acc = 0;
     this.pendingJump = false;
     this.fall = null;
@@ -79,6 +90,15 @@ export class Game {
     const prev = this.state;
     this.state = state;
     this.emit('state', { state, prev });
+  }
+
+  // Applique le palier demandé (appelé par la musique au moment du drop)
+  commitTempo() {
+    if (!this.pendingTempo) return;
+    const { level, ratio } = this.pendingTempo;
+    this.tempo = { level, ratio };
+    this.pendingTempo = null;
+    this.emit('tempo', this.tempo);
   }
 
   // --- API pour les entités / armes / Director
@@ -126,8 +146,13 @@ export class Game {
     if (this.state !== 'playing') return;
     const r = this.runner, S = r.stats, f = this._f || (this._f = {});
 
-    const progress = Math.min(1, this.sMax / GAME.difficultyDistance);
-    r.cruise = S.get('baseSpeed') + (S.get('maxBaseSpeed') - S.get('baseSpeed')) * progress;
+    const target = this.tempoAt(this.sMax);
+    if (target.level > (this.pendingTempo ?? this.tempo).level) {
+      this.pendingTempo = { ...target, waited: 0 };
+      this.emit('tempo:request', target);
+    }
+    if (this.pendingTempo && (this.pendingTempo.waited += h) > GAME.tempoCommitTimeout) this.commitTempo();
+    r.cruise = S.get('baseSpeed') * this.tempo.ratio;
     this.track.frame(r.z, f);
     r.update(h, intent, { y: f.y, vy: f.slope * r.speed, slope: f.slope, k: f.k });
     this.track.frame(r.z, f);

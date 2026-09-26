@@ -22,7 +22,19 @@ export class MusicDirector {
     this.lyria = lyria;
     this.synth = synth;
     this.engine = null;
-    game.on('game:start', ({ loadout }) => this.play(MusicThemes.get(loadout.theme || 'techno')));
+    this.tempo = { level: 0, ratio: 1 };
+    game.on('game:start', ({ loadout }) => { this.tempo = game.tempo; this.play(MusicThemes.get(loadout.theme || 'techno')); });
+    // Le jeu demande un palier → transition DJ → au drop, le jeu accélère (commitTempo)
+    game.on('tempo:request', (tempo) => {
+      this.tempo = tempo;
+      if (!this.engine?.setTempo(tempo)) game.commitTempo();
+    });
+    const onDrop = (t) => setTimeout(() => game.commitTempo(), Math.max(0, (t - this.ctx.currentTime) * 1000));
+    lyria.onDrop = onDrop;
+    synth.onDrop = onDrop;
+    // Grille de mesures / temps en heure audio (pour caler les transitions)
+    lyria.nextBarTime = (t) => this.#gridTime(t, 4);
+    lyria.nextBeatTime = (t) => this.#gridTime(t, 1);
     game.on('game:over', () => setTimeout(() => { if (this.game.state === 'over') this.stop(); }, 1500));
     // si Lyria se connecte en pleine partie, on bascule dessus
     lyria.onStatus((status) => { if (status === 'ready' && this.engine === synth && this.theme) this.play(this.theme); });
@@ -37,6 +49,14 @@ export class MusicDirector {
     this.ctx = ctx;
     this.lyria.setAudioContext(ctx);
     this.synth.setAudioContext(ctx);
+  }
+
+  // Heure audio du prochain multiple de `beats` temps (4 = début de mesure) après t
+  #gridTime(t, beats) {
+    const clock = this.game.beat, now = this.ctx.currentTime;
+    const at = clock.beats + clock.beatsIn(t - now);
+    const target = Math.ceil(at / beats - 1e-6) * beats;
+    return now + (target - clock.beats) * clock.period;
   }
 
   setOffset(ms) {
@@ -77,25 +97,25 @@ export class MusicDirector {
     this.lockKicks = 4;
     this.tracker.reset();
     this.engine = this.lyria.ready ? this.lyria : this.synth;
-    const ok = await this.engine.start(theme);
-    if (this.engine === this.lyria && ok === false) { this.engine = this.synth; this.synth.start(theme); }
+    const ok = await this.engine.start(theme, this.tempo);
+    if (this.engine === this.lyria && ok === false) { this.engine = this.synth; this.synth.start(theme, this.tempo); }
+    this.engine?.setTempo(this.tempo); // un palier a pu passer pendant la connexion
+    this.engine?.setIntensity(this.#layers());
   }
 
   stop() { this.engine?.stop(); this.engine = null; }
 
+  #layers() { return 0.25 + (this.game.tempo?.level ?? 0) * 0.19; }
+
   update(dt) {
-    const g = this.game, r = g.runner, S = r.stats;
+    const g = this.game;
     if (this.engine) {
-      g.beat.setBpm(this.engine.bpm * (1 + (this.engine === this.lyria ? this.tempoAdjust : 0)));
+      g.beat.setBpm(this.engine.clockBpm * (1 + (this.engine === this.lyria ? this.tempoAdjust : 0)));
       if (this.engine === this.lyria && this.lyria.status === 'playing') this.#trackLyria(dt);
     }
     if (g.state !== 'playing' && g.state !== 'falling') return;
-    const base = S.get('baseSpeed'), top = S.get('maxBaseSpeed') + S.get('boostSpeed') * 0.5;
-    const speed = Math.max(0, Math.min(1, (r.speed - base) / (top - base)));
-    const progress = Math.min(1, g.sMax / 5000);
-    let target = 0.15 + progress * 0.45 + speed * 0.3 + g.chaser.danger(g.sMax) * 0.15;
-    if (g.boss) target = Math.max(target, 0.9);
-    this.intensity += (Math.min(1, target) - this.intensity) * Math.min(1, dt * 0.5);
+    // Mode DJ : l'intensité ne dépend QUE du palier de tempo (pas des chocs, du danger ou du sprint)
+    this.intensity += (this.#layers() - this.intensity) * Math.min(1, dt * 0.5);
     this.engine?.setIntensity(this.intensity);
   }
 }

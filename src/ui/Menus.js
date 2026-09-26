@@ -1,4 +1,5 @@
 import { Skins, MusicThemes } from '../kernel/Registry.js';
+import { GAME } from '../kernel/config.js';
 
 // Écrans (titre, fin de partie) et panneaux (boutique, musique Lyria).
 // Ne connaît le jeu qu'à travers des callbacks : onPlay().
@@ -29,6 +30,9 @@ export class Menus {
       else if (b.dataset.theme) { profile.selectTheme(b.dataset.theme); this.refresh(); }
     });
     lyria.onStatus(() => this.#renderMusic());
+    const voc = $('vocals');
+    voc.checked = lyria.vocals;
+    voc.addEventListener('change', () => lyria.setVocals(voc.checked)); // pris en compte à la prochaine partie / au prochain palier
     const off = $('audioOffset');
     off.value = music.offsetMs;
     $('audioOffsetVal').textContent = `${music.offsetMs} ms`;
@@ -106,7 +110,7 @@ export class Menus {
       const count = p.musicCount(t.id), sel = p.data.theme === t.id;
       const label = t.consumable ? `${count} partie(s)` : 'Gratuit';
       const btn = sel ? '<button disabled>Choisi</button>' : count > 0 ? `<button data-theme="${t.id}">Choisir</button>` : this.#buyButton(`music:${t.id}`);
-      return `<div class="card ${sel ? 'selected' : ''}"><div class="name">🎵 ${t.name}</div><div class="desc">${label} · ${t.bpm[0]}→${t.bpm[1]} BPM</div>${btn}</div>`;
+      return `<div class="card ${sel ? 'selected' : ''}"><div class="name">🎵 ${t.name}</div><div class="desc">${label} · ${t.bpm}→${Math.round(t.bpm * GAME.tempoLevels.at(-1).ratio)} BPM</div>${btn}</div>`;
     }).join('');
   }
 

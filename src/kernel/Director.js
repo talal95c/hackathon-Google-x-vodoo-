@@ -1,4 +1,4 @@
-import { DIRECTOR, TRACK, GAME, RUNNER } from './config.js';
+import { DIRECTOR, TRACK, RUNNER } from './config.js';
 import { Entities } from './Registry.js';
 import { ZONES } from '../content/zones.js';
 import { Track } from './Track.js';
@@ -55,8 +55,10 @@ export class Director {
 
   // Distance parcourue pendant un temps musical, à la vitesse de croisière prévue en s
   beatLength(s) {
-    const cruise = RUNNER.baseSpeed + (RUNNER.maxBaseSpeed - RUNNER.baseSpeed) * Math.min(1, s / GAME.difficultyDistance);
-    return cruise * this.game.beat.period;
+    // au palier prévu en s, vitesse ET tempo sont multipliés par ratio : la distance d'un temps
+    // vaut donc baseSpeed × ratio × (60 / (bpm0 × ratio)) = baseSpeed × période au palier 0
+    const g = this.game, ratioNow = g.tempo?.ratio ?? 1;
+    return RUNNER.baseSpeed * g.beat.period * ratioNow;
   }
 
   // Aimante les entités proches pour que leur arrivée tombe sur un temps (def.snap = subdivision,

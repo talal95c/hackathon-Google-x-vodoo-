@@ -33,6 +33,8 @@ export class Runner {
     this.latV = 0; this.push = 0; this.steer = 0;
     this.boost = 0;
     this.drifting = false; this.driftDir = 0; this.driftCharge = 0;
+    this.slideGauge = 1;      // jauge de glissade (0 → 1)
+    this.slideLock = false;   // jauge vidée : il faut relâcher SHIFT avant de reglisser
     this.grounded = true; this.coyote = 0; this.jumpBuf = 0; this.prevRoadVy = 0;
     this.stumble = 0; this.invul = 0;
     this.gait = 0; this.lastStep = 0;
@@ -120,9 +122,14 @@ export class Runner {
     const steer = this.stumble > 0 ? 0 : intent.steer;
     this.steer = steer;
     const wantDrift = intent.drift && this.grounded && Math.abs(steer) > 0.2 && this.speed > 12;
-    if (wantDrift && !this.drifting) { this.drifting = true; this.driftDir = Math.sign(steer); g.emit('runner:drift', { on: true }); }
-    if (this.drifting && !intent.drift) this.#stopDrift(true);
-    if (this.drifting) this.driftCharge = Math.min(1.5, this.driftCharge + dt * S.get('driftChargeRate') * (0.6 + Math.abs(steer)));
+    if (!intent.drift) this.slideLock = false;
+    if (wantDrift && !this.drifting && !this.slideLock && this.slideGauge >= S.get('slideMin')) { this.drifting = true; this.driftDir = Math.sign(steer); g.emit('runner:drift', { on: true }); }
+    if (this.drifting && this.slideGauge <= 0) { this.slideLock = true; this.#stopDrift(true); } // jauge vide
+    else if (this.drifting && !intent.drift) this.#stopDrift(true);                              // relâché
+    if (this.drifting) {
+      this.driftCharge = Math.min(1.5, this.driftCharge + dt * S.get('driftChargeRate') * (0.6 + Math.abs(steer)));
+      this.slideGauge = Math.max(0, this.slideGauge - dt * S.get('slideDrain'));
+    } else this.slideGauge = Math.min(1, this.slideGauge + dt * S.get('slideRegen'));
 
     // Vitesse
     this.boost = Math.max(0, this.boost - dt);

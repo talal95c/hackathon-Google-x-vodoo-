@@ -131,3 +131,41 @@ test('rythme : la foulée suit le tempo (2 pas par temps)', () => {
   run(g, 4, pilot); // 4 s à 120 BPM = 8 temps = 16 pas
   assert.ok(Math.abs(steps - 16) <= 2, `${steps} pas`);
 });
+
+test('paliers de tempo : demandé, puis appliqué au drop (ou seul après un délai)', () => {
+  const g = new Game({ seed: 4 });
+  g.start({ seed: 4 });
+  const req = [], applied = [];
+  g.on('tempo:request', (t) => req.push(t));
+  g.on('tempo', (t) => applied.push(t));
+  g.runner.z = 460; g.sMax = 460; g.chaser.reset(460);
+  run(g, 0.5, pilot);
+  assert.equal(req.at(-1)?.level, 1, 'palier demandé');
+  assert.equal(g.tempo.level, 0, 'pas encore appliqué : on attend le drop');
+  g.commitTempo(); // la musique confirme au drop
+  assert.equal(g.tempo.level, 1);
+  run(g, 0.1, pilot);
+  assert.ok(Math.abs(g.runner.cruise - 34 * 1.1) < 1e-9, `cruise ${g.runner.cruise}`);
+
+  // sans musique : appliqué tout seul après le délai
+  const h = new Game({ seed: 4 });
+  h.start({ seed: 4 });
+  h.runner.z = 1150; h.sMax = 1150; h.chaser.reset(1150);
+  run(h, 9, pilot);
+  assert.equal(h.tempo.level, 2);
+});
+
+test('la glissade est limitée par une jauge', () => {
+  const g = new Game({ seed: 4 });
+  g.start({ seed: 4 });
+  for (const e of g.entities) e.destroy();
+  g.entities = [];
+  const r = g.runner;
+  let slid = 0;
+  for (let t = 0; t < 4; t += 1 / 60) {
+    g.update(1 / 60, { steer: r.x > 2 ? -1 : 1, drift: true, brake: false, jump: false });
+    if (r.drifting) slid += 1 / 60;
+    if (g.state !== 'playing') break;
+  }
+  assert.ok(slid > 0.5 && slid < 1.8, `glissade tenue ${slid.toFixed(2)} s malgré SHIFT maintenu`);
+});

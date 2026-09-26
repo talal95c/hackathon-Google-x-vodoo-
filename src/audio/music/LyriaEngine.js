@@ -1,38 +1,49 @@
-import { range, levelOf } from './engines.js';
+import { promptIndex } from './engines.js';
+import { GAME } from '../../kernel/config.js';
 
-// palier de tempo : 0 pour les niveaux bas, 1 pour les niveaux hauts
-const tier = (theme, lvl) => (lvl >= theme.levels.length / 2 ? 1 : 0);
-
-// Musique générée en temps réel par Google DeepMind Lyria RealTime.
-// Adapté du LyriaLiveDJ de la branche feat/dino-game.
+// Musique générée en temps réel par Google DeepMind Lyria RealTime (adapté du LyriaLiveDJ
+// de la branche feat/dino-game), en "mode DJ" :
 //
-// - Prompt "core" permanent (identité du thème) + prompt du palier d'intensité, mélangés
-//   par poids ; changement de palier = fondu de ~3 s (pas de coupure).
-// - Le BPM ne change qu'une fois (paliers bas → hauts) avec resetContext → effet "drop".
-// - Densité et brillance suivent l'intensité du jeu en continu.
+// - Prompt "core" (identité du thème) + prompt d'énergie du palier + voix optionnelles
+//   (mode VOCALIZATION de Lyria).
+// - Rien ne change en dehors des paliers de tempo du jeu (événement 'tempo') : pas de
+//   variation parasite quand on se prend un obstacle.
+// - Transition de palier façon DJ, calée sur les mesures, SANS coupure :
+//     1. au début de la prochaine mesure, le filtre adoucit légèrement le son sur 2 mesures ;
+//     2. puis : nouveau prompt + nouveau BPM + resetContext (Lyria ne change de tempo qu'ainsi) ;
+//     3. le nouvel audio démarre sur un temps et fait un fondu enchaîné d'une mesure avec
+//        l'ancien (deux bus de volume qui se croisent), puis le filtre se rouvre sur 2 mesures.
 //
 // Clé API : saisie par le joueur (stockée dans son navigateur). La clé du .env
 // (VITE_GEMINI_API_KEY) n'est utilisée qu'en développement : ne jamais la mettre dans un build public.
 const MODEL = 'models/lyria-realtime-exp';
 const API_VERSION = 'v1alpha'; // version indiquée par la doc Lyria RealTime
 const KEY_STORAGE = 'gemini_api_key';
+const VOCALS_STORAGE = 'dino-escape-vocals';
+const OPEN = 20000, SOFT = 1200; // filtre DJ : ouvert / adouci (Hz)
 
 export class LyriaEngine {
   status = 'off';     // off | connecting | ready | playing | error
   message = '';
+  vocals = true;      // mode voix (VOCALIZATION)
+  ratio = 1;
   #listeners = new Set();
   #session = null;
   #sources = new Set();
 
   constructor() {
     let saved = '';
-    try { saved = localStorage.getItem(KEY_STORAGE) || ''; } catch { /* stockage bloqué */ }
+    try {
+      saved = localStorage.getItem(KEY_STORAGE) || '';
+      this.vocals = localStorage.getItem(VOCALS_STORAGE) !== '0';
+    } catch { /* stockage bloqué */ }
     this.apiKey = saved || (import.meta.env?.DEV ? import.meta.env.VITE_GEMINI_API_KEY || '' : '');
   }
 
-  // Tempo imposé à Lyria (le vrai tempo peut dériver un peu : le BeatTracker corrige)
-  get bpm() { return this.theme ? this.theme.bpm[tier(this.theme, this.level)] : 120; }
-
+  // Tempo imposé à Lyria = bpm du thème × ratio du palier du jeu
+  get bpm() { return this.theme ? Math.round(this.theme.bpm * this.ratio) : 120; }
+  // Tempo réellement entendu (change au drop, pas à la demande) : pour l'horloge du jeu
+  get clockBpm() { return this.theme ? Math.round(this.theme.bpm * (this.audibleRatio ?? this.ratio)) : 120; }
   get ready() { return this.status === 'ready' || this.status === 'playing'; }
   hasKey() { return this.apiKey.length > 10; }
   onStatus(fn) { this.#listeners.add(fn); return () => this.#listeners.delete(fn); }
@@ -43,12 +54,31 @@ export class LyriaEngine {
     try { this.apiKey ? localStorage.setItem(KEY_STORAGE, this.apiKey) : localStorage.removeItem(KEY_STORAGE); } catch { /* */ }
   }
 
+  setVocals(on) {
+    this.vocals = on;
+    try { localStorage.setItem(VOCALS_STORAGE, on ? '1' : '0'); } catch { /* */ }
+  }
+
+  // Chaîne audio : sources → filtre DJ → volume → sortie
   setAudioContext(ctx) {
     if (this.ctx) return;
     this.ctx = ctx;
+    this.filter = ctx.createBiquadFilter();
+    this.filter.type = 'lowpass';
+    this.filter.frequency.value = OPEN;
+    this.filter.Q.value = 0.8;
     this.out = ctx.createGain();
     this.out.gain.value = 0.45;
-    this.out.connect(ctx.destination);
+    this.filter.connect(this.out).connect(ctx.destination);
+    this.bus = this.#newBus(1);
+  }
+
+  // Un bus de volume par "contexte" Lyria : permet le fondu enchaîné entre deux tempos
+  #newBus(gain) {
+    const b = this.ctx.createGain();
+    b.gain.value = gain;
+    b.connect(this.filter);
+    return b;
   }
 
   async connect() {
@@ -76,17 +106,21 @@ export class LyriaEngine {
     }
   }
 
-  async start(theme) {
+  async start(theme, tempo = { level: 0, ratio: 1 }) {
     if (!this.#session) return false;
     this.theme = theme;
-    this.level = 0;
-    this.intensity = 0;
-    this.lastConfig = 0;
-    this.lastLevelChange = performance.now();
+    this.ratio = this.audibleRatio = tempo.ratio;
+    this.level = promptIndex(theme, tempo.level, GAME.tempoLevels.length);
+    this.pending = null;
+    this.switchAt = null;
     this.nextTime = this.ctx.currentTime + 0.25;
+    this.filter.frequency.cancelScheduledValues(0);
+    this.filter.frequency.value = OPEN;
+    this.bus.gain.cancelScheduledValues(0);
+    this.bus.gain.value = 1;
     try {
-      await this.#prompts(0, null, 0);
-      await this.#applyConfig();
+      await this.#sendPrompts();
+      await this.#sendConfig();
       this.#session.play();
       this.onRestart?.();
     } catch (e) { console.warn('[Lyria] démarrage', e); return false; }
@@ -95,68 +129,77 @@ export class LyriaEngine {
   }
 
   stop() {
-    clearInterval(this.fadeTimer);
+    clearTimeout(this.switchTimer);
+    this.pending = null;
     for (const s of this.#sources) { try { s.stop(); } catch { /* */ } }
     this.#sources.clear();
     if (this.#session) { try { this.#session.stop(); } catch { /* */ } }
     if (this.status === 'playing') this.#set('ready', 'Lyria prêt 🎶');
   }
 
-  setIntensity(x) {
-    if (this.status !== 'playing' || !this.theme) return;
-    this.intensity = x;
-    const lvl = levelOf(this.theme, x), now = performance.now();
-    if (lvl !== this.level && !this.fading && now - this.lastLevelChange > 8000) this.#changeLevel(lvl);
-    else if (!this.fading && now - this.lastConfig > 3000) this.#applyConfig();
+  // Nouveau palier demandé par le jeu → transition DJ. Renvoie true si un drop suivra
+  // (onDrop(heureAudio) sera appelé), false si le palier doit s'appliquer tout de suite.
+  setTempo(tempo) {
+    if (this.status !== 'playing' || !this.theme) { this.ratio = this.audibleRatio = tempo.ratio; return false; }
+    if (tempo.ratio === this.ratio && !this.pending) return false;
+    this.pending = tempo; // si une transition est déjà en cours, elle prendra le dernier palier
+    if (!this.switchTimer) this.#scheduleTransition();
+    return true;
   }
 
-  // core (identité, poids fixe) + palier courant, avec éventuellement l'ancien palier en fondu
-  #prompts(lvl, oldLvl, p) {
-    const t = this.theme, list = [{ text: t.core, weight: 1 }];
-    if (oldLvl !== null && p < 1) list.push({ text: t.levels[oldLvl], weight: +(1.2 * (1 - p)).toFixed(2) || 0.05 });
-    list.push({ text: t.levels[lvl], weight: +(1.2 * (oldLvl === null ? 1 : Math.max(0.05, p))).toFixed(2) });
+  setIntensity() { /* mode DJ : rien ne bouge entre deux paliers */ }
+
+  #scheduleTransition() {
+    const now = this.ctx.currentTime;
+    const beat = 60 / this.bpm;
+    const start = this.nextBarTime?.(now + 0.1) ?? now + 0.1; // début de la prochaine mesure (fourni par MusicDirector)
+    const end = start + 8 * beat;                              // balayage sur 2 mesures
+    const f = this.filter.frequency;
+    f.cancelScheduledValues(now);
+    f.setValueAtTime(f.value, now);
+    f.setValueAtTime(OPEN, start);
+    f.exponentialRampToValueAtTime(SOFT, end);
+    this.switchTimer = setTimeout(() => this.#doSwitch(end), Math.max(0, (end - now) * 1000 - 120));
+  }
+
+  async #doSwitch(switchTime) {
+    this.switchTimer = null;
+    const tempo = this.pending;
+    this.pending = null;
+    if (!tempo || this.status !== 'playing') return;
+    this.ratio = tempo.ratio;
+    this.level = promptIndex(this.theme, tempo.level, GAME.tempoLevels.length);
+    try {
+      await this.#sendPrompts();
+      await this.#sendConfig();
+      this.#session.resetContext();
+      this.switchAt = switchTime; // le prochain audio reçu démarrera sur un temps à partir d'ici
+      this.onRestart?.();
+    } catch (e) { console.warn('[Lyria] transition', e); }
+  }
+
+  #sendPrompts() {
+    const t = this.theme;
+    const core = this.vocals ? t.core : `${t.core}, Instrumental`;
+    const list = [{ text: core, weight: 1 }, { text: t.levels[this.level], weight: 1.2 }];
+    if (this.vocals && t.vocals) list.push({ text: t.vocals, weight: 0.9 });
     return this.#session.setWeightedPrompts({ weightedPrompts: list });
   }
 
-  // Fondu entre paliers sur ~3 s ; le tempo ne change qu'en passant la moitié (paliers 0-1 → 2-3)
-  #changeLevel(lvl) {
-    const old = this.level, tempoChange = tier(this.theme, old) !== tier(this.theme, lvl);
-    this.level = lvl;
-    this.fading = true;
-    this.lastLevelChange = performance.now();
-    let step = 0;
-    const STEPS = 4;
-    const run = async () => {
-      step++;
-      const p = step / STEPS;
-      try {
-        await this.#prompts(lvl, old, p);
-        if (p >= 1) {
-          clearInterval(this.fadeTimer);
-          await this.#applyConfig();
-          if (tempoChange) { this.#session.resetContext(); this.onRestart?.(); } // nouveau BPM = relance : effet "drop"
-          this.fading = false;
-        }
-      } catch (e) { clearInterval(this.fadeTimer); this.fading = false; }
-    };
-    run();
-    this.fadeTimer = setInterval(run, 800);
-  }
-
-  async #applyConfig() {
-    this.lastConfig = performance.now();
-    const t = this.theme, x = this.intensity;
-    const config = {
-      density: +range(t.density, x).toFixed(2),
-      brightness: +range(t.brightness, x).toFixed(2),
-      guidance: 3.5,          // un peu moins strict = transitions plus douces
-      musicGenerationMode: 'QUALITY',
-    };
-    // BPM et tonalité ne s'appliquent qu'après resetContext : on les renvoie à chaque fois
-    // (sinon Lyria revient aux valeurs par défaut), mais on ne relance qu'aux changements de palier.
-    config.bpm = t.bpm[tier(t, this.level)];
-    if (t.scale) config.scale = t.scale;
-    try { await this.#session.setMusicGenerationConfig({ musicGenerationConfig: config }); } catch { /* session fermée */ }
+  // Densité / brillance fixées par palier (montent avec l'énergie), BPM et tonalité du thème
+  #sendConfig() {
+    const t = this.theme, x = this.level / Math.max(1, t.levels.length - 1);
+    const lerp = ([a, b]) => +(a + (b - a) * x).toFixed(2);
+    return this.#session.setMusicGenerationConfig({
+      musicGenerationConfig: {
+        bpm: this.bpm,
+        density: lerp(t.density),
+        brightness: lerp(t.brightness),
+        guidance: 3.5,
+        scale: t.scale,
+        musicGenerationMode: this.vocals ? 'VOCALIZATION' : 'QUALITY',
+      },
+    });
   }
 
   // PCM 16 bits stéréo 48 kHz en base64 → file de lecture sans trou
@@ -177,11 +220,38 @@ export class LyriaEngine {
     const L = buf.getChannelData(0), R = buf.getChannelData(1);
     for (let i = 0; i < frames; i++) { L[i] = pcm[2 * i] / 32768; R[i] = pcm[2 * i + 1] / 32768; }
     const now = this.ctx.currentTime;
+
+    if (this.switchAt !== null) {
+      // 1er audio au nouveau tempo : démarre sur un temps, fondu enchaîné d'une mesure avec l'ancien
+      const t = this.nextBeatTime?.(Math.max(this.switchAt, now + 0.08)) ?? Math.max(this.switchAt, now + 0.08);
+      const bar = (4 * 60) / this.bpm;
+      const old = this.bus;
+      old.gain.cancelScheduledValues(now);
+      old.gain.setValueAtTime(old.gain.value, now);
+      old.gain.setValueAtTime(1, t);
+      old.gain.linearRampToValueAtTime(0, t + bar);
+      for (const s of this.#sources) if (s.bus === old) { try { s.stop(t + bar + 0.05); } catch { /* */ } }
+      setTimeout(() => old.disconnect(), (t + bar + 0.3 - now) * 1000);
+      this.bus = this.#newBus(0);
+      this.bus.gain.setValueAtTime(0, t);
+      this.bus.gain.linearRampToValueAtTime(1, t + bar);
+      this.nextTime = t;
+      const f = this.filter.frequency;
+      f.cancelScheduledValues(now);
+      f.setValueAtTime(f.value, now);
+      f.setValueAtTime(SOFT, t);
+      f.exponentialRampToValueAtTime(OPEN, t + 2 * bar); // réouverture douce sur 2 mesures
+      this.switchAt = null;
+      this.audibleRatio = this.ratio;
+      this.onDrop?.(t); // le jeu accélère pile au drop
+    }
+
     if (this.nextTime < now) this.nextTime = now + 0.1;
     this.onPcm?.(L, 48000, this.nextTime); // analyse du rythme sur l'audio avant qu'il soit joué
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
-    src.connect(this.out);
+    src.bus = this.bus;
+    src.connect(this.bus);
     src.start(this.nextTime);
     this.nextTime += buf.duration;
     this.#sources.add(src);
