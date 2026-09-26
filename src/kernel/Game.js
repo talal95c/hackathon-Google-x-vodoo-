@@ -168,9 +168,9 @@ export class Game {
   update(dt, intent, wallDt = dt) {
     this.beat.update(Math.min(dt, 0.25)); // l'horloge musicale tourne en temps réel, même au menu
     if (intent.jump) this.pendingJump = true;
-    if (this.state !== 'playing' && this.state !== 'falling') return;
     const scale = this.timeWarp.left > 0 ? this.timeWarp.scale : 1;
     this.timeWarp.left = Math.max(0, this.timeWarp.left - wallDt);
+    if (this.state !== 'playing' && this.state !== 'falling') return;
     this.acc += Math.min(dt, 0.25) * scale;
     let n = 0;
     while (this.acc >= GAME.fixedDt && n < GAME.maxSubSteps) {

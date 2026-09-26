@@ -328,3 +328,12 @@ test('pas de frôlement récompensé si le dino était protégé pendant le croi
   run(g, 1);
   assert.equal(count, 0);
 });
+
+test('un ralenti en cours expire pendant un duel au lieu de reprendre après', () => {
+  const g = new Game({ seed: 11 });
+  g.start({ seed: 11 });
+  g.slow(0.35, 0.4);
+  assert.equal(g.pauseForDuel(), true);
+  g.update(1 / 20, idle, 5);
+  assert.equal(g.timeWarp.left, 0);
+});
