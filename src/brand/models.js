@@ -10,6 +10,12 @@ import { isWorldSafe } from '../kernel/WorldJourney.js';
 
 const UP = new THREE.Vector3(0, 1, 0);
 
+// Geometries and materials are shared by every instance of a model, so despawned entities leave nothing to dispose.
+const shared = new Map();
+const once = (key, make) => { if (!shared.has(key)) shared.set(key, make()); return shared.get(key); };
+const boxGeo = (w, h, d) => once(`box:${w}:${h}:${d}`, () => new THREE.BoxGeometry(w, h, d));
+const cylGeo = (r, h) => once(`cyl:${r}:${h}`, () => new THREE.CylinderGeometry(r, r, h, 20));
+
 function canvasTexture(w, h, draw) {
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
@@ -79,19 +85,19 @@ function brandTextures(pack) {
 const KITS = {
   burger(T) {
     const box = (g, w, h, d, x, y, z) => {
-      const side = new THREE.MeshLambertMaterial({ map: T.boxSide });
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), [side, side, lambert(T.primary), lambert(T.primary), side, side]);
+      const mats = once('burger:boxMats', () => { const side = new THREE.MeshLambertMaterial({ map: T.boxSide }), top = lambert(T.primary); return [side, side, top, top, side, side]; });
+      const m = new THREE.Mesh(boxGeo(w, h, d), mats);
       m.position.set(x, y, z); m.castShadow = true; g.add(m);
       cube(g, T.accent, w + 0.04, 0.12, d + 0.04, x, y + h / 2 - 0.25, z);
       return m;
     };
     const burger = (g, r, y) => {
-      const layer = (color, h, rr, yy) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(rr, rr, h, 20), lambert(color)); m.position.y = yy; m.castShadow = true; g.add(m); };
+      const layer = (color, h, rr, yy) => { const m = new THREE.Mesh(cylGeo(rr, h), lambert(color)); m.position.y = yy; m.castShadow = true; g.add(m); };
       layer(0xd08a3c, r * 0.35, r, y - r * 0.35);
       layer(0x5a2e1a, r * 0.28, r * 1.05, y - r * 0.05);
       layer(0xffc43d, r * 0.1, r * 1.12, y + r * 0.12);
       layer(0x4caf50, r * 0.08, r * 1.08, y + r * 0.2);
-      const top = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), lambert(0xe09a45));
+      const top = new THREE.Mesh(once(`bun:${r}`, () => new THREE.SphereGeometry(r, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2)), lambert(0xe09a45));
       top.position.y = y + r * 0.24; top.scale.y = 0.7; top.castShadow = true; g.add(top);
     };
     return {
@@ -108,7 +114,8 @@ const KITS = {
       tabWall: () => { const g = new THREE.Group(); for (let i = -2; i <= 2; i++) box(g, 0.95, 1.2, 0.8, i, 0.6, 0); return g; },
       cookieBanner: () => {
         const g = new THREE.Group();
-        const m = new THREE.Mesh(new THREE.BoxGeometry(6.5, 1.3, 0.3), [lambert(T.primary), lambert(T.primary), lambert(T.accent), lambert(T.accent), new THREE.MeshBasicMaterial({ map: T.ads[0] }), new THREE.MeshBasicMaterial({ map: T.ads[0] })]);
+        const mats = once('burger:bannerMats', () => { const face = new THREE.MeshBasicMaterial({ map: T.ads[0] }); return [lambert(T.primary), lambert(T.primary), lambert(T.accent), lambert(T.accent), face, face]; });
+        const m = new THREE.Mesh(boxGeo(6.5, 1.3, 0.3), mats);
         m.position.y = 0.9; g.add(m);
         return g;
       },
@@ -125,19 +132,20 @@ const KITS = {
       },
       goldCoin: () => {
         const g = new THREE.Group(), s = new THREE.Group(); g.add(s); burger(s, 0.9, 1.2);
-        s.traverse((o) => { if (o.material) o.material = new THREE.MeshLambertMaterial({ color: o.material.color, emissive: 0x945700, emissiveIntensity: 0.5 }); });
+        s.traverse((o) => { if (o.material) o.material = once(`gold:${o.material.color.getHex()}`, () => new THREE.MeshLambertMaterial({ color: o.material.color, emissive: 0x945700, emissiveIntensity: 0.5 })); });
         return { object: g, update(e, dt, t) { g.rotation.y = t * 3 + e.id; } };
       },
     };
   },
   generic(T) {
     const crate = (w, h, d) => () => {
-      const g = new THREE.Group(); const side = new THREE.MeshLambertMaterial({ map: T.boxSide });
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), side); m.position.y = h / 2; m.castShadow = true; g.add(m);
+      const g = new THREE.Group(); const side = once('generic:side', () => new THREE.MeshLambertMaterial({ map: T.boxSide }));
+      const m = new THREE.Mesh(boxGeo(w, h, d), side); m.position.y = h / 2; m.castShadow = true; g.add(m);
       return g;
     };
     const token = (scale) => () => {
-      const m = new THREE.Mesh(new THREE.CylinderGeometry(0.9 * scale, 0.9 * scale, 0.18, 20).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ map: T.coin }));
+      const geo = once(`token:${scale}`, () => new THREE.CylinderGeometry(0.9 * scale, 0.9 * scale, 0.18, 20).rotateX(Math.PI / 2));
+      const m = new THREE.Mesh(geo, once('generic:coin', () => new THREE.MeshBasicMaterial({ map: T.coin })));
       m.position.y = 1.2;
       return { object: m, update(e, dt, t) { m.rotation.y = t * 3 + e.id; } };
     };
@@ -174,7 +182,7 @@ export function billboardView(T) {
         const g = new THREE.Group();
         cube(g, this.post, 0.5, 6, 0.5, -3, 3, 0, false);
         cube(g, this.post, 0.5, 6, 0.5, 3, 3, 0, false);
-        const board = new THREE.Mesh(new THREE.BoxGeometry(8.4, 5.25, 0.3), [this.frameMat, this.frameMat, this.frameMat, this.frameMat, face, face]);
+        const board = new THREE.Mesh(boxGeo(8.4, 5.25, 0.3), [this.frameMat, this.frameMat, this.frameMat, this.frameMat, face, face]);
         board.position.y = 8; g.add(board);
         g.position.set(x, 0, 0).applyAxisAngle(UP, f.th).add(new THREE.Vector3(f.x, f.y, f.z));
         g.rotation.y = f.th - side * 0.45;
@@ -187,7 +195,6 @@ export function billboardView(T) {
       const root = this.chunks.get(index);
       if (!root) return;
       root.removeFromParent();
-      root.traverse((o) => o.geometry?.dispose());
       this.chunks.delete(index);
     }
     update() {

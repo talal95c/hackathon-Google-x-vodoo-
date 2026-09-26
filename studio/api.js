@@ -3,6 +3,9 @@
 //   POST /api/studio/analyze   { url, name, kit }     -> starts a Devin v3 session returning a brand pack
 //   GET  /api/studio/session/:id                      -> { status, status_detail, acus, url, pack }
 //   POST /api/studio/session/:id/message { text, pack } -> asks the same session for a revised pack
+import { lookup } from 'node:dns/promises';
+import { isIP } from 'node:net';
+
 const API = 'https://api.devin.ai/v3';
 
 export const PACK_SCHEMA = {
@@ -28,8 +31,14 @@ const PACK_RULES = 'Fields: name; tagline; logo (absolute image URL of the logo)
 const decode = (s) => s.replace(/&#0*39;|&apos;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#(\d+);/g, (_, n) => String.fromCharCode(n));
 
 export function scanHtml(html, url) {
-  const meta = (name) => html.match(new RegExp(`<meta[^>]+(?:name|property)=["']${name}["'][^>]*content=["']([^"']*)`, 'i'))?.[1];
-  const abs = (src) => { try { return new URL(src, url).href; } catch { return undefined; } };
+  const metas = {};
+  for (const [tag] of html.matchAll(/<meta\b[^>]*>/gi)) {
+    const attr = (n) => tag.match(new RegExp(`\\b${n}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`, 'i'))?.slice(1).find((v) => v !== undefined);
+    const key = (attr('property') ?? attr('name'))?.toLowerCase(), content = attr('content');
+    if (key && content !== undefined && !(key in metas)) metas[key] = content;
+  }
+  const meta = (name) => metas[name];
+  const abs = (src) => { if (!src) return undefined; try { return new URL(src, url).href; } catch { return undefined; } };
   const counts = {};
   for (const m of html.matchAll(/#([0-9a-f]{6})\b/gi)) {
     const c = `#${m[1].toLowerCase()}`;
@@ -45,8 +54,8 @@ export function scanHtml(html, url) {
   return {
     name: decode(meta('og:site_name') ?? title.split(/[|–-]/).pop()?.trim() ?? title),
     tagline: decode(meta('og:description') ?? meta('description') ?? ''),
-    logo: abs(logo ?? meta('og:image') ?? ''),
-    image: abs(meta('og:image') ?? ''),
+    logo: abs(logo ?? meta('og:image')),
+    image: abs(meta('og:image')),
     colors,
   };
 }
@@ -69,19 +78,58 @@ const readJson = (req) => new Promise((resolve, reject) => {
   req.on('end', () => { try { resolve(raw ? JSON.parse(raw) : {}); } catch { reject(Object.assign(new Error('invalid JSON'), { status: 400 })); } });
 });
 
-const httpUrl = (u) => { const url = new URL(u); if (!/^https?:$/.test(url.protocol)) throw Object.assign(new Error('url must be http(s)'), { status: 400 }); return url.href; };
+const fail = (status, message) => Object.assign(new Error(message), { status });
+
+const httpUrl = (u) => {
+  let url;
+  try { url = new URL(u); } catch { throw fail(400, 'invalid url'); }
+  if (!/^https?:$/.test(url.protocol)) throw fail(400, 'url must be http(s)');
+  return url.href;
+};
+
+const privateIp = (ip) => {
+  const v4 = ip.startsWith('::ffff:') ? ip.slice(7) : ip;
+  if (isIP(v4) === 4) {
+    const [a, b] = v4.split('.').map(Number);
+    return a === 0 || a === 10 || a === 127 || (a === 100 && b >= 64 && b < 128) || (a === 169 && b === 254)
+      || (a === 172 && b >= 16 && b < 32) || (a === 192 && b === 168) || (a === 198 && (b === 18 || b === 19)) || a >= 224;
+  }
+  const v6 = ip.toLowerCase();
+  return v6 === '::' || v6 === '::1' || /^f[cd]/.test(v6) || /^fe[89ab]/.test(v6) || v6.startsWith('ff');
+};
+
+// Fetches a public website only: every hop (including redirects) must resolve to public addresses.
+async function fetchPublic(u, hops = 4) {
+  const url = new URL(httpUrl(u));
+  const host = url.hostname.replace(/^\[|\]$/g, '');
+  const addrs = isIP(host) ? [{ address: host }] : await lookup(host, { all: true }).catch(() => []);
+  if (!addrs.length) throw fail(400, 'host not found');
+  if (addrs.some((a) => privateIp(a.address))) throw fail(400, 'only public websites can be scanned');
+  const res = await fetch(url, { redirect: 'manual', headers: { 'User-Agent': 'Mozilla/5.0 DinoStudio' }, signal: AbortSignal.timeout(15000) });
+  if (res.status >= 300 && res.status < 400 && res.headers.get('location')) {
+    if (!hops) throw fail(400, 'too many redirects');
+    return fetchPublic(new URL(res.headers.get('location'), url).href, hops - 1);
+  }
+  return { res, url: url.href };
+}
+
+// Devin calls spend the server's credits: allowed from this machine, or remotely with STUDIO_TOKEN.
+function authorize(req) {
+  const token = process.env.STUDIO_TOKEN;
+  if (token) { if (req.headers['x-studio-token'] !== token) throw fail(401, 'studio token required'); return; }
+  const ip = req.socket.remoteAddress ?? '';
+  if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(ip)) throw fail(403, 'set STUDIO_TOKEN on the server to use Devin from other machines');
+}
 
 async function handle(req) {
   const path = req.url.split('?')[0];
   if (req.method === 'POST' && path === '/api/studio/scan') {
-    const url = httpUrl((await readJson(req)).url);
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 DinoStudio' }, signal: AbortSignal.timeout(15000) });
-    return scanHtml(await res.text(), url);
+    const { res, url } = await fetchPublic((await readJson(req)).url);
+    return scanHtml((await res.text()).slice(0, 3e6), url);
   }
   if (req.method === 'POST' && path === '/api/studio/image') {
     // Remote logos are proxied so the studio can store them as data URLs (canvas textures need same-origin pixels).
-    const url = httpUrl((await readJson(req)).url);
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 DinoStudio' }, signal: AbortSignal.timeout(15000) });
+    const { res } = await fetchPublic((await readJson(req)).url);
     const type = res.headers.get('content-type') ?? '';
     if (!res.ok || !type.startsWith('image/')) throw Object.assign(new Error('not an image'), { status: 422 });
     const buf = Buffer.from(await res.arrayBuffer());
@@ -89,6 +137,7 @@ async function handle(req) {
     return { dataUrl: `data:${type.split(';')[0]};base64,${buf.toString('base64')}` };
   }
   if (req.method === 'POST' && path === '/api/studio/analyze') {
+    authorize(req);
     const { url, name, kit } = await readJson(req);
     const site = httpUrl(url);
     const s = await devin(`/organizations/${await org()}/sessions`, { method: 'POST', body: JSON.stringify({
@@ -99,12 +148,19 @@ async function handle(req) {
     return { session_id: s.session_id, url: s.url, status: s.status };
   }
   const m = path.match(/^\/api\/studio\/session\/([\w-]+)(\/message)?$/);
+  if (m) authorize(req);
+  const studioSession = async (id) => {
+    const s = await devin(`/organizations/${await org()}/sessions/${id}`);
+    if (!s.tags?.includes('dino-studio')) throw fail(404, 'not a studio session');
+    return s;
+  };
   if (m && req.method === 'GET' && !m[2]) {
-    const s = await devin(`/organizations/${await org()}/sessions/${m[1]}`);
+    const s = await studioSession(m[1]);
     return { status: s.status, status_detail: s.status_detail, acus: s.acus_consumed, url: s.url, pack: s.structured_output };
   }
   if (m && req.method === 'POST' && m[2]) {
     const { text, pack } = await readJson(req);
+    await studioSession(m[1]);
     await devin(`/organizations/${await org()}/sessions/${m[1]}/messages`, { method: 'POST', body: JSON.stringify({
       message: `Owner change request: ${text}\n\nCurrent pack (JSON): ${JSON.stringify(pack ?? {}).slice(0, 12000)}\n\nApply the request and put the complete updated pack in structured output. ${PACK_RULES}`,
     }) });

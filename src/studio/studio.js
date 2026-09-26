@@ -20,14 +20,22 @@ function loadDraft() {
 let pack = loadDraft();
 let session = JSON.parse(localStorage.getItem('dino-brand-session') ?? 'null');
 let reloadTimer = 0;
+const studioToken = new URLSearchParams(location.search).get('token') ?? localStorage.getItem('dino-studio-token');
+if (studioToken) localStorage.setItem('dino-studio-token', studioToken);
 
 function save({ reload = true } = {}) {
-  pack.id = slug(pack.id || pack.name);
+  // Leaving the BNW example (another website) starts a new brand with its own id and save slot.
+  if (!pack.id || (pack.id === bnw.id && pack.url && pack.url !== bnw.url)) pack.id = slug(pack.name || pack.url.replace(/^https?:\/\//, ''));
+  pack.id = slug(pack.id);
   localStorage.setItem(DRAFT_KEY, JSON.stringify(pack));
   if (reload) { clearTimeout(reloadTimer); reloadTimer = setTimeout(reloadPreview, 500); }
 }
 function reloadPreview() { $('preview').src = `brand.html?pack=draft&t=${Date.now()}`; }
-const status = (html) => { $('status').innerHTML = html; };
+const status = (text, link) => {
+  $('status').replaceChildren();
+  if (link) { const a = document.createElement('a'); a.href = link; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Devin session'; $('status').append(a, ': '); }
+  $('status').append(text);
+};
 const addChat = (text, me = false) => { const p = document.createElement('p'); p.textContent = text; if (me) p.className = 'me'; $('chat').append(p); p.scrollIntoView({ block: 'nearest' }); };
 
 function bindText(id, get, set) {
@@ -103,7 +111,8 @@ function merge(update) {
 }
 
 async function api(path, body) {
-  const res = await fetch(`/api/studio/${path}`, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : undefined);
+  const headers = { 'Content-Type': 'application/json', ...(studioToken && { 'X-Studio-Token': studioToken }) };
+  const res = await fetch(`/api/studio/${path}`, body ? { method: 'POST', headers, body: JSON.stringify(body) } : { headers });
   const out = await res.json().catch(() => ({ error: `studio server unavailable (${res.status})` }));
   if (!res.ok) throw new Error(out.error ?? res.statusText);
   return out;
@@ -113,7 +122,7 @@ function showSwatches(colors) {
   $('swatches').innerHTML = '';
   for (const c of colors ?? []) {
     const b = document.createElement('button'); b.type = 'button'; b.style.background = c; b.title = `${c}: click to use as the accent, shift+click to use as the primary`;
-    b.onclick = (e) => { pack.palette[e.shiftKey ? 'primary' : 'accent'] = c; recolorWorlds(); render(); save(); };
+    b.onclick = (e) => { pack.palette[e.shiftKey ? 'primary' : 'accent'] = c; pack.skin = { ...pack.skin, color: pack.palette.primary, eye: pack.palette.accent }; recolorWorlds(); render(); save(); };
     $('swatches').append(b);
   }
 }
@@ -140,7 +149,7 @@ $('scan').onclick = async () => {
     if (s.name && (!pack.name || pack.name === bnw.name)) pack.name = s.name;
     if (s.tagline) pack.tagline = s.tagline.slice(0, 80);
     if (s.logo) await adoptLogo(s.logo);
-    if (s.colors?.[0]) { pack.palette.primary = s.colors[0]; pack.palette.accent = s.colors[1] ?? pack.palette.accent; pack.palette.alt = s.colors[2] ?? pack.palette.alt; recolorWorlds(); }
+    if (s.colors?.[0]) { pack.palette.primary = s.colors[0]; pack.palette.accent = s.colors[1] ?? pack.palette.accent; pack.palette.alt = s.colors[2] ?? pack.palette.alt; pack.skin = { ...pack.skin, color: pack.palette.primary, eye: pack.palette.accent }; recolorWorlds(); }
     showSwatches(s.colors);
     render(); save();
     status(`Found ${s.colors?.length ?? 0} brand colors${s.logo ? ' and a logo' : ''}. For products, copy and worlds, use "Analyze with Devin".`);
@@ -154,11 +163,10 @@ async function poll() {
   if (!session) return;
   try {
     const s = await api(`session/${session.id}`);
-    const link = `<a href="${s.url}" target="_blank" rel="noopener">Devin session</a>`;
     const key = JSON.stringify(s.pack ?? null);
     if (s.pack && key !== lastPack) { lastPack = key; merge(s.pack); }
     const idle = ['exit', 'error', 'suspended'].includes(s.status) || ['waiting_for_user', 'finished'].includes(s.status_detail);
-    status(`${link}: ${s.status_detail ?? s.status}${s.acus ? ` · ${s.acus.toFixed(2)} ACU` : ''}${s.pack ? ' · pack applied' : ' · working…'}`);
+    status(`${s.status_detail ?? s.status}${s.acus ? ` · ${s.acus.toFixed(2)} ACU` : ''}${s.pack ? ' · pack applied' : ' · working…'}`, /^https:\/\//.test(s.url ?? '') ? s.url : undefined);
     if (idle && s.pack && !session.pending) return;
     if (s.pack && key !== session.seen) session.pending = false;
   } catch (e) { status(`Devin: ${e.message}`); return; }

@@ -4,6 +4,8 @@ export const DRAFT_KEY = 'dino-brand-draft';
 const hex = (v) => (typeof v === 'string' ? parseInt(v.replace('#', ''), 16) : v);
 const cssHex = (v) => (typeof v === 'number' ? `#${v.toString(16).padStart(6, '0')}` : v);
 
+const plain = (s) => String(s ?? '').replace(/[<>&"'`]/g, '');
+
 export const skinId = (pack) => `brand-${pack.id}`;
 export const themeId = (pack) => `brand-${pack.id}`;
 export const profileKey = (pack) => `dino-escape-profile:brand-${pack.id}`;
@@ -32,7 +34,7 @@ export function applyContent(pack, { Skins, MusicThemes, zones }) {
     const { id, ...base } = MusicThemes.get('techno');
     const m = pack.music ?? {};
     MusicThemes.define(theme, {
-      ...base, name: m.name ?? `${pack.name} Mix`, price: 0, consumable: false,
+      ...base, name: plain(m.name ?? `${pack.name} Mix`), price: 0, consumable: false,
       ...(m.core && { core: m.core }), ...(m.vocals && { vocals: m.vocals }),
       ...(Array.isArray(m.levels) && m.levels.length && { levels: m.levels }), ...(m.bpm && { bpm: m.bpm }),
     });
@@ -40,16 +42,16 @@ export function applyContent(pack, { Skins, MusicThemes, zones }) {
   if (!Skins.has(skin)) {
     const s = pack.skin ?? {};
     Skins.define(skin, {
-      name: s.name ?? pack.name, price: 0, rarity: 'epic', starter: true, theme,
-      description: pack.tagline ?? '',
+      name: plain(s.name ?? pack.name), price: 0, rarity: 'epic', starter: true, theme,
+      description: plain(pack.tagline),
       view: { model: 'blockDino', color: hex(s.color ?? pack.palette?.primary ?? '#535353'), emissive: hex(s.emissive ?? '#000000'), eye: hex(s.eye ?? pack.palette?.accent ?? '#ffffff') },
     });
   }
   (pack.worlds ?? []).forEach((wld, i) => {
     const z = zones[i];
     if (!z || !wld) return;
-    if (wld.name) z.name = wld.name;
-    if (wld.subtitle) z.subtitle = wld.subtitle;
+    if (wld.name) z.name = plain(wld.name);
+    if (wld.subtitle) z.subtitle = plain(wld.subtitle);
     if (wld.palette) z.palette = { ...z.palette, ...zonePalette(wld.palette) };
   });
   return { skin, theme, profileKey: profileKey(pack) };
