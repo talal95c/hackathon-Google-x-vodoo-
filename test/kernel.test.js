@@ -44,6 +44,32 @@ test('tap bref = une parade ; glissement vers le haut = saut sans parade', () =>
   }
 });
 
+test('une glissade à deux doigts ou un déplacement revenu au départ ne déclenche pas de parade', () => {
+  const handlers = {}, oldWindow = globalThis.window;
+  globalThis.window = { innerWidth: 800 };
+  try {
+    const input = new Input({ addEventListener: (type, fn) => { handlers[type] = fn; } });
+    const touch = (identifier, x, y) => ({ identifier, clientX: x, clientY: y });
+    const event = (type, changedTouches, touches) => ({ type, changedTouches, touches, target: {}, preventDefault() {} });
+    const first = touch(1, 200, 300), second = touch(2, 600, 300);
+    handlers.touchstart(event('touchstart', [first], [first]));
+    handlers.touchstart(event('touchstart', [second], [first, second]));
+    assert.equal(input.read(1 / 60).drift, true);
+    handlers.touchend(event('touchend', [first], [second]));
+    handlers.touchend(event('touchend', [second], []));
+    assert.equal(input.read(1 / 60).attack, false);
+
+    handlers.touchstart(event('touchstart', [first], [first]));
+    handlers.touchmove(event('touchmove', [touch(1, 240, 300)], [touch(1, 240, 300)]));
+    handlers.touchmove(event('touchmove', [first], [first]));
+    handlers.touchend(event('touchend', [first], []));
+    assert.equal(input.read(1 / 60).attack, false);
+  } finally {
+    if (oldWindow === undefined) delete globalThis.window;
+    else globalThis.window = oldWindow;
+  }
+});
+
 test('parade : cible violette proche uniquement, cooldown et récompense', () => {
   const g = new Game({ seed: 10 });
   g.start({ seed: 10 });
