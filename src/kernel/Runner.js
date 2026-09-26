@@ -141,7 +141,7 @@ export class Runner {
     // Glissade → sprint au relâchement
     const steer = this.stumble > 0 ? 0 : intent.steer;
     this.steer = steer;
-    const wantDrift = intent.drift && this.grounded && Math.abs(steer) > 0.2 && this.speed > 12;
+    const wantDrift = intent.drift && this.grounded && (Math.abs(steer) > 0.2 || intent.slideStraight) && this.speed > 12;
     if (!intent.drift) this.slideLock = false;
     if (wantDrift && !this.drifting && !this.slideLock && this.slideGauge >= S.get('slideMin')) { this.drifting = true; this.driftDir = Math.sign(steer); g.emit('runner:drift', { on: true }); }
     if (this.drifting && this.slideGauge <= 0) { this.slideLock = true; this.#stopDrift(true); } // jauge vide

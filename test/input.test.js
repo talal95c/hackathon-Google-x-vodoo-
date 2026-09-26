@@ -66,3 +66,23 @@ test('tactile : deuxième doigt = glissade, le doigt restant reprend la directio
   assert.equal(r.drift, false);
   assert.ok(r.steer > 0.5);
 });
+
+test('tactile : un seul déplacement lent après une pause ne saute pas', () => {
+  const { input, send } = setup();
+  send('touchstart', 1, 200, 500);
+  send('touchmove', 1, 200, 460, 300);
+  assert.equal(input.read(1 / 60).jump, false);
+  send('touchmove', 1, 200, 420, 16);
+  assert.equal(input.read(1 / 60).jump, true);
+});
+
+test('tactile : faire demi-tour avant la butée inverse la direction', () => {
+  const { input, send } = setup();
+  send('touchstart', 1, 200, 500);
+  send('touchmove', 1, 148, 500);
+  assert.ok(settle(input).steer > 0.9);
+  send('touchmove', 1, 178, 500);
+  assert.ok(settle(input).steer < -0.4);
+  send('touchmove', 1, 176, 500); // tremblement du pouce : pas de nouvel aller-retour
+  assert.ok(settle(input).steer < -0.3);
+});

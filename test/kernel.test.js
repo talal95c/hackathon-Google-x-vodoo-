@@ -339,3 +339,17 @@ test('un ralenti en cours expire pendant un duel au lieu de reprendre après', (
   g.update(1 / 20, idle, 5);
   assert.equal(g.timeWarp.left, 0);
 });
+
+test('glissade tactile (balayage ↓) : possible sans braquer, pas au clavier', () => {
+  const slideOf = (intent) => {
+    const g = new Game({ seed: 4 });
+    g.start({ seed: 4 });
+    for (const e of g.entities) e.destroy();
+    g.entities = [];
+    let slid = false;
+    for (let t = 0; t < 2; t += 1 / 60) { g.update(1 / 60, { steer: 0, jump: false, brake: false, ...intent }); slid ||= g.runner.drifting; }
+    return slid;
+  };
+  assert.equal(slideOf({ drift: true }), false);
+  assert.equal(slideOf({ drift: true, slideStraight: true }), true);
+});
