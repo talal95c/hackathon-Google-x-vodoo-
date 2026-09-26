@@ -1,4 +1,4 @@
-import { RUNNER } from './config.js';
+import { RUNNER, ROYALE } from './config.js';
 import { Stats } from './Stats.js';
 import { Weapons, Effects } from './Registry.js';
 import { StatusEffect } from '../weapons/StatusEffect.js';
@@ -10,6 +10,8 @@ import { StatusEffect } from '../weapons/StatusEffect.js';
 //
 // État lu par les vues : x, z, Y, y, vy, speed, latV, push, grounded, drifting, driftDir,
 // driftCharge, boost, stumble, invul, gait (cycle de course, radians), steer, weapon, effects.
+// Course Royale : shoveV (poussée latérale subie/donnée), shoveCd, drafting (aspiration, posé par
+// race/Participant.js), slipCharge, autopilot (s restantes de pilotage auto), tricking.
 export class Runner {
   constructor(game) {
     this.game = game;
@@ -39,9 +41,23 @@ export class Runner {
     this.grounded = true; this.coyote = 0; this.jumpBuf = 0; this.prevRoadVy = 0;
     this.stumble = 0; this.invul = 0;
     this.gait = 0; this.lastStep = 0;
+    this.shoveV = 0; this.shoveCd = 0;
+    this.drafting = false; this.slipCharge = 0;
+    this.autopilot = 0;
+    this.tricking = false; this.trickDone = false;
   }
 
-  get isInvulnerable() { return !!this.game.worldJump || this.invul > 0 || !!this.weapon?.grantsInvulnerability; }
+  get isInvulnerable() { return !!this.game.worldJump || this.invul > 0 || this.autopilot > 0 || !!this.weapon?.grantsInvulnerability; }
+  get raging() { return this.effects.has('rage'); }
+
+  // Coup d'épaule : petit dash latéral (dir +1 = gauche). Renvoie false pendant le temps de recharge.
+  dash(dir) {
+    if (this.shoveCd > 0 || this.stumble > 0 || !dir) return false;
+    this.shoveCd = ROYALE.shove.cooldown;
+    this.shoveV += Math.sign(dir) * ROYALE.shove.dash;
+    this.game.emit('runner:dash', { dir: Math.sign(dir) });
+    return true;
+  }
   get smashes() { return !!this.weapon?.smashes; }
 
   // --- API utilisée par les entités / armes
@@ -88,6 +104,13 @@ export class Runner {
     const S = this.stats, g = this.game;
     this.stumble = Math.max(0, this.stumble - dt);
     this.invul = Math.max(0, this.invul - dt);
+    this.shoveCd = Math.max(0, this.shoveCd - dt);
+    this.autopilot = Math.max(0, this.autopilot - dt);
+    if (this.autopilot > 0) {
+      // Téléchargement express : le jeu pilote au centre de la route, sprint continu
+      intent = { ...intent, steer: Math.max(-1, Math.min(1, (-this.x * 3 - this.push) / 10)), drift: false, brake: false, jump: false };
+      this.boost = Math.max(this.boost, 0.2);
+    }
 
     // Vertical (altitude absolue)
     if (intent.jump) this.jumpBuf = S.get('jumpBuffer');
@@ -102,6 +125,11 @@ export class Runner {
     } else this.coyote = Math.max(0, this.coyote - dt);
     this.prevRoadVy = road.vy;
 
+    // Figure en l'air (Royale) : sauter une 2e fois bien au-dessus de la route → sprint à l'atterrissage
+    if (intent.jump && g.royale && !this.grounded && this.coyote <= 0 && this.Y - road.y > 1.2 && !this.trickDone) {
+      this.tricking = true; this.trickDone = true; this.jumpBuf = 0;
+      g.emit('runner:trick');
+    }
     if (this.jumpBuf > 0 && (this.grounded || this.coyote > 0) && this.stumble <= 0) {
       this.vy = Math.max(this.vy, road.vy) + S.get('jumpVel');
       this.grounded = false; this.coyote = 0; this.jumpBuf = 0;
@@ -115,6 +143,8 @@ export class Runner {
         const impact = Math.min(1, -this.vy / 25);
         this.Y = road.y; this.grounded = true;
         g.emit('runner:land', { impact });
+        if (this.tricking && this.stumble <= 0) this.addBoost(ROYALE.trickBoost, 'trick');
+        this.tricking = false; this.trickDone = false;
       }
     }
     this.y = this.Y - road.y;
@@ -131,6 +161,12 @@ export class Runner {
       this.driftCharge = Math.min(1.5, this.driftCharge + dt * S.get('driftChargeRate') * (0.6 + Math.abs(steer)));
       this.slideGauge = Math.max(0, this.slideGauge - dt * S.get('slideDrain'));
     } else this.slideGauge = Math.min(1, this.slideGauge + dt * S.get('slideRegen'));
+
+    // Aspiration : rester derrière un rival charge un sprint
+    if (this.drafting && this.grounded) {
+      this.slipCharge += dt;
+      if (this.slipCharge >= ROYALE.slipstream.charge) { this.slipCharge = 0; this.addBoost(ROYALE.slipstream.boost, 'slipstream'); }
+    } else this.slipCharge = Math.max(0, this.slipCharge - dt * 2);
 
     // Vitesse
     this.boost = Math.max(0, this.boost - dt);
@@ -153,7 +189,9 @@ export class Runner {
       const cf = S.get('centrifugal') * (this.drifting ? S.get('driftCentrifugal') : 1) * (this.grounded ? 1 : 0.5);
       this.push = -road.k * this.speed * this.speed * cf;
     }
-    this.x += (this.latV + this.push) * dt;
+    this.x += (this.latV + this.push + this.shoveV) * dt;
+    this.shoveV *= Math.exp(-5 * dt);
+    if (Math.abs(this.shoveV) < 0.05) this.shoveV = 0;
     this.z += this.speed * dt;
 
     // Cycle de course (animation + bruits de pas), proportionnel à la vitesse

@@ -51,7 +51,7 @@ export class Boss extends Enemy {
     if (pattern === 'aimed') shoot(r.x);
     else if (pattern === 'spread') for (const off of [-3.5, 0, 3.5]) shoot(r.x + off);
     else if (pattern === 'wall') {
-      const hole = g.rng.range(-3, 3);
+      const hole = g.fxRng.range(-3, 3);
       for (let d = -6; d <= 6; d += 2.4) if (Math.abs(d - hole) > 2) shoot(d);
     }
     g.emit('boss:attack', { boss: this, pattern });

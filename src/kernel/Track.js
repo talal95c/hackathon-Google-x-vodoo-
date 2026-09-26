@@ -15,6 +15,7 @@ export class Track {
     this.rng = rng;
     this.chunks = [];
     this.populate = null; // (chunk) => void, fourni par Game
+    this.widthProfile = { start: TRACK.width, min: TRACK.widthMin, per: 900 }; // largeur selon la distance
   }
 
   reset() {
@@ -22,7 +23,7 @@ export class Track {
     this.chunks = [];
     this.nextChunk = 0;
     // Échantillons (tableaux parallèles, lecture seule pour les vues)
-    this.X = [0]; this.Y = [0]; this.Z = [0]; this.TH = [0]; this.K = [0]; this.SL = [0]; this.W = [TRACK.width];
+    this.X = [0]; this.Y = [0]; this.Z = [0]; this.TH = [0]; this.K = [0]; this.SL = [0]; this.W = [this.widthProfile.start];
     this.gen = { th: 0, k: 0, kT: 0, kLeft: 60, inArc: false, slope: 0, slT: 0, slLeft: 80, lastHard: -Infinity };
     this.hardTurns = [];   // virages durs : { s, end, sign (+1 = à gauche) }, lus par le Director et les vues
   }
@@ -86,7 +87,7 @@ export class Track {
       this.X.push(this.X[i - 1] + Math.sin(g.th) * TRACK.step);
       this.Z.push(this.Z[i - 1] + Math.cos(g.th) * TRACK.step);
       this.Y.push(this.Y[i - 1] + g.slope * TRACK.step);
-      this.W.push(Math.max(TRACK.widthMin, TRACK.width - dist / 900) + Math.min(4, Math.abs(g.k) * TRACK.curveWidening));
+      this.W.push(Math.max(this.widthProfile.min, this.widthProfile.start - dist / this.widthProfile.per) + Math.min(4, Math.abs(g.k) * TRACK.curveWidening));
     }
   }
 

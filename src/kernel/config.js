@@ -94,4 +94,37 @@ export const DIRECTOR = {
   bossStart: 700,        // le boss apparaît à 700 m dans la zone…
   // …et l'arène dure jusqu'à la fin de la zone (500 m) : s'il est encore en vie, il s'enfuit
   arenaWeaponEvery: 90,  // une arme garantie tous les 90 m dans l'arène
+  itemRowEvery: 170,     // Royale : une rangée de boîtes « ? » tous les 170 m
+};
+
+// Course Royale (multijoueur) : 2 à 5 dinos, le dernier est éliminé à intervalles réguliers.
+export const ROYALE = {
+  minPlayers: 2,
+  maxPlayers: 5,
+  endTime: 135,          // la dernière élimination tombe à 2:15, quel que soit le nombre de joueurs
+  interval: 20,          // secondes entre deux éliminations
+  firstMin: 30,          // jamais d'élimination avant 30 s
+  warning: 5,            // alerte "tu es dernier" avant l'élimination
+  countdown: 3,
+  width: { start: 16, min: 10, per: 650 }, // la route se resserre (m de largeur perdus tous les `per` m)
+  respawnDelay: 1.6,     // chute → retour sur la route (pas d'élimination)
+  respawnSpeed: 0.55,
+  respawnInvul: 1.5,
+  snapshotRate: 20,
+  shove: { cooldown: 1.2, dash: 11, impulse: 26, reach: 4, range: 4.2, ringOutWindow: 3 },
+  bump: { radius: 1.9, length: 2.2, strength: 9 },
+  slipstream: { min: 2, range: 14, lateral: 1.6, charge: 1.1, boost: 0.9 },
+  coinSpeed: 0.012,      // +1,2 % de vitesse de croisière par pièce…
+  coinMax: 10,           // …jusqu'à 10 pièces
+  coinLoss: 3,           // pièces perdues quand on est touché
+  trickBoost: 0.6,
+  rocket: { window: 0.35, boost: 1.8, stallBefore: 1, stallSpeed: 0.3 },
+  combo: {
+    window: 4,           // secondes pour enchaîner avant que le combo retombe
+    maxLevel: 5,
+    boostPerLevel: 0.35, // chaque palier donne un sprint de 0,35 s × palier
+    shovePerLevel: 0.12, // +12 % de puissance de poussée par palier
+    itemAt: 3,           // palier 3 : objet offert si l'emplacement est vide
+    rageAt: 5,           // palier 5 : mode RAGE (vitesse + poussée ×1,6)
+  },
 };

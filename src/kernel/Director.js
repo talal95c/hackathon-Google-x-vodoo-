@@ -34,7 +34,8 @@ export class Director {
     const g = this.game, r = g.rng, zone = ZONES[chunk.zone];
     const diff = Math.min(1, chunk.s0 / 4000);
     const gap = DIRECTOR.gapEasy + (DIRECTOR.gapHard - DIRECTOR.gapEasy) * diff;
-    const arena = zone.boss ? this.arenaStart(chunk.s0) : Infinity;
+    const arena = zone.boss && !g.royale ? this.arenaStart(chunk.s0) : Infinity;
+    if (g.royale) this.#itemRows(chunk);
     const f = {};
     let s = Math.max(chunk.s0, DIRECTOR.firstSpawn) + r.range(4, 14);
     while (s < chunk.s1 - 4) {
@@ -57,6 +58,16 @@ export class Director {
     }
   }
 
+  // Royale : rangées de boîtes « ? » à intervalles fixes (sans tirage aléatoire → identiques pour tous)
+  #itemRows(chunk) {
+    const g = this.game, every = DIRECTOR.itemRowEvery, f = {};
+    for (let s = Math.ceil(Math.max(chunk.s0, DIRECTOR.firstSpawn) / every) * every; s < chunk.s1; s += every) {
+      if (isWorldSafe(s) || g.track.hardTurnAt(s, 10)) continue;
+      const W = g.track.frame(s, f).w, n = W > 13 ? 4 : 3;
+      for (let k = 0; k < n; k++) g.spawn('itemBox', s, (k - (n - 1) / 2) * (W - 3) / n, { chunk: chunk.index });
+    }
+  }
+
   #pick(table, s) {
     const options = table.filter((e) => !e.minDistance || s >= e.minDistance);
     const total = options.reduce((a, e) => a + e.weight, 0);
@@ -75,6 +86,7 @@ export class Director {
   // Déclenche le boss quand le dino entre dans l'arène
   update() {
     const g = this.game, s = g.runner.z, n = Track.zoneNumber(s), zone = ZONES[Track.zoneIndex(s)];
+    if (g.royale) return;
     if (!zone.boss || this.bossZone === n || s < this.arenaStart(s)) return;
     this.bossZone = n;
     this.boss = g.spawn(zone.boss, s + 30, 0, { arenaEnd: this.arenaEnd(s) });

@@ -1,4 +1,4 @@
-import { GAME, TRACK } from './config.js';
+import { GAME, TRACK, ROYALE } from './config.js';
 import { WORLD_JUMP } from './WorldJourney.js';
 import { EventBus } from './EventBus.js';
 import { Random } from './Random.js';
@@ -19,11 +19,14 @@ import { ZONES } from '../content/zones.js';
 //   game.update(dt, { steer, drift, brake, jump });
 //
 // États : 'menu' → 'playing' ⇄ 'falling' → 'over'
+// Mode 'royale' (loadout.mode) : pas de vies ni de curseur mortel, une chute = retour sur la route ;
+// la fin de course est décidée de l'extérieur (race/RaceCore.js) via endRace().
 // Voir ARCHITECTURE.md pour la liste des événements.
 export class Game {
   constructor({ seed, bus } = {}) {
     this.bus = bus ?? new EventBus();
     this.rng = new Random(seed ?? 1);        // apparitions, comportements
+    this.fxRng = new Random(seed ?? 1);      // aléas en cours de jeu (attaques de boss…) : n'influence jamais les apparitions
     this.trackRng = new Random(seed ?? 1);   // forme de la route : flux séparé → même graine = même route,
     this.track = new Track(this.bus, this.trackRng); // quel que soit l'ordre génération / apparitions
     this.runner = new Runner(this);
@@ -35,6 +38,7 @@ export class Game {
     this.state = 'menu';
     this.entities = [];
     this.loadout = {};
+    this.mode = 'solo';
     this.#resetWorld(seed ?? 1);
   }
 
@@ -54,9 +58,13 @@ export class Game {
     return { level: i, ratio: L[i].ratio };
   }
 
-  // loadout : { seed?, modifiers?: [{source, add, mul}], skin?, theme? } (préparé par meta/)
+  get royale() { return this.mode === 'royale'; }
+
+  // loadout : { seed?, mode?: 'solo'|'royale', modifiers?: [{source, add, mul}], skin?, theme? } (préparé par meta/)
   start(loadout = {}) {
     this.loadout = loadout;
+    this.mode = loadout.mode ?? 'solo';
+    this.track.widthProfile = this.royale ? { ...ROYALE.width } : { start: TRACK.width, min: TRACK.widthMin, per: 900 };
     this.#resetWorld(loadout.seed ?? (Math.random() * 2 ** 32) >>> 0, loadout.modifiers);
     this.#setState('playing');
     this.emit('game:start', { loadout, seed: this.seed });
@@ -67,6 +75,9 @@ export class Game {
   #resetWorld(seed, modifiers = []) {
     this.seed = seed;
     this.rng.seed(seed);
+    this.fxRng.seed(`fx-${seed}`);
+    this.raceTime = 0;
+    this.respawns = 0;
     this.trackRng.seed(`route-${seed}`);
     for (const e of this.entities) e.destroy('despawn');
     this.entities = [];
@@ -113,6 +124,12 @@ export class Game {
 
   // Renvoie true si la partie est finie
   loseLife(reason) {
+    if (this.royale) {
+      const lost = Math.min(this.coins, ROYALE.coinLoss);
+      if (lost) { this.coins -= lost; this.emit('coins', { amount: -lost, total: this.coins }); }
+      this.emit('life:lost', { reason, lives: this.lives });
+      return false;
+    }
     this.lives = Math.max(0, this.lives - 1);
     this.emit('life:lost', { reason, lives: this.lives });
     if (this.lives > 0) return false;
@@ -144,6 +161,10 @@ export class Game {
     const tempo = this.tempoAt(this.sMax);
     if (tempo.level !== this.tempo.level) { this.tempo = tempo; this.emit('tempo', tempo); }
     r.cruise = S.get('baseSpeed') * this.tempo.ratio;
+    if (this.royale) {
+      this.raceTime += h;
+      r.cruise *= 1 + ROYALE.coinSpeed * Math.min(this.coins, ROYALE.coinMax);
+    }
     while (!this.worldJump && this.nextWorld < ZONES.length && r.z > this.nextWorld * TRACK.zoneLength + WORLD_JUMP.tail) this.nextWorld++;
     const boundary = this.nextWorld * TRACK.zoneLength;
     if (!this.worldJump && this.nextWorld < ZONES.length && r.z >= boundary - WORLD_JUMP.lead) {
@@ -181,7 +202,7 @@ export class Game {
     this.entities = list.filter((e) => e.alive);
 
     this.chaser.update(h, this.sMax, r.cruise);
-    if (this.chaser.gap(this.sMax) <= 0) return this.#gameOver('caught');
+    if (!this.royale && this.chaser.gap(this.sMax) <= 0) return this.#gameOver('caught');
 
     this.director.update(h);
     this.track.update(r.z);
@@ -236,7 +257,51 @@ export class Game {
     F.vy -= 30 * h;
     F.x += F.vx * h; F.y += F.vy * h; F.z += F.vz * h;
     this.chaser.update(h, this.sMax, this.runner.cruise);
-    if (F.t >= GAME.fallDuration) this.#gameOver('fall'); // tomber = fin de partie, quelles que soient les vies
+    if (this.royale) {
+      this.raceTime += h;
+      if (F.t >= ROYALE.respawnDelay) this.#respawn();
+    } else if (F.t >= GAME.fallDuration) this.#gameOver('fall'); // tomber = fin de partie, quelles que soient les vies
+  }
+
+  // Royale : retour au centre de la route, là où on est tombé, au ralenti et invulnérable un instant
+  #respawn() {
+    const r = this.runner, f = this.track.frame(r.z, this._f || (this._f = {}));
+    r.x = 0; r.latV = 0; r.push = 0; r.shoveV = 0;
+    r.Y = f.y; r.y = 0; r.vy = 0; r.grounded = true; r.prevRoadVy = 0;
+    r.speed = r.cruise * ROYALE.respawnSpeed; r.boost = 0; r.drifting = false; r.driftCharge = 0;
+    r.invul = ROYALE.respawnInvul;
+    this.fall = null;
+    this.respawns++;
+    this.#setState('playing');
+    this.emit('runner:respawn', { z: r.z });
+  }
+
+  // --- API course (appelée par race/Participant.js)
+  // Poussée latérale reçue d'un rival (dx en m/s, + = gauche). Le bouclier l'amortit.
+  applyImpulse(dx) {
+    if (this.state !== 'playing' || this.worldJump) return false;
+    const r = this.runner;
+    r.shoveV += r.smashes ? dx * 0.35 : dx;
+    this.emit('runner:shoved', { dx });
+    return true;
+  }
+
+  // Attaque d'objet reçue : 'hit' | 'blocked' (bouclier, invulnérable) | 'dodged' (en l'air, pour les tirs rasants)
+  applyHit(kind, { dodgeable = false, slow = 1 } = {}) {
+    const r = this.runner;
+    if (this.state !== 'playing') return 'blocked';
+    if (r.smashes || r.isInvulnerable) return 'blocked';
+    if (dodgeable && r.y > 1.2) return 'dodged';
+    r.hurt({ type: kind });
+    if (slow < 1) r.speed *= slow;
+    return 'hit';
+  }
+
+  // Fin de course décidée par la course : reason = 'eliminated' | 'won' | 'finished'
+  endRace({ reason, place, ...extra } = {}) {
+    if (this.state === 'over' || this.state === 'menu') return;
+    this.#setState('over');
+    this.emit('game:over', { reason, place, ...extra, distance: this.distance, coins: this.coins, score: this.score, zone: Track.zoneNumber(this.sMax) });
   }
 
   #gameOver(reason) {

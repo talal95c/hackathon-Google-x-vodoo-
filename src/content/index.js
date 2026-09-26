@@ -4,6 +4,7 @@ import './enemies.js';
 import './collectables.js';
 import './skins.js';
 import './music.js';
+import './race.js';
 import './shop.js'; // en dernier : génère les articles à partir des skins / musiques
 
 export { ZONES } from './zones.js';
