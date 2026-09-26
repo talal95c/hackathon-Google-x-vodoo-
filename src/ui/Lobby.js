@@ -59,12 +59,50 @@ export class Lobby {
   // Course en cours : multijoueur, ou solo avec PNJ
   get race() { return this.mp.inRace ? this.mp : this.bots?.active || this.bots?.list.length ? this.bots : null; }
 
-  // Classement live (course) et HUD du coup d'épaule
+  // Classement live (course) et HUD du coup d'épaule : lignes persistantes par joueur,
+  // positionnées en translateY pour animer les dépassements.
   board() {
     const race = this.race, el = $('mpBoard');
     el.classList.toggle('hidden', !race);
-    if (!race) return;
-    el.innerHTML = race.ranking().map((p, i) => `<li class="${p.alive ? '' : 'out'}"><b>${i + 1}</b><span class="dot" style="background:${p.color}"></span>${esc(p.name)}<em>${p.lives != null && p.alive ? `<span class="hearts">${'♥'.repeat(Math.max(0, p.lives))}</span> ` : ''}${p.alive ? `${p.dist} m` : `💀 ${p.dist} m`}${p.rtt ? ` · ${Math.round(p.rtt)} ms` : ''}</em></li>`).join('');
+    if (!race) { if (this.rows) { el.innerHTML = ''; this.rows = null; } return; }
+    const rows = (this.rows ??= new Map()), ranking = race.ranking(), seen = new Set();
+    const lead = Math.max(1, ...ranking.filter((p) => p.alive).map((p) => p.dist), ranking[0]?.dist || 0);
+    ranking.forEach((p, i) => {
+      const key = String(p.id ?? p.name);
+      seen.add(key);
+      let r = rows.get(key);
+      if (!r) {
+        const li = document.createElement('li');
+        li.innerHTML = '<b class="rk"></b><span class="av"></span><span class="nm"></span><em></em><i class="bar"><i></i></i><span class="delta"></span>';
+        el.appendChild(li);
+        r = { li, rank: i, q: (s) => li.querySelector(s), html: {} };
+        r.li.style.setProperty('--c', p.color);
+        rows.set(key, r);
+        li.classList.add('enter');
+        li.addEventListener('animationend', () => li.classList.remove('enter'), { once: true });
+      }
+      const set = (sel, v) => { if (r.html[sel] !== v) { r.html[sel] = v; r.q(sel).innerHTML = v; } };
+      if (i !== r.rank) {
+        const up = i < r.rank, d = r.q('.delta');
+        d.textContent = up ? `▲${r.rank - i}` : `▼${i - r.rank}`;
+        r.li.classList.remove('up', 'down'); void r.li.offsetWidth;
+        r.li.classList.add(up ? 'up' : 'down');
+        clearTimeout(r.t); r.t = setTimeout(() => r.li.classList.remove('up', 'down'), 1100);
+        r.rank = i;
+      }
+      r.li.style.setProperty('--y', `${i * 34}px`);
+      r.li.className = r.li.className.replace(/\b(p[123]|me|out)\b/g, '').trim();
+      if (p.alive && i < 3) r.li.classList.add(`p${i + 1}`);
+      if (p.me) r.li.classList.add('me');
+      if (!p.alive) r.li.classList.add('out');
+      set('.rk', p.alive ? `${i + 1}` : '✕');
+      set('.av', esc((p.name || '?').trim().charAt(0).toUpperCase()));
+      set('.nm', esc(p.name));
+      set('em', `${p.lives != null && p.alive ? `<span class="hearts">${'♥'.repeat(Math.max(0, p.lives))}</span>` : ''}${p.dist}<small>m</small>${p.rtt ? `<small class="rtt">${Math.round(p.rtt)}ms</small>` : ''}`);
+      r.q('.bar > i').style.transform = `scaleX(${Math.min(1, p.dist / lead)})`;
+    });
+    for (const [key, r] of rows) if (!seen.has(key)) { r.li.remove(); rows.delete(key); }
+    el.style.height = `${ranking.length * 34 + 12}px`;
   }
 
   update() {
@@ -78,6 +116,6 @@ export class Lobby {
   resultsHtml() {
     const race = this.race;
     if (!race) return '';
-    return `<ol class="mp-results">${race.ranking().map((p, i) => `<li class="${p.me ? 'me' : ''}"><b>${i + 1}</b><span class="dot" style="background:${p.color}"></span><span class="who">${esc(p.name)}</span><em>${p.alive ? `🏃 ${p.dist} m` : `💀 ${p.dist} m`}</em></li>`).join('')}</ol>`;
+    return `<ol class="mp-results">${race.ranking().map((p, i) => `<li class="${p.me ? 'me' : ''} ${p.alive && i < 3 ? `p${i + 1}` : ''}" style="--c:${p.color};--i:${i}"><b>${i + 1}</b><span class="av">${esc((p.name || '?').trim().charAt(0).toUpperCase())}</span><span class="who">${esc(p.name)}</span><em>${p.alive ? `🏃 ${p.dist} m` : `💀 ${p.dist} m`}</em></li>`).join('')}</ol>`;
   }
 }
