@@ -129,6 +129,7 @@ export function bindSfx(game, sfx) {
   on('runner:step', () => sfx.step(false));
   on('runner:boost', ({ big }) => sfx.boost(big));
   on('runner:hit', () => sfx.crash());
+  on('runner:nearMiss', () => { sfx.tone(520, 0.16, 'triangle', 0.1, 700); sfx.noise(0.12, 0.06, 3200); });
   on('runner:fall', () => sfx.tone(600, 0.8, 'sawtooth', 0.12, -500));
   on('runner:drift', ({ on: d }) => sfx.skid(d));
   on('runner:manual', ({ on: m }) => { if (m) sfx.tone(880, 0.12, 'square', 0.1, -300); });

@@ -279,3 +279,52 @@ test('chaque partie génère une nouvelle carte (route et décor), même graine 
   const a = new Game(); a.start({ seed: 77 }); const b = new Game(); b.start({ seed: 77 });
   assert.equal(a.track.salt, b.track.salt);
 });
+
+test('les pièces se ramassent plus largement que les obstacles ne frappent', () => {
+  const g = new Game({ seed: 11 });
+  g.start({ seed: 11 });
+  const { z, x } = g.runner;
+  const hazard = g.spawn('cactus', z, x + 1.8);
+  const coin = g.spawn('coin', z, x + 1.8);
+  assert.equal(hazard.overlapsRunner(), false);
+  assert.equal(coin.overlapsRunner(), true);
+});
+
+test('frôler un obstacle sans le toucher déclenche un ralenti, sans perte de vie', () => {
+  const g = new Game({ seed: 11 });
+  g.start({ seed: 11 });
+  for (const e of g.entities) e.destroy();
+  g.entities = [];
+  const events = [];
+  g.on('runner:nearMiss', (e) => events.push(e));
+  const hazard = g.spawn('cactus', g.runner.z + 4, g.runner.x + 1.1 + 0.85 * 0.8 + 0.3);
+  const far = g.spawn('cactus', g.runner.z + 4, g.runner.x + 6);
+  const lives = g.lives;
+  for (let i = 0; i < 90 && g.timeWarp.left === 0; i++) g.update(1 / 60, idle);
+  assert.equal(events.length, 1);
+  assert.equal(events[0].entity, hazard);
+  assert.ok(events[0].margin >= 0 && events[0].margin <= 0.9);
+  assert.equal(g.lives, lives);
+  assert.ok(g.timeWarp.left > 0 && g.timeWarp.scale < 1);
+  const s = g.runner.z;
+  g.update(0.1, idle);
+  assert.ok(g.runner.z - s < g.runner.speed * 0.1 * 0.6, 'la simulation avance au ralenti');
+  g.update(1 / 20, idle, 1);
+  assert.equal(g.timeWarp.left, 0, 'le ralenti suit le temps réel même si dt est plafonné');
+  run(g, 1);
+  assert.equal(events.length, 1, 'un seul frôlement par obstacle ; l’obstacle lointain ne compte pas');
+  assert.equal(far.nearMissDone, true);
+});
+
+test('pas de frôlement récompensé si le dino était protégé pendant le croisement', () => {
+  const g = new Game({ seed: 11 });
+  g.start({ seed: 11 });
+  for (const e of g.entities) e.destroy();
+  g.entities = [];
+  let count = 0;
+  g.on('runner:nearMiss', () => count++);
+  g.spawn('cactus', g.runner.z + 1.5, g.runner.x + 1.1 + 0.85 * 0.8 + 0.3);
+  g.runner.invul = 0.05;
+  run(g, 1);
+  assert.equal(count, 0);
+});

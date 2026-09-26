@@ -27,6 +27,7 @@ export class Hud {
     on('runner:respawn', () => this.flash(0.5));
     on('runner:manual', ({ on: m, dir }) => { if (m) this.banner(dir > 0 ? '⬅ KEEP LEFT!' : 'KEEP RIGHT! ➡', 1.2); });
     on('runner:hit', () => this.flash(0.6));
+    on('runner:nearMiss', ({ total }) => this.banner(total > 1 ? `NEAR MISS! ×${total}` : 'NEAR MISS!', 0.8));
     on('boss:start', ({ boss }) => { this.el.boss.classList.remove('hidden'); this.el.bossName.textContent = `⚠ ${boss.def.name}`; this.banner('BOSS!', 1.6); });
     on('boss:damage', ({ hp, max }) => { this.el.bossFill.style.width = `${(hp / max) * 100}%`; });
     on('boss:defeated', ({ reward }) => { this.el.boss.classList.add('hidden'); this.banner(`BOSS DEFEATED! +${reward} ★`, 2); this.flash(0.8); });
