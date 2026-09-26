@@ -281,9 +281,9 @@ class GameDirector {
     this.ui3DHud?.classList.remove('hidden');
     this.touchControls?.classList.remove('hidden');
 
-    // Reset camera to over-the-shoulder behind the Dino
-    this.camera.position.set(0, 5.2, 8.5);
-    this.camera.lookAt(0, 2.2, -10);
+    // Reset camera elevated over-the-shoulder behind the Dino
+    this.camera.position.set(0, 7.0, 9.2);
+    this.camera.lookAt(0, 1.8, -12);
   }
 
   handle3DDeath(finalScore3D) {
@@ -464,13 +464,13 @@ class GameDirector {
 
       // 4-point Bézier curve for cinematic camera orbit
       // P0: Front view (0, 2.2, 16)
-      // P1: Side swoop (-5.5, 3.8, 14.5)
-      // P2: Behind shoulder (-2.2, 4.8, 10.5)
-      // P3: Final Behind-the-Back chase position (0, 5.2, 8.5)
+      // P1: Side swoop (-5.5, 4.2, 14.5)
+      // P2: Behind shoulder (-2.2, 5.8, 11.2)
+      // P3: Final Elevated Behind-the-Back chase position (0, 7.0, 9.2)
       const p0 = new THREE.Vector3(0, 2.2, 16);
-      const p1 = new THREE.Vector3(-5.5, 3.8, 14.5);
-      const p2 = new THREE.Vector3(-2.2, 4.8, 10.5);
-      const p3 = new THREE.Vector3(0, 5.2, 8.5);
+      const p1 = new THREE.Vector3(-5.5, 4.2, 14.5);
+      const p2 = new THREE.Vector3(-2.2, 5.8, 11.2);
+      const p3 = new THREE.Vector3(0, 7.0, 9.2);
 
       const t = ease;
       const it = 1 - t;
@@ -486,7 +486,7 @@ class GameDirector {
 
       // Smooth target lookAt point
       const l0 = new THREE.Vector3(0, 2.0, 0);
-      const l3 = new THREE.Vector3(0, 2.2, -10);
+      const l3 = new THREE.Vector3(0, 1.8, -12);
       const currentLookAt = new THREE.Vector3().lerpVectors(l0, l3, ease);
       this.camera.lookAt(currentLookAt);
 

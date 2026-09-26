@@ -1004,19 +1004,19 @@ export class Dino3DGame {
     this.camera.fov += (targetFOV - this.camera.fov) * dt * 3;
     this.camera.updateProjectionMatrix();
 
-    // Silky smooth camera follow
+    // Silky smooth camera follow (elevated slightly above Dino for enhanced track visibility)
     const targetCamX = this.playerX * 0.38;
     this.camera.position.x += (targetCamX - this.camera.position.x) * dt * 8;
-    this.camera.position.y = 5.2 + (this.playerY * 0.25) + this.camBounceY;
-    this.camera.position.z = 8.5;
+    this.camera.position.y = 7.0 + (this.playerY * 0.25) + this.camBounceY;
+    this.camera.position.z = 9.2;
 
     // Reset roll to ensure crystal-clear stability
     this.camera.rotation.z = 0;
 
     this.camera.lookAt(
       this.playerX * 0.2,
-      2.2 + this.playerY * 0.15 + this.camBounceY * 0.5,
-      -10
+      1.8 + this.playerY * 0.15 + this.camBounceY * 0.5,
+      -12
     );
   }
 
