@@ -1,0 +1,137 @@
+{
+  "id": "bnw",
+  "name": "BNW Burger",
+  "fullName": "Black and White Burger",
+  "tagline": "Not a burger, a vogue",
+  "url": "https://bnwburger.com/",
+  "logo": "brands/bnw/logo.png",
+  "kit": "burger",
+  "palette": {
+    "primary": "#143852",
+    "accent": "#ffcc40",
+    "alt": "#cf2e2e",
+    "light": "#ffffff"
+  },
+  "copy": {
+    "title": "SMASH|ESCAPE.",
+    "hero": "Smash le rythme.|Sème le curseur.",
+    "detail": "Cinq quartiers BNW, des burgers partout.|Cours plus vite que le curseur.",
+    "cta": "Commander chez BNW"
+  },
+  "worlds": [
+    {
+      "name": "RUE DES SMASHES",
+      "subtitle": "Le grill est chaud. Cours !",
+      "palette": {
+        "sky": "#fff4dc",
+        "skyTop": "#143852",
+        "cloud": "#ffffff",
+        "sun": "#ffcc40",
+        "road": "#f4f1ea",
+        "edge": "#143852",
+        "dash": "#ffcc40",
+        "text": "#143852"
+      }
+    },
+    {
+      "name": "QUARTIER CHARBON",
+      "subtitle": "Saisi à la flamme.",
+      "palette": {
+        "sky": "#46586a",
+        "skyTop": "#0b1b2a",
+        "cloud": "#607487",
+        "sun": "#ff7a3d",
+        "road": "#2d3136",
+        "edge": "#ffcc40",
+        "dash": "#ffffff",
+        "text": "#ffffff"
+      }
+    },
+    {
+      "name": "BOULEVARD CHEDDAR",
+      "subtitle": "Ça coule de partout.",
+      "palette": {
+        "sky": "#ffe28a",
+        "skyTop": "#f2a900",
+        "cloud": "#fff6d6",
+        "sun": "#ffffff",
+        "road": "#ffffff",
+        "edge": "#143852",
+        "dash": "#cf2e2e",
+        "text": "#143852"
+      }
+    },
+    {
+      "name": "MONTAGNE MOUNTAIN",
+      "subtitle": "Le Smash Mountain t’attend au sommet.",
+      "palette": {
+        "sky": "#cfe3ee",
+        "skyTop": "#143852",
+        "cloud": "#ffffff",
+        "sun": "#ffcc40",
+        "road": "#e9eef2",
+        "edge": "#cf2e2e",
+        "dash": "#143852",
+        "text": "#143852"
+      }
+    },
+    {
+      "name": "CÔTE OUEST",
+      "subtitle": "West Coast, dernière ligne droite.",
+      "palette": {
+        "sky": "#ffc9a8",
+        "skyTop": "#cf2e2e",
+        "cloud": "#ffe6d6",
+        "sun": "#ffcc40",
+        "road": "#fff8ef",
+        "edge": "#143852",
+        "dash": "#ffcc40",
+        "text": "#143852"
+      }
+    }
+  ],
+  "ads": [
+    {
+      "text": "SMASH ORIGINAL",
+      "sub": "Le classique BNW"
+    },
+    {
+      "text": "BLACK BRISKET",
+      "sub": "Fondant, fumé"
+    },
+    {
+      "text": "WEST COAST",
+      "sub": "Smash burger"
+    },
+    {
+      "text": "WAVY FRIES",
+      "sub": "Croustillantes"
+    },
+    {
+      "text": "MILKSHAKE",
+      "sub": "Pour finir en beauté"
+    },
+    {
+      "text": "COMMANDE",
+      "sub": "bnwburger.com"
+    }
+  ],
+  "skin": {
+    "name": "BNW · Smash",
+    "color": "#143852",
+    "emissive": "#0a1c2a",
+    "eye": "#ffcc40"
+  },
+  "music": {
+    "name": "BNW Smash",
+    "bpm": 100,
+    "core": "Hip-Hop, Boom Bap, Funky Bassline, Brass Stabs, Punchy 808 Kick, Sizzling Grill Percussion, Street Food Vibe, Playful, Confident, Urban",
+    "vocals": "Hype Vocal Chops, Crowd Shouts",
+    "levels": [
+      "Laid-back Groove, Head Nodding, Vinyl Crackle, Warm Bass",
+      "Bouncy, Horn Riff, Hand Claps, Rising Energy",
+      "Peak Energy, Trap Hi-hats, Big Brass Hook, Party",
+      "Maximum Energy, Hard-hitting Drums, Brass Fanfare, Festival Climax"
+    ]
+  }
+}

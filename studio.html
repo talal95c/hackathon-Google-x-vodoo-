@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dino Escape · Brand Studio</title>
+</head>
+<body>
+  <main class="studio">
+    <aside class="editor">
+      <header><b>Dino Escape</b> Brand Studio<small>Your own version of the game, built from your brand. The original game is not changed.</small></header>
+
+      <section>
+        <h2>1 · Your business</h2>
+        <label>Website <input id="f-url" type="url" placeholder="https://your-shop.com" /></label>
+        <label>Name <input id="f-name" /></label>
+        <label>Logo <input id="f-logo" type="file" accept="image/*" /></label>
+        <div class="logo-row"><img id="logoPreview" alt="" /><button type="button" id="logoClear">Remove</button></div>
+        <label>Asset kit
+          <select id="f-kit"><option value="burger">Burger / fast food (boxes, fries, burgers)</option><option value="generic">Generic (logo crates and tokens)</option></select>
+        </label>
+        <div class="row">
+          <button type="button" id="scan">Quick scan website</button>
+          <button type="button" id="analyze" class="primary">Analyze with Devin</button>
+        </div>
+        <p class="status" id="status"></p>
+      </section>
+
+      <section>
+        <h2>2 · Colors</h2>
+        <div class="colors">
+          <label>Primary <input id="c-primary" type="color" /></label>
+          <label>Accent <input id="c-accent" type="color" /></label>
+          <label>Second accent <input id="c-alt" type="color" /></label>
+          <label>Light <input id="c-light" type="color" /></label>
+        </div>
+        <div class="swatches" id="swatches"></div>
+      </section>
+
+      <section>
+        <h2>3 · Text</h2>
+        <label>Tagline <input id="f-tagline" /></label>
+        <label>Title (two lines, split with |) <input id="f-title" /></label>
+        <label>Hero text <input id="f-hero" /></label>
+        <label>Call to action <input id="f-cta" /></label>
+      </section>
+
+      <section>
+        <h2>4 · Roadside ads</h2>
+        <div id="ads"></div>
+      </section>
+
+      <section>
+        <h2>5 · Worlds</h2>
+        <div id="worlds"></div>
+      </section>
+
+      <section>
+        <h2>6 · Ask Devin for changes</h2>
+        <div class="chat" id="chat"></div>
+        <textarea id="chatInput" rows="2" placeholder="e.g. make the ads mention our new Mountain burger"></textarea>
+        <button type="button" id="chatSend">Send to Devin</button>
+      </section>
+
+      <section>
+        <h2>7 · Publish</h2>
+        <div class="row">
+          <button type="button" id="export">Download brand pack</button>
+          <a id="openGame" target="_blank" rel="noopener">Open full screen ↗</a>
+          <button type="button" id="reset">Reset to BNW example</button>
+        </div>
+      </section>
+    </aside>
+    <section class="preview">
+      <iframe id="preview" title="Brand game preview"></iframe>
+    </section>
+  </main>
+  <script type="module" src="/src/studio/studio.js"></script>
+</body>
+</html>

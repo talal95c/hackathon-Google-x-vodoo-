@@ -33,9 +33,12 @@ import { Hud } from './ui/Hud.js';
 import { Menus } from './ui/Menus.js';
 import { MusicThemes } from './kernel/Registry.js';
 
+// Jeu de marque (brand.html) : undefined dans le jeu principal
+const BRAND = globalThis.DINO_BRAND;
+
 // --- Logique
 const game = new Game();
-const profile = new Profile(new LocalStorage());
+const profile = new Profile(new LocalStorage(), BRAND?.profileKey);
 const shop = new Shop(profile, game.bus);
 
 // --- Rendu (l'ordre compte : RunnerView met à jour ctx.focus pour les suivants)
@@ -53,6 +56,7 @@ const views = [
   new Particles(ctx),
   new CameraRig(ctx),
 ];
+for (const V of BRAND?.views ?? []) views.push(new V(ctx));
 
 // --- Son et musique
 const sfx = new Sfx();
@@ -92,7 +96,7 @@ game.on('game:over', (result) => {
 
 // --- Boucle
 let last = performance.now(), time = 0;
-hud.setTitle('Dino Escape');
+hud.setTitle(BRAND?.title ?? 'Dino Escape');
 
 function frame(now) {
   const dt = Math.min(1 / 20, (now - last) / 1000);
