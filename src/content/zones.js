@@ -4,8 +4,8 @@
 //   boss      → boss de fin de zone (null = pas de boss ; voir entities/Boss.js pour en créer un)
 export const ZONES = [
   {
-    id: 'offline', name: 'DÉSERT HORS LIGNE', subtitle: 'Quitte la page sans connexion.',
-    palette: { sky: 0x9fbdcb, skyTop: 0x476d97, cloud: 0xdce9ee, sun: 0xffe6bd, road: 0xd4d8d9, edge: 0x314c63, dash: 0xe8edf0, text: '#535353' },
+    id: 'offline', name: 'SMASH STREET', subtitle: 'Le grill est chaud. Cours !',
+    palette: { sky: 0xfff8ec, skyTop: 0x143852, cloud: 0xffffff, sun: 0xffcc40, road: 0xffffff, edge: 0x143852, dash: 0xffcc40, text: '#143852' },
     decor: 'clouds',
     spawns: [
       { type: 'cactus', weight: 3 },
