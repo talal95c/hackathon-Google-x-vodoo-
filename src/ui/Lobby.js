@@ -1,6 +1,11 @@
 // Salon multijoueur : créer une partie (code + lien), rejoindre, liste des joueurs, lancement,
 // compte à rebours, classement live pendant la course et coup d'épaule.
+import { Skins } from '../kernel/Registry.js';
+import { skinPortraits } from './SkinPortraits.js';
+
 const $ = (id) => document.getElementById(id);
+const MAX_PLAYERS = 7; // autant que de couleurs côté réseau
+const CODE_RE = /[A-Z0-9]{5}/;
 const ROW = 44;
 const initial = (n) => esc((n || '?').trim().charAt(0).toUpperCase());
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -11,27 +16,35 @@ export class Lobby {
     this.el = $('mpPanel');
     menus.panels.mp = this.el;
     $('mpName').value = mp.name;
-    $('mpName').addEventListener('change', (e) => mp.setName(e.target.value));
+    $('mpName').addEventListener('change', (e) => { mp.setName(e.target.value); e.target.value = mp.name; this.render(); });
 
     document.addEventListener('click', async (e) => {
       const b = e.target.closest('[data-mp]');
       if (!b) return;
       const a = b.dataset.mp;
       if (a === 'open') this.open();
-      else if (a === 'create') { await mp.create(); this.#setUrl(); this.render(); }
-      else if (a === 'join') { const code = $('mpCode').value; if (code.trim()) { await mp.join(code); this.#setUrl(); this.render(); } }
-      else if (a === 'copy') { try { await navigator.clipboard.writeText(this.link()); this.status('Link copied! Send it to your friends.'); } catch { this.status(this.link()); } }
+      else if (a === 'create') await this.#connect(() => mp.create());
+      else if (a === 'join') { const code = this.#readCode(); if (code) await this.#connect(() => mp.join(code)); else this.status('Type the 5-letter code your friend sent you.'); }
+      else if (a === 'copy') this.#copy(this.link(), 'Invite link copied! Send it to your friends.');
+      else if (a === 'copycode') this.#copy(mp.code, `Code ${mp.code} copied!`);
       else if (a === 'launch') { this.menus.closePanels(); this.onLaunch(); }
-      else if (a === 'leave') { mp.leave(); this.#setUrl(); this.render(); }
+      else if (a === 'leave') { mp.leave(); this.#setUrl(); this.status(''); this.render(); }
     });
-    $('mpCode').addEventListener('keydown', (e) => { if (e.key === 'Enter') this.el.querySelector('[data-mp=join]').click(); });
+    const codeInput = $('mpCode');
+    codeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') this.el.querySelector('[data-mp=join]').click(); });
+    // Un lien d'invitation collé dans le champ → on garde juste le code
+    codeInput.addEventListener('input', () => {
+      const v = codeInput.value;
+      const fromLink = v.includes('partie=') ? v.split('partie=')[1] : v;
+      codeInput.value = fromLink.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
+    });
     mp.on('lobby', () => { this.render(); this.board(); });
     mp.on('status', (t) => this.status(t));
     mp.on('results', () => this.board());
 
     // Lien partagé : ?partie=CODE → rejoint directement
     const code = new URLSearchParams(location.search).get('partie');
-    if (code) { this.open(); mp.join(code).then(() => this.render()); }
+    if (code) { this.open(); this.#connect(() => mp.join(code)); }
   }
 
   link() { const u = new URL(location.href); u.search = this.mp.code ? `?partie=${this.mp.code}` : ''; return u.toString(); }
@@ -39,17 +52,57 @@ export class Lobby {
   open() { this.menus.open('mp'); this.render(); }
   status(t) { $('mpStatus').textContent = t; }
 
+  #readCode() { return ($('mpCode').value.toUpperCase().match(CODE_RE) || [])[0] || ''; }
+
+  // Création / connexion : boutons désactivés le temps que le réseau réponde
+  async #connect(fn) {
+    this.el.classList.add('busy');
+    try { await fn(); this.#setUrl(); }
+    catch (err) { this.status(`Could not connect (${err?.message || err}). Try again.`); this.mp.leave(); }
+    finally { this.el.classList.remove('busy'); this.render(); }
+  }
+
+  async #copy(text, ok) {
+    try { await navigator.clipboard.writeText(text); this.status(ok); }
+    catch { this.status(text); } // pas de presse-papiers (iframe itch.io) : on affiche le texte à copier à la main
+  }
+
+  #portrait(skin) {
+    const src = skinPortraits().get(skin);
+    return src ? `<img src="${src}" alt=""/>` : '<span class="mp-avatar-fallback">🦖</span>';
+  }
+
   render() {
     const mp = this.mp, inRoom = mp.inRoom;
     $('mpJoin').classList.toggle('hidden', inRoom);
     $('mpRoom').classList.toggle('hidden', !inRoom);
-    if (!inRoom) return;
+    if (this.el.classList.contains('hidden')) return; // portraits générés seulement quand le panneau est visible
+    if (!inRoom) {
+      const skin = mp.profile.data.skin;
+      $('mpMyPortrait').src = skinPortraits().get(skin) || '';
+      $('mpMySkin').textContent = Skins.has(skin) ? Skins.get(skin).name : skin;
+      return;
+    }
     $('mpCodeShow').textContent = mp.code;
     const rows = [mp.me, ...mp.peers.values()];
-    $('mpPlayers').innerHTML = rows.map((p) => `<li><span class="dot" style="background:${p.color}"></span>${esc(p.name)}${p.me ? ' (you)' : ''}${(p.me ? mp.isHost : p.host) ? ' 👑' : ''}</li>`).join('');
+    const card = (p) => {
+      const host = p.me ? mp.isHost : p.host;
+      const skinName = Skins.has(p.skin) ? Skins.get(p.skin).name : '';
+      return `<li class="mp-player ${p.me ? 'me' : ''}" style="--c:${p.color}">
+        <div class="mp-avatar">${this.#portrait(p.skin)}</div>
+        <div class="mp-player-info"><b>${esc(p.name)}</b><span class="small">${esc(skinName)}${p.rtt ? ` · ${Math.round(p.rtt)} ms` : ''}</span></div>
+        <div class="mp-badges">${host ? '<span class="mp-badge host">👑 Host</span>' : ''}${p.me ? '<span class="mp-badge">You</span>' : ''}</div>
+      </li>`;
+    };
+    const empty = rows.length < MAX_PLAYERS ? `<li class="mp-player empty"><div class="mp-avatar"><span class="mp-avatar-fallback">?</span></div><div class="mp-player-info"><b>Waiting for a rival…</b><span class="small">Share the code</span></div></li>` : '';
+    $('mpPlayers').innerHTML = rows.map(card).join('') + empty;
+    $('mpCount').textContent = `${rows.length} player${rows.length > 1 ? 's' : ''}`;
+    $('mpHint').textContent = mp.isHost
+      ? (mp.peers.size ? 'Everyone is here? Hit start.' : 'Send the invite link, then start when your friends show up.')
+      : 'The host starts the race for everyone.';
     $('mpLaunch').classList.toggle('hidden', !mp.isHost);
     $('mpWait').classList.toggle('hidden', mp.isHost);
-    $('mpLaunch').textContent = mp.peers.size ? `⚔ Start the race (${rows.length} players)` : '⚔ Start (solo, to test)';
+    $('mpLaunch').textContent = mp.peers.size ? `⚔ Start the race · ${rows.length} players` : '⚔ Start alone (to test)';
   }
 
   // Compte à rebours avant le départ

@@ -1,0 +1,242 @@
+{
+  "classic": {
+    "voiceName": "Iapetus",
+    "lines": [
+      {
+        "text": "Not found!",
+        "file": "classic/0.mp3",
+        "seconds": 0.95
+      },
+      {
+        "text": "Beep boop!",
+        "file": "classic/1.mp3",
+        "seconds": 0.83
+      },
+      {
+        "text": "Offline!",
+        "file": "classic/2.mp3",
+        "seconds": 1.49
+      },
+      {
+        "text": "Reboot!",
+        "file": "classic/3.mp3",
+        "seconds": 1.29
+      },
+      {
+        "text": "Bye!",
+        "file": "classic/4.mp3",
+        "seconds": 0.56
+      }
+    ]
+  },
+  "reggae": {
+    "voiceName": "Umbriel",
+    "lines": [
+      {
+        "text": "Easy, mon!",
+        "file": "reggae/0.mp3",
+        "seconds": 0.8
+      },
+      {
+        "text": "Irie!",
+        "file": "reggae/1.mp3",
+        "seconds": 1.14
+      },
+      {
+        "text": "One shove!",
+        "file": "reggae/2.mp3",
+        "seconds": 0.9
+      },
+      {
+        "text": "Riddim!",
+        "file": "reggae/3.mp3",
+        "seconds": 0.68
+      },
+      {
+        "text": "Bless up!",
+        "file": "reggae/4.mp3",
+        "seconds": 0.56
+      }
+    ]
+  },
+  "vader": {
+    "voiceName": "Algenib",
+    "lines": [
+      {
+        "text": "Join me.",
+        "file": "vader/0.mp3",
+        "seconds": 1.6
+      },
+      {
+        "text": "Weak.",
+        "file": "vader/1.mp3",
+        "seconds": 1.03
+      },
+      {
+        "text": "Kneel!",
+        "file": "vader/2.mp3",
+        "seconds": 1.19
+      },
+      {
+        "text": "Disturbing.",
+        "file": "vader/3.mp3",
+        "seconds": 1.6
+      },
+      {
+        "text": "Darkness!",
+        "file": "vader/4.mp3",
+        "seconds": 1.53
+      }
+    ]
+  },
+  "drift": {
+    "voiceName": "Laomedeia",
+    "lines": [
+      {
+        "text": "Bounced!",
+        "file": "drift/0.mp3",
+        "seconds": 1.01
+      },
+      {
+        "text": "GG!",
+        "file": "drift/1.mp3",
+        "seconds": 1.17
+      },
+      {
+        "text": "Noob!",
+        "file": "drift/2.mp3",
+        "seconds": 0.94
+      },
+      {
+        "text": "Bye bye!",
+        "file": "drift/3.mp3",
+        "seconds": 1.17
+      },
+      {
+        "text": "Ez!",
+        "file": "drift/4.mp3",
+        "seconds": 0.96
+      }
+    ]
+  },
+  "mario": {
+    "voiceName": "Puck",
+    "lines": [
+      {
+        "text": "Mamma mia!",
+        "file": "mario/0.mp3",
+        "seconds": 1.2
+      },
+      {
+        "text": "Wahoo!",
+        "file": "mario/1.mp3",
+        "seconds": 1.19
+      },
+      {
+        "text": "Let's-a go!",
+        "file": "mario/2.mp3",
+        "seconds": 1.22
+      },
+      {
+        "text": "Bye bye!",
+        "file": "mario/3.mp3",
+        "seconds": 1.08
+      },
+      {
+        "text": "Yahoo!",
+        "file": "mario/4.mp3",
+        "seconds": 1.6
+      }
+    ]
+  },
+  "alligator": {
+    "voiceName": "Enceladus",
+    "lines": [
+      {
+        "text": "Snap!",
+        "file": "alligator/0.mp3",
+        "seconds": 1.07
+      },
+      {
+        "text": "Chomp!",
+        "file": "alligator/1.mp3",
+        "seconds": 1.6
+      },
+      {
+        "text": "Gotcha!",
+        "file": "alligator/2.mp3",
+        "seconds": 1.75
+      },
+      {
+        "text": "Ssswamp!",
+        "file": "alligator/3.mp3",
+        "seconds": 1.57
+      },
+      {
+        "text": "Bite!",
+        "file": "alligator/4.mp3",
+        "seconds": 0.95
+      }
+    ]
+  },
+  "neon": {
+    "voiceName": "Fenrir",
+    "lines": [
+      {
+        "text": "Zap!",
+        "file": "neon/0.mp3",
+        "seconds": 0.76
+      },
+      {
+        "text": "Voltage!",
+        "file": "neon/1.mp3",
+        "seconds": 1.21
+      },
+      {
+        "text": "Toast!",
+        "file": "neon/2.mp3",
+        "seconds": 1.06
+      },
+      {
+        "text": "Glow!",
+        "file": "neon/3.mp3",
+        "seconds": 0.88
+      },
+      {
+        "text": "Bzzt!",
+        "file": "neon/4.mp3",
+        "seconds": 0.37
+      }
+    ]
+  },
+  "gold": {
+    "voiceName": "Alnilam",
+    "lines": [
+      {
+        "text": "Peasant.",
+        "file": "gold/0.mp3",
+        "seconds": 0.86
+      },
+      {
+        "text": "Cha-ching!",
+        "file": "gold/1.mp3",
+        "seconds": 1.13
+      },
+      {
+        "text": "Bling!",
+        "file": "gold/2.mp3",
+        "seconds": 0.81
+      },
+      {
+        "text": "Too rich.",
+        "file": "gold/3.mp3",
+        "seconds": 1.6
+      },
+      {
+        "text": "Pardon me.",
+        "file": "gold/4.mp3",
+        "seconds": 1.17
+      }
+    ]
+  }
+}

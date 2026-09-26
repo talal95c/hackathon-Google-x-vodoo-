@@ -36,6 +36,7 @@ export class Bots {
     }));
     this.shoveCd = 0;
     this.active = true;
+    g.emit('bots:start', { skins: this.list.map((b) => b.skin) });
   }
 
   stop() { this.active = false; this.list = []; }
@@ -124,7 +125,7 @@ export class Bots {
           b.shoveAnim = 0.35; b.shoveDir = t.dir;
           if (t.id === 'me') { if (!r.isInvulnerable) { r.knock(t.dir * FIGHT.shovePower, { stumble: FIGHT.shoveStumble, source: 'bot' }); g.emit('mp:shoved', { from: b.name }); this.#impact('me', t.dir, 'received', 'shove'); } }
           else { const o = this.list.find((x) => x.id === t.id); o.knockV += t.dir * FIGHT.shovePower; o.latV = 0; o.stumble = FIGHT.shoveStumble; this.#impact(o.id, t.dir, null, 'shove'); }
-          g.emit('bot:shove', { bot: b.name });
+          g.emit('bot:shove', { bot: b.name, id: b.id, skin: b.skin, s: b.s, d: b.d });
         }
         b.shoveCd = 2.5 + Math.random() * 2;
       }

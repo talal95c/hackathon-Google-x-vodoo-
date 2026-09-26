@@ -99,6 +99,17 @@ export class Sfx {
     this.tone(620, .16, 'triangle', .055, 180);
     setTimeout(() => this.tone(880, .18, 'triangle', .045, 130), 100);
   }
+  // Réplique vocale (AudioBuffer déjà décodé) : position stéréo et volume, renvoie la source
+  voice(buffer, { pan = 0, volume = 1, rate = 1 } = {}) {
+    if (!this.ctx || !buffer) return null;
+    const src = this.ctx.createBufferSource(); src.buffer = buffer; src.playbackRate.value = rate;
+    const gain = this.ctx.createGain(); gain.gain.value = 1.4 * volume;
+    const panner = this.ctx.createStereoPanner(); panner.pan.value = Math.max(-.6, Math.min(.6, pan));
+    src.connect(gain).connect(panner).connect(this.master);
+    src.onended = () => { src.disconnect(); gain.disconnect(); panner.disconnect(); };
+    src.start();
+    return src;
+  }
 
   coin() { this.tone(988, 0.08, 'square', 0.1); setTimeout(() => this.tone(1319, 0.12, 'square', 0.1), 60); }
   boost(big) { this.tone(big ? 300 : 220, 0.45, 'sawtooth', 0.12, big ? 900 : 500); this.noise(0.4, 0.15, 3000); }
@@ -135,6 +146,7 @@ export function bindSfx(game, sfx) {
   on('runner:manual', ({ on: m }) => { if (m) sfx.tone(880, 0.12, 'square', 0.1, -300); });
   on('coins', ({ amount }) => { if (amount <= 2) sfx.coin(); });
   on('zone', () => sfx.zone());
+  on('world:soon', ({ seconds }) => sfx.tone(seconds === 1 ? 880 : 660, 0.12, 'triangle', 0.1));
   on('weapon:equip', () => sfx.tone(440, 0.3, 'sawtooth', 0.12, 440));
   on('weapon:fire', () => sfx.tone(1400, 0.05, 'square', 0.04, -900));
   on('weapon:expire', () => sfx.tone(500, 0.25, 'triangle', 0.1, -300));
