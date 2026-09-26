@@ -31,7 +31,7 @@ export class PostProcessing {
       this.ao = new SceneAO(scene, camera, 512, 512);
       this.ao.updateGtaoMaterial({ radius: 2.1, thickness: 1.5, distanceExponent: 1.6, scale: 1, samples: 8 });
       this.ao.updatePdMaterial({ samples: 8, radius: 4 });
-      this.ao.blendIntensity = .6;
+      this.ao.blendIntensity = .82;
       this.composer.addPass(this.ao);
     }
     this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), .30, .42, 1.8);
@@ -47,9 +47,9 @@ export class PostProcessing {
           vec2 split=edge*dot(edge,edge)*(.001+ rush*.010);
           vec3 c=vec3(texture2D(tDiffuse,vUv+split).r,texture2D(tDiffuse,vUv).g,texture2D(tDiffuse,vUv-split).b);
           float l=dot(c,vec3(.2126,.7152,.0722));
-          c=mix(vec3(l),c,1.13);
-          c=(c-.5)*1.08+.5;
-          c*=mix(vec3(.93,1.015,1.065),vec3(1.025,1.006,.965),smoothstep(.08,.85,l));
+          c=mix(vec3(l),c,1.08);
+          c=(c-.5)*1.055+.5;
+          c*=mix(vec3(.95,.99,1.05),vec3(1.03,1.01,.96),smoothstep(.08,.85,l));
           c*=1.-smoothstep(.12,.64,dot(edge,edge))*.20;
           float grain=fract(sin(dot(gl_FragCoord.xy+mod(time,60.),vec2(12.9898,78.233)))*43758.5453)-.5;
           c+=grain*.0035;

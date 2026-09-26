@@ -221,3 +221,19 @@ test('les ennemis qui foncent avancent vers le dino ; le ptérodactyle ne se sau
   assert.ok(s0 - p.s > 5 || !p.alive, 'le ptérodactyle a avancé');
   assert.ok(hit, 'sauter ne suffit pas : il faut esquiver');
 });
+
+test('un coup latéral pousse le dino puis s\'amortit (et peut le faire tomber)', () => {
+  const g = new Game({ seed: 2 });
+  g.start({ seed: 2 });
+  for (const e of g.entities) e.destroy();
+  g.entities = [];
+  const r = g.runner, x0 = r.x;
+  r.knock(20);
+  for (let t = 0; t < 0.3; t += 1 / 60) g.update(1 / 60, { steer: 0, drift: false, brake: false, jump: false });
+  assert.ok(r.x - x0 > 3, `poussé de ${(r.x - x0).toFixed(1)} m`);
+  assert.ok(Math.abs(r.knockV) < 8, 'amorti');
+  r.knock(60, { stumble: 0.4 });
+  let fell = false;
+  for (let t = 0; t < 2 && !fell; t += 1 / 60) { g.update(1 / 60, { steer: 0, drift: false, brake: false, jump: false }); fell = g.state !== 'playing'; }
+  assert.ok(fell, 'un gros coup au bord fait tomber');
+});

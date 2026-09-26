@@ -5,7 +5,7 @@
 export const ZONES = [
   {
     id: 'offline', name: 'DÉSERT HORS LIGNE', subtitle: 'Quitte la page sans connexion.',
-    palette: { sky: 0x9fbdcb, skyTop: 0x476d97, cloud: 0xdce9ee, sun: 0xffe6bd, road: 0xd4d8d9, edge: 0x314c63, dash: 0xe8edf0, text: '#535353' },
+    palette: { sky: 0xd5b5a5, skyTop: 0x718baf, cloud: 0xf4dfc3, sun: 0xffdfad, road: 0xe1b58b, edge: 0x725a4c, dash: 0xf3dbad, text: '#535353' },
     decor: 'clouds',
     spawns: [
       { type: 'cactus', weight: 3 },
@@ -19,7 +19,7 @@ export const ZONES = [
   },
   {
     id: 'browser', name: 'NAVIGATEUR', subtitle: 'Échappe aux onglets et aux fenêtres.',
-    palette: { sky: 0xfde3c4, skyTop: 0x5f9cf5, cloud: 0xfff3e2, sun: 0xffe2b8, road: 0xf7f7f7, edge: 0x1a73e8, dash: 0xffffff, text: '#1a3d7c' },
+    palette: { sky: 0xc4b4cf, skyTop: 0x6d86ab, cloud: 0xf1dccb, sun: 0xffe6c6, road: 0xd3bcd5, edge: 0x73629c, dash: 0xffffff, text: '#1a3d7c' },
     decor: 'windows',
     spawns: [
       { type: 'popup', weight: 2 },
@@ -36,7 +36,7 @@ export const ZONES = [
   },
   {
     id: 'windows', name: 'WINDOWS', subtitle: 'Traverse le bureau du système.',
-    palette: { sky: 0xb9def7, skyTop: 0x347bcb, cloud: 0xf5faff, sun: 0xffffff, road: 0xdbedfa, edge: 0x0078d4, dash: 0xffffff, text: '#164c7d' },
+    palette: { sky: 0xb4cfd7, skyTop: 0x587fac, cloud: 0xe7ece5, sun: 0xffedcf, road: 0xbbd4d3, edge: 0x0078d4, dash: 0xffffff, text: '#164c7d' },
     decor: 'desktop',
     spawns: [{ type: 'popup', weight: 2 }, { type: 'tabWall', weight: 1 }, { type: 'popupSlider', weight: 1 }, { pattern: 'coinSnake', weight: 2 }, { type: 'shieldPickup', weight: .35 }], boss: null,
   },

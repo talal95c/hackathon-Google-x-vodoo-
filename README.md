@@ -14,8 +14,11 @@ boss, boutique (skins, musiques, améliorations) et musique générée en direct
 - Tous les 720 m, un saut guidé franchit un portail vers le monde suivant. Le contrôle revient
   à l'atterrissage ; les zones de départ et d'arrivée sont dégagées. Le cloud se poursuit à l'infini.
 - Néons réactifs au rythme, décors fusionnés par matériau et libérés derrière le joueur.
-- Rendu : éclairages cyan/corail, faisceaux animés, sculptures de données, matériaux réfléchissants,
-  variantes de décors par monde. Post-traitement : ombres de contact GTAO sur ordinateur, bloom HDR,
+- Rendu de maquette low poly : volumes biseautés, matières mates, sol raccordé à la route,
+  massifs de végétation animée, arbres, bancs, pavés, lanternes et composants miniatures dans le hardware.
+- Tunnels facettés de 92 m, arceaux et rails lumineux : ils suivent les courbes,
+  avec une transition douce vers un éclairage intérieur. Ils restent hors des portails et des épingles.
+- Variantes de couleurs et de décors par monde. Post-traitement : ombres de contact GTAO sur ordinateur, bloom HDR,
   contraste coloré, grain fin, vignette et décomposition chromatique pendant les sprints et portails, tone mapping ACES
   et anticrénelage MSAA. La résolution est plafonnée pour limiter le coût sur mobile.
 - Le jury saisit sa propre clé Gemini dans le menu Musique. Aucun relais serveur n'est nécessaire.
@@ -42,7 +45,7 @@ Menu → « Cours sur n'importe quel site » → tape une adresse : Gemini lit l
 Ajouter des mondes livrés avec le jeu : `node scripts/generate-sites.mjs lemonde.fr twitch.tv`.
 
 ## Tests
-    npm test           # tests du kernel (sans navigateur)
+    npm test           # tests du kernel et de dégagement/streaming des tunnels (sans navigateur)
 
 ## Architecture
 Voir **[ARCHITECTURE.md](ARCHITECTURE.md)** : kernel / vues / contenu, liste des événements, et comment

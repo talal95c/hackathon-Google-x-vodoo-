@@ -3,7 +3,7 @@
 const PREFIX = 'dino-site:';
 const INDEX = 'dino-sites';
 
-export async function shrink(dataURL, size = 256, quality = 0.82) {
+export async function shrink(dataURL, size = 256, quality = 0.8) {
   if (typeof document === 'undefined' || !dataURL) return dataURL;
   const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = dataURL; });
   const c = document.createElement('canvas');

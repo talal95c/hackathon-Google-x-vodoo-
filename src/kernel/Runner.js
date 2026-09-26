@@ -31,6 +31,7 @@ export class Runner {
     this.speed = RUNNER.startSpeed;
     this.cruise = RUNNER.baseSpeed;
     this.latV = 0; this.push = 0; this.steer = 0;
+    this.knockV = 0;          // coup latéral reçu (multijoueur), amorti indépendamment de la direction
     this.manual = false;      // true = dans un virage dur (aspiration vers l'extérieur)
     this.boost = 0;
     this.drifting = false; this.driftDir = 0; this.driftCharge = 0;
@@ -45,6 +46,14 @@ export class Runner {
   get smashes() { return !!this.weapon?.smashes; }
 
   // --- API utilisée par les entités / armes
+  // Coup latéral (bousculade / coup d'épaule d'un rival). lateral en m/s (+ = gauche).
+  // Il s'ajoute au déplacement et s'amortit en ~0,5 s : au bord de la route, ça peut faire tomber.
+  knock(lateral, { stumble = 0, source = null } = {}) {
+    this.knockV += lateral;
+    if (stumble) this.stumble = Math.max(this.stumble, stumble);
+    this.game.emit('runner:knocked', { lateral, source });
+  }
+
   hurt(source) {
     if (this.isInvulnerable) return false;
     const S = this.stats;
@@ -153,7 +162,8 @@ export class Runner {
       const cf = S.get('centrifugal') * (this.drifting ? S.get('driftCentrifugal') : 1) * (this.grounded ? 1 : 0.5);
       this.push = -road.k * this.speed * this.speed * cf;
     }
-    this.x += (this.latV + this.push) * dt;
+    this.knockV *= Math.exp(-dt * this.stats.get('knockDecay'));
+    this.x += (this.latV + this.push + this.knockV) * dt;
     this.z += this.speed * dt;
 
     // Cycle de course (animation + bruits de pas), proportionnel à la vitesse

@@ -161,3 +161,18 @@ body:not(.in-game) #hud { opacity: 0; }
 #siteBar { background: linear-gradient(90deg, #1a73e8, #34a853); transition: width .25s; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { font-size: 13px; padding: 6px 12px; border-radius: 20px; }
+
+/* ---------- Multijoueur */
+.mp-button { background: linear-gradient(90deg, #ff4f8b, #ff9100); color: #fff; border-color: #7a1f3d; }
+.mp-code { font-size: 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mp-code b { font-size: 32px; letter-spacing: 6px; }
+.mp-players { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+#mpBoard { position: absolute; top: 110px; right: 16px; list-style: none; display: flex; flex-direction: column; gap: 4px; background: rgba(255,255,255,.85); border-radius: 12px; padding: 8px 12px; font-size: 13px; font-weight: bold; min-width: 170px; }
+#mpBoard li { display: flex; align-items: center; gap: 4px; }
+#mpBoard li b { width: 16px; } #mpBoard li em { margin-left: auto; font-style: normal; opacity: .7; }
+#mpBoard li.out { opacity: .45; }
+#shoveBox { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); width: 240px; text-align: center; pointer-events: auto; }
+#shoveBtn { font-size: 13px; padding: 6px 12px; width: 100%; }
+#shoveFill { background: #ff4f8b; }
+.mp-results { text-align: left; margin: 6px auto; display: inline-block; }
