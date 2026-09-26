@@ -34,7 +34,7 @@ export class Entity {
   overlapsRunner(r = this.runner) {
     const h = this.hitbox;
     return Math.abs(r.z - this.s) < h.hz + 0.6
-      && Math.abs(r.x - this.d) < h.hx + RUNNER.radius
+      && Math.abs(r.x - this.d) < h.hx + RUNNER.radius * (this.kind === 'collectable' ? 1.35 : 0.8)
       && r.y < this.y + h.top - 0.3
       && r.y + RUNNER.height > this.y + h.bottom;
   }

@@ -1,4 +1,5 @@
 import { MusicThemes, Skins } from '../kernel/Registry.js';
+import { CHALLENGES } from '../content/challenges.js';
 
 const DEFAULTS = {
   version: 1,
@@ -10,6 +11,7 @@ const DEFAULTS = {
   music: {},         // thèmes consommables : { reggae: 2, ... }
   theme: 'reggae',
   upgrades: {},      // { 'upgrade:weaponTime': 2, ... }
+  challenge: null,
 };
 
 // Progression persistante du joueur.
@@ -63,14 +65,21 @@ export class Profile {
   // Améliorations
   upgradeLevel(id) { return this.data.upgrades[id] ?? 0; }
   setUpgradeLevel(id, lvl) { this.data.upgrades[id] = lvl; this.save(); }
+  selectChallenge(id) {
+    if (id !== null && !CHALLENGES.some((c) => c.id === id)) return;
+    this.data.challenge = id;
+    this.save();
+  }
 
   // Fin de partie : crédite les pièces, met à jour le record
-  recordRun({ coins, score }) {
-    this.data.coins += coins;
+  recordRun({ coins, score, challenge }) {
+    const goal = CHALLENGES.find((c) => c.id === challenge?.id);
+    const challengeReward = goal && challenge.complete ? goal.reward : 0;
+    this.data.coins += coins + challengeReward;
     this.data.runs++;
     const isBest = score > this.data.best;
     if (isBest) this.data.best = score;
     this.save();
-    return { isBest, best: this.data.best };
+    return { isBest, best: this.data.best, challengeReward };
   }
 }
