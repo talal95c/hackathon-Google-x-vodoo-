@@ -43,6 +43,15 @@
         <button class="mp-button" data-mp="open">⚔ Multiplayer</button>
       </div>
     </div>
+    <div class="nudge" id="keyNudge" hidden>
+      <div class="nudge-icon">✨</div>
+      <div class="nudge-body">
+        <b>Want the full experience?</b>
+        <p>Add a free Gemini key and the music gets generated live by Lyria RealTime, following your race.</p>
+        <div class="buttons"><button class="primary" data-action="music">Add my key</button><button data-action="nudge-later">Later</button></div>
+      </div>
+      <button class="nudge-close" data-action="nudge-later" aria-label="Close">✕</button>
+    </div>
     <div class="menu-footer">
       <div class="controls"><span><b>↑</b> run</span><span><b>← →</b> steer</span><span><b>SPACE</b> jump</span><span><b>SHIFT</b> slide</span><span><b>E / F</b> slap</span></div>
       <div class="buttons"><button data-action="shop">🛒 Shop</button><button data-action="music">♫ Music</button></div>
@@ -118,22 +127,44 @@
     <p class="small mp-status" id="mpStatus"></p>
   </div>
 
-  <div class="panel hidden" id="musicPanel">
-    <div class="panel-head"><h2>Lyria music</h2><button data-action="close">✕</button></div>
-    <p>The music is generated live by <b>Google DeepMind Lyria RealTime</b> and speeds up with the game.
-      It needs a Gemini API key (<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a>), stored only in your browser.
-      Without a key, a synthesized track takes over.</p>
-    <input id="apiKey" type="password" placeholder="Gemini API key" autocomplete="off" />
-    <div class="buttons"><button class="primary" data-action="connect">Connect</button><button data-action="forget">Forget key</button></div>
-    <p class="small" id="lyriaStatus"></p>
-    <label class="small" id="hapticsRow"><input id="haptics" type="checkbox" style="width:auto" /> Vibration (mobile)</label>
-    <label class="small"><input id="vocals" type="checkbox" style="width:auto" /> Vocals (Lyria vocal mode)</label>
-    <label class="small"><input id="skinVoices" type="checkbox" style="width:auto" /> Skin voices (each dino taunts when it slaps)</label>
-    <label class="small">Music ↔ game sync: <b id="audioOffsetVal">0 ms</b>
-      <input id="audioOffset" type="range" min="-200" max="200" step="5" />
-    </label>
-    <p class="small">Lines up the world's pulses with the music: if they land after the kick, lower it; if before, raise it (Bluetooth headphones: about +150 ms).</p>
-    <h3>Theme for the next run</h3>
+  <div class="panel hidden music-panel" id="musicPanel">
+    <div class="panel-head">
+      <div><h2>🎵 Live music</h2><p class="mp-sub">Generated on the fly by <b>Google DeepMind Lyria RealTime</b>. It speeds up with you.</p></div>
+      <button data-action="close">✕</button>
+    </div>
+
+    <!-- Carte Lyria : état de la connexion + clé. data-state = nokey | off | connecting | ready | playing | error -->
+    <div class="lyria-card" id="lyriaCard" data-state="nokey">
+      <div class="lyria-head">
+        <span class="lyria-pill"><i></i><span id="lyriaStatus"></span></span>
+        <button class="ghost only-key" data-action="forget">Forget key</button>
+      </div>
+      <div class="only-nokey">
+        <h3>Unlock the full experience</h3>
+        <p>Live music that follows the beat of your race, speeding up as you do. It takes a free Gemini API key, stored only in your browser.</p>
+        <ol class="steps">
+          <li><span>1</span><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Get a free key on Google AI Studio ↗</a></li>
+          <li><span>2</span>Paste it below and connect</li>
+        </ol>
+      </div>
+      <div class="only-key"><h3>You're all set</h3><p>Lyria plays live during the race. Without network, a synthesized track takes over.</p></div>
+      <div class="key-row">
+        <input id="apiKey" type="password" placeholder="Paste your Gemini API key" autocomplete="off" spellcheck="false" />
+        <button class="primary" data-action="connect" id="lyriaConnect">Connect</button>
+      </div>
+    </div>
+
+    <div class="opt-list">
+      <label class="opt"><span><b>Vocals</b><small>Lyria sings along (vocal mode)</small></span><input id="vocals" type="checkbox" /><i class="switch"></i></label>
+      <label class="opt"><span><b>Skin voices</b><small>Each dino taunts when it slaps</small></span><input id="skinVoices" type="checkbox" /><i class="switch"></i></label>
+      <label class="opt" id="hapticsRow"><span><b>Vibration</b><small>Haptic feedback on hits and slaps (mobile)</small></span><input id="haptics" type="checkbox" /><i class="switch"></i></label>
+      <div class="opt opt-range">
+        <span><b>Music ↔ game sync <em id="audioOffsetVal">0 ms</em></b><small>If the pulses land after the kick, lower it. Bluetooth headphones: about +150 ms.</small></span>
+        <input id="audioOffset" type="range" min="-200" max="200" step="5" />
+      </div>
+    </div>
+
+    <h3 class="section-title">Theme for the next run</h3>
     <div class="grid" id="themeGrid"></div>
   </div>
 
