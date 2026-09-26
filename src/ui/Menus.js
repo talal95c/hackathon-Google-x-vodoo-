@@ -62,7 +62,10 @@ export class Menus {
     $('overErr').textContent = TXT[0];
     $('overTitle').textContent = TXT[1];
     $('overScore').textContent = `${result.score} pts`;
-    $('overDetails').innerHTML = `${result.distance} m · +${result.coins} ★ (total ${this.profile.coins} ★)<br/>${isBest ? '🏆 NEW BEST!' : `Best: ${best} pts`}`;
+    const tile = (v, l, cls = '') => `<div class="stat ${cls}"><b>${v}</b><span>${l}</span></div>`;
+    $('overStats').innerHTML = tile(`${result.distance} m`, 'distance') + tile(`+${result.coins} ★`, `${this.profile.coins} ★ total`)
+      + (isBest ? tile('🏆', 'new best!', 'best') : tile(`${best}`, 'best score'));
+    $('overRace').innerHTML = '';
     this.show('over');
   }
 

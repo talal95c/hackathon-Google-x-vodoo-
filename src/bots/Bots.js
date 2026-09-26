@@ -45,7 +45,7 @@ export class Bots {
 
   ranking() {
     const g = this.game;
-    const rows = [{ id: 'me', name: 'Toi', color: '#1a73e8', me: true, alive: g.state === 'playing' || g.state === 'falling', dist: g.distance }];
+    const rows = [{ id: 'me', name: 'You', color: '#1a73e8', me: true, alive: g.state === 'playing' || g.state === 'falling', dist: g.distance }];
     for (const b of this.list) rows.push({ id: b.id, name: b.name, color: b.color, alive: b.alive, dist: Math.floor(b.s) });
     return rows.sort((a, b) => (b.alive - a.alive) || b.dist - a.dist);
   }

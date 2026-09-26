@@ -80,6 +80,6 @@ export class Lobby {
   resultsHtml() {
     const race = this.race;
     if (!race) return '';
-    return `<ol class="mp-results">${race.ranking().map((p) => `<li><span class="dot" style="background:${p.color}"></span>${esc(p.name)} — ${p.alive ? `still racing (${p.dist} m)` : `${p.dist} m`}</li>`).join('')}</ol>`;
+    return `<ol class="mp-results">${race.ranking().map((p, i) => `<li class="${p.me ? 'me' : ''}"><b>${i + 1}</b><span class="dot" style="background:${p.color}"></span><span class="who">${esc(p.name)}</span><em>${p.alive ? `🏃 ${p.dist} m` : `💀 ${p.dist} m`}</em></li>`).join('')}</ol>`;
   }
 }
