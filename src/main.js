@@ -124,7 +124,7 @@ game.on('game:over', (result) => {
   mp.finish(result);
   setTimeout(() => {
     menus.showGameOver(result, record);
-    if (mp.inRace || bots.list.length) document.getElementById('overDetails').insertAdjacentHTML('beforeend', lobby.resultsHtml() + (mp.inRace && !mp.isHost ? '<p class="small">The host can start a rematch.</p>' : ''));
+    if (mp.inRace || bots.list.length) document.getElementById('overRace').innerHTML = lobby.resultsHtml() + (mp.inRace && !mp.isHost ? '<p class="small">The host can start a rematch.</p>' : '');
   }, 700);
 });
 
@@ -152,4 +152,4 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // Debug depuis la console : __dino.game.runner, __dino.profile.earn(1000)…
-window.__dino = { game, profile, shop, lyria, music, mp };
+window.__dino = { game, profile, shop, lyria, music, mp, menus, lobby, bots };
