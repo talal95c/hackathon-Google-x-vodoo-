@@ -147,3 +147,42 @@ body:not(.in-game) #hud { opacity: 0; }
 #journey { position: absolute; top: 87px; left: 50%; transform: translateX(-50%); width: min(250px, 38vw); padding: 7px 10px; border-radius: 9px; background: #ffffffda; color: #344657; text-align: center; font-size: 9px; font-weight: 800; letter-spacing: .6px; }
 #journey .bar { height: 3px; margin-top: 5px; } #worldProgress { background: #299dda; }
 @media (max-width: 600px) { #journey { top: 84px; font-size: 7px; width: 42vw; letter-spacing: .2px; } }
+
+/* ---------- Course Royale */
+body.royale #danger, body.royale #journey, body.royale #lives, body.royale #boss, body.royale #top .right, body.royale #music { display: none; }
+#race { position: absolute; inset: 0; pointer-events: none; }
+#rPlace { position: absolute; top: 24px; right: 28px; font-size: 54px; font-weight: 900; letter-spacing: -3px; color: var(--ink, #222); background: #ffffffe6; border-radius: 18px; padding: 4px 18px; }
+#rPlace small { font-size: 20px; letter-spacing: 0; opacity: .6; }
+#rElim { position: absolute; top: 24px; left: 50%; transform: translateX(-50%); background: #ffffffe6; border-radius: 12px; padding: 9px 15px; font-size: 11px; font-weight: 800; letter-spacing: 1px; white-space: nowrap; }
+#rElim.warn { background: #e53935; color: #fff; }
+#rElim.me { animation: pulse .5s infinite; }
+#rBoard { position: absolute; top: 110px; right: 28px; display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 700; }
+#rBoard div { background: #ffffffd0; border-radius: 8px; padding: 4px 9px; display: flex; gap: 6px; align-items: center; }
+#rBoard div.me { outline: 2px solid var(--ink, #222); } #rBoard div.out { opacity: .4; text-decoration: line-through; }
+#rBoard i, #rPlayers i, #roPodium i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+#rCombo { position: absolute; top: 72px; left: 50%; transform: translateX(-50%); min-width: 150px; text-align: center; background: linear-gradient(90deg, #ff9100, #ff1744); color: #fff; border-radius: 12px; padding: 7px 14px; font-size: 16px; }
+#rCombo .bar { background: #ffffff55; } #rComboFill { background: #fff; transition: none; }
+#rCombo.pop { animation: pulse .35s; }
+#rFeed { position: absolute; left: 28px; top: 120px; display: flex; flex-direction: column; gap: 4px; font-size: 11px; max-width: 42vw; }
+#rFeed div { background: #ffffffd0; border-radius: 8px; padding: 4px 9px; }
+#rAlert { position: absolute; bottom: 32%; left: 50%; transform: translateX(-50%); background: #e53935; color: #fff; font-weight: 900; padding: 8px 16px; border-radius: 12px; animation: pulse .4s infinite; }
+#rCount { position: absolute; top: 35%; left: 0; right: 0; text-align: center; font-size: clamp(60px, 16vw, 150px); font-weight: 900; color: #fff; text-shadow: 0 4px 0 #0005; }
+#rSpec { position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%); background: #000a; color: #fff; padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 800; }
+#rItem { pointer-events: auto; position: absolute; right: 28px; bottom: 110px; width: 84px; height: 84px; border-radius: 22px; border: 3px solid #fff; background: #ffffffb0; font-size: 36px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; }
+#rItem small { font-size: 8px; font-weight: 800; } #rItem .empty { opacity: .3; }
+#rItem.ready { background: #ffd54f; box-shadow: 0 0 22px #ffb300; }
+#rEmotes { pointer-events: auto; position: absolute; left: 28px; bottom: 110px; display: flex; gap: 6px; }
+#rEmotes button { padding: 6px 9px; font-size: 14px; border-radius: 10px; background: #ffffffc0; }
+#raceOver { background: #f4f4f4e8; backdrop-filter: blur(10px); }
+#roPodium { display: flex; flex-direction: column; gap: 6px; width: min(460px, 90vw); }
+#roPodium div { display: grid; grid-template-columns: 44px 14px 1fr auto; gap: 8px; align-items: center; background: #fff; border-radius: 12px; padding: 8px 12px; text-align: left; }
+#roPodium div.me { outline: 2px solid var(--ink, #222); } #roPodium .p1 { background: #fff4c2; } #roPodium small { opacity: .6; }
+#rPlayers { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+#rPlayers div { display: flex; gap: 8px; align-items: center; background: #fff; border-radius: 10px; padding: 7px 11px; }
+#rLobbyCode { font-size: 48px; letter-spacing: 8px; }
+.royale-button { background: linear-gradient(90deg, #ff9100, #ff1744) !important; color: #fff !important; }
+@media (max-width: 759px) {
+  #rPlace { top: 14px; right: 12px; font-size: 36px; padding: 2px 12px; } #rBoard { top: 80px; right: 12px; font-size: 9px; }
+  #rElim { top: 64px; font-size: 9px; } #rCombo { top: 100px; } #rFeed { left: 12px; top: 90px; font-size: 9px; }
+  #rItem { right: 12px; bottom: 90px; width: 70px; height: 70px; } #rEmotes { left: 12px; bottom: 90px; }
+}

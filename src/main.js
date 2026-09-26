@@ -9,6 +9,7 @@ import './view/models/decor.js';
 import './view/models/blockDino.js';
 import './view/models/reggaeDino.js';
 import './view/models/weapons.js';
+import './view/models/race.js';
 
 import { Game } from './kernel/Game.js';
 import { LocalStorage } from './meta/Storage.js';
@@ -21,6 +22,10 @@ import { WorldDecorView } from './view/WorldDecorView.js';
 import { EntityViews } from './view/EntityViews.js';
 import { RunnerView } from './view/RunnerView.js';
 import { ChaserView } from './view/ChaserView.js';
+import { RivalsView } from './view/RivalsView.js';
+import { RaceSession } from './race/RaceSession.js';
+import { RaceHud } from './ui/RaceHud.js';
+import { Lobby } from './ui/Lobby.js';
 import { Particles } from './view/Particles.js';
 import { CameraRig } from './view/CameraRig.js';
 import { BeatFx } from './view/BeatFx.js';
@@ -41,7 +46,8 @@ const shop = new Shop(profile, game.bus);
 // --- Rendu (l'ordre compte : RunnerView met à jour ctx.focus pour les suivants)
 const world = new World();
 game.on('zone', ({ zone }) => world.setPalette(zone.palette));
-const ctx = { game, world, focus: new THREE.Vector3(), skin: profile.data.skin };
+const race = new RaceSession(game);
+const ctx = { game, world, race, focus: new THREE.Vector3(), skin: profile.data.skin };
 const views = [
   new BeatFx(ctx),      // en premier : fournit ctx.fx et ctx.beatMaterials
   new TrackView(ctx),
@@ -49,6 +55,7 @@ const views = [
   new SideLightShow(ctx),
   new EntityViews(ctx),
   new RunnerView(ctx),
+  new RivalsView(ctx),
   new ChaserView(ctx),
   new Particles(ctx),
   new CameraRig(ctx),
@@ -67,7 +74,14 @@ if (lyria.hasKey()) lyria.connect();
 const hud = new Hud(game, profile);
 const input = new Input();
 const menus = new Menus({ game, profile, shop, lyria, music, onPlay: play });
+const raceHud = new RaceHud(game, race, hud, input);
+new Lobby({ game, race, profile, menus, onEnter: enterRace });
 let overAt = 0;
+
+function enterRace() {
+  sfx.init();
+  menus.show(null);
+}
 
 function play() {
   sfx.init(); // l'audio ne peut démarrer qu'après une action du joueur
@@ -76,14 +90,16 @@ function play() {
   game.start(shop.prepareRun());
 }
 
-input.onAction((a) => {
-  if (a !== 'confirm' || menus.panelOpen) return;
+input.onAction((a, arg) => {
+  if (a === 'emote') return race.p?.emote(arg);
+  if (a !== 'confirm' || menus.panelOpen || race.active) return;
   if (game.state === 'menu' || (game.state === 'over' && performance.now() - overAt > 900)) play();
 });
 
 game.on('game:start', ({ loadout }) => hud.setMusicLabel(`🎵 ${MusicThemes.get(loadout.theme).name}${lyria.ready ? ' · Lyria' : ''}`));
 lyria.onStatus((status) => { if (status === 'playing') hud.setMusicLabel(`🎵 ${lyria.theme.name} · Lyria live`); });
 game.on('game:over', (result) => {
+  if (game.royale) return; // résultats de course : ui/Lobby.js
   overAt = performance.now();
   const record = profile.recordRun(result);
   hud.setBest(record.best);
@@ -99,10 +115,13 @@ function frame(now) {
   last = now;
   time += dt;
   input.enabled = !menus.panelOpen;
-  game.update(dt, input.read(dt));
+  const intent = input.read(dt);
+  if (race.active) race.update(dt, intent);
+  else game.update(dt, intent);
   for (const v of views) v.update(dt, time);
   music.update(dt);
   hud.update(dt);
+  raceHud.update(dt);
   world.update(dt, ctx.focus);
   world.render(ctx.fx?.pulse ?? 0, game.worldJump ? Math.sin(game.worldJump.progress * Math.PI) : game.runner.boost > 0 ? .8 : 0);
   requestAnimationFrame(frame);
@@ -110,4 +129,4 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // Debug depuis la console : __dino.game.runner, __dino.profile.earn(1000)…
-window.__dino = { game, profile, shop, lyria, music };
+window.__dino = { game, profile, shop, lyria, music, race };

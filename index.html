@@ -26,6 +26,19 @@
       <div id="driftbox"><div class="label" id="driftLabel">GLISSADE</div><div class="bar"><div class="fill" id="driftFill"></div></div></div>
     </div>
     <div id="music" class="small"></div>
+    <!-- Course Royale (src/ui/RaceHud.js) -->
+    <div id="race" class="hidden">
+      <div id="rPlace">1</div>
+      <div id="rElim"></div>
+      <div id="rBoard"></div>
+      <div id="rCombo" class="hidden"><b id="rComboLvl">COMBO ×1</b><div class="bar"><div class="fill" id="rComboFill"></div></div></div>
+      <div id="rFeed"></div>
+      <div id="rAlert" class="hidden"></div>
+      <div id="rCount" class="hidden"></div>
+      <div id="rSpec" class="hidden"></div>
+      <button id="rItem" class="no-steer" aria-label="Utiliser l'objet"></button>
+      <div id="rEmotes" class="no-steer"></div>
+    </div>
   </div>
   <div id="vignette"></div>
   <div id="flash"></div>
@@ -41,13 +54,14 @@
       <p class="hero-detail">Du désert hors ligne jusqu’au cloud.<br />Traverse les cinq mondes pour semer le curseur.</p>
       <div class="buttons hero-actions">
         <button class="primary" data-action="play"><span>▶</span> Lancer la session <span>↗</span></button>
+        <button class="primary royale-button" data-action="race"><span>🏁</span> Course Royale <span>2-5</span></button>
         <button class="reggae-button" data-action="reggae" aria-label="Équiper le dino reggae"><span class="reggae-stripes"></span> Dino reggae</button>
       </div>
       <p class="small" id="wallet"></p>
     </div>
     <div class="hero-tag"><span class="tag-dot"></span><div><b id="heroName">RIDDIM</b><span id="heroTheme">REGGAE DINO · VOL. 01</span></div><span class="equalizer"><i></i><i></i><i></i><i></i></span></div>
     <div class="menu-footer">
-      <div class="controls"><span><b>← →</b> tourner</span><span><b>ESPACE</b> sauter</span><span><b>SHIFT</b> glisser</span></div>
+      <div class="controls"><span><b>← →</b> tourner</span><span><b>ESPACE</b> sauter</span><span><b>SHIFT</b> glisser</span><span><b>E</b> objet</span><span><b>X</b> pousser</span><span><b>👍</b> glisse le pouce : ↑ saut · ↓ drift · coup sec ↔ pousser · 2e doigt objet</span></div>
       <div class="buttons"><button data-action="shop">Collection & boutique</button><button data-action="music">♫ Musique</button></div>
     </div>
   </div>
@@ -61,6 +75,48 @@
       <button class="primary" data-action="play">↻ REJOUER</button>
       <button data-action="shop">🛒 BOUTIQUE</button>
     </div>
+  </div>
+
+  <div class="screen hidden" id="raceOver">
+    <p class="err">COURSE ROYALE — RÉSULTATS</p>
+    <h2 id="roTitle">Victoire</h2>
+    <div id="roPodium"></div>
+    <p id="roRewards"></p>
+    <div class="buttons">
+      <button class="primary" data-action="race-again">↻ NOUVELLE COURSE</button>
+      <button data-action="race-menu">MENU</button>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="racePanel">
+    <div class="panel-head"><h2>🏁 Course Royale</h2><button data-action="close">✕</button></div>
+    <p class="small">2 à 5 dinos sur la même route. Toutes les ~20 s, le dernier est éliminé. Dépasse et pousse pour faire monter ton combo (turbo, poussées plus fortes, objet bonus, RAGE).</p>
+    <p class="small" id="rProfile"></p>
+    <label class="small">Pseudo <input id="rName" maxlength="16" placeholder="Dino" /></label>
+    <div id="rMenu">
+      <div class="buttons">
+        <button class="primary" data-action="race-bots">🤖 Entraînement (4 bots)</button>
+        <button data-action="race-quick">⚡ Partie rapide</button>
+        <button data-action="race-ranked">🏆 Classée</button>
+      </div>
+      <div class="buttons">
+        <button data-action="race-create">＋ Créer un salon</button>
+        <input id="rCode" maxlength="4" placeholder="CODE" style="width:7em;text-transform:uppercase" />
+        <button data-action="race-join">Rejoindre</button>
+      </div>
+    </div>
+    <div id="rLobby" class="hidden">
+      <h1 id="rLobbyCode">ABCD</h1>
+      <p class="small" id="rLobbyInfo"></p>
+      <div id="rPlayers"></div>
+      <div class="buttons">
+        <button id="rCopy" data-action="race-copy">🔗 Copier le lien</button>
+        <button id="rAddBot" data-action="race-addbot">＋ Bot</button>
+        <button id="rStart" class="primary" data-action="race-start">▶ Lancer</button>
+        <button data-action="race-leave">Quitter</button>
+      </div>
+    </div>
+    <p class="small" id="rStatus"></p>
   </div>
 
   <div class="panel hidden" id="shop">

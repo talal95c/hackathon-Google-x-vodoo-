@@ -8,7 +8,7 @@ export class CameraRig extends View {
   look = new THREE.Vector3();
   shake = 0;
   snap = true;
-  #fc = {}; #fl = {}; #t = new THREE.Vector3(); #l = new THREE.Vector3();
+  #fc = {}; #fl = {}; #fs = {}; #spec = { z: 0, x: 0, Y: 0, grounded: true, gait: 0 }; #t = new THREE.Vector3(); #l = new THREE.Vector3();
 
   constructor(ctx) {
     super(ctx);
@@ -19,6 +19,14 @@ export class CameraRig extends View {
     this.listen('runner:land', ({ impact }) => this.addShake(impact * 0.4));
     this.listen('runner:boost', () => this.addShake(0.25));
     this.listen('boss:damage', () => this.addShake(0.08));
+  }
+
+  // Spectateur : pseudo-coureur à la position (interpolée) du rival suivi
+  #follow(s) {
+    const o = this.#spec, fr = this.track.frame(s.z, this.#fs);
+    o.z = s.z; o.x = s.x; o.Y = fr.y + s.y; o.grounded = s.y < 0.05;
+    this.focus.set(fr.x + fr.lx * s.x, o.Y, fr.z + fr.lz * s.x);
+    return o;
   }
 
   addShake(v) { this.shake = Math.max(this.shake, v); }
@@ -39,14 +47,16 @@ export class CameraRig extends View {
       return;
     }
     if (cam.view?.enabled) cam.clearViewOffset();
-    if (g.state === 'playing') {
+    const spec = g.state === 'over' ? this.ctx.race?.spectate?.state : null;
+    const f = g.state === 'playing' ? r : spec ? this.#follow(spec) : null;
+    if (f) {
       const flight = g.worldJump ? Math.sin(g.worldJump.progress * Math.PI) : 0;
       const back = 8 + speed * 0.04 + flight * 5;
-      const fc = this.track.frame(Math.max(0, r.z - back), this.#fc);
-      const fl = this.track.frame(r.z + 14, this.#fl);
-      const bob = r.grounded ? Math.abs(Math.cos(r.gait)) * 0.07 : 0;
-      this.#t.set(fc.x + fc.lx * r.x * 0.6, Math.max(fc.y, r.Y - 1) + 4.4 + bob, fc.z + fc.lz * r.x * 0.6);
-      this.#l.set(fl.x + fl.lx * r.x * 0.4, fl.y * 0.5 + r.Y * 0.5 + 2.4, fl.z + fl.lz * r.x * 0.4);
+      const fc = this.track.frame(Math.max(0, f.z - back), this.#fc);
+      const fl = this.track.frame(f.z + 14, this.#fl);
+      const bob = f.grounded ? Math.abs(Math.cos(f.gait)) * 0.07 : 0;
+      this.#t.set(fc.x + fc.lx * f.x * 0.6, Math.max(fc.y, f.Y - 1) + 4.4 + bob, fc.z + fc.lz * f.x * 0.6);
+      this.#l.set(fl.x + fl.lx * f.x * 0.4, fl.y * 0.5 + f.Y * 0.5 + 2.4, fl.z + fl.lz * f.x * 0.4);
       const k = this.snap ? 1 : Math.min(1, dt * 10);
       this.pos.lerp(this.#t, k); this.look.lerp(this.#l, k);
       this.snap = false;

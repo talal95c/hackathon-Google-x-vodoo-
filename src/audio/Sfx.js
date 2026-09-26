@@ -72,6 +72,12 @@ export function bindSfx(game, sfx) {
   on('runner:boost', ({ big }) => sfx.boost(big));
   on('runner:hit', () => sfx.crash());
   on('runner:fall', () => sfx.tone(600, 0.8, 'sawtooth', 0.12, -500));
+  on('race:combo', ({ kind, level }) => { if (kind !== 'break') sfx.tone(440 + level * 110, 0.12, 'square', 0.1, 300); });
+  on('race:item', ({ item }) => { if (item) sfx.tone(880, 0.08, 'triangle', 0.12, 440); });
+  on('race:impulse', () => sfx.crash());
+  on('race:shoveHit', () => sfx.tone(220, 0.15, 'square', 0.14, -120));
+  on('race:elim', ({ me }) => sfx.tone(me ? 300 : 700, me ? 1 : 0.3, 'sawtooth', 0.1, me ? -260 : -400));
+  on('race:start', () => sfx.tone(1046, 0.3, 'square', 0.12));
   on('runner:drift', ({ on: d }) => sfx.skid(d));
   on('runner:manual', ({ on: m }) => { if (m) sfx.tone(880, 0.12, 'square', 0.1, -300); });
   on('coins', ({ amount }) => { if (amount <= 2) sfx.coin(); });

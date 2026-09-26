@@ -24,7 +24,8 @@ export class Participant {
     this.snapAcc = 0; this.bumpCd = 0;
     this.lastJumpAt = -Infinity;
     this.renderDelay = 0.12;
-    const on = (t, fn) => game.on(t, fn);
+    this.offs = [];
+    const on = (t, fn) => this.offs.push(game.on(t, fn));
     on('itembox:collect', () => { if (this.racing) this.send({ t: 'box' }); });
     on('runner:fall', () => { if (this.racing) this.send({ t: 'fell' }); });
     on('trap:hit', ({ owner }) => { if (this.racing) this.send({ t: 'trapHit', owner }); });
@@ -137,6 +138,9 @@ export class Participant {
     const g = this.game, R = ROYALE.rocket;
     g.start({ mode: 'royale', seed: this.seed, skin: this.skin, theme: this.theme ?? 'techno', modifiers: [] });
     g.playerId = this.id;
+    // Grille de départ : chacun sur sa ligne, dans l'ordre d'inscription
+    const n = this.standings.length, i = Math.max(0, this.standings.indexOf(this.id));
+    g.runner.x = (i - (n - 1) / 2) * 2.4;
     this.phase = 'racing';
     // Départ turbo : sauter juste avant le « GO »
     const early = (this.startAt - this.lastJumpAt) / 1000;
@@ -217,4 +221,6 @@ export class Participant {
   }
 
   emote(e) { this.send({ t: 'emote', e }); }
+
+  dispose() { for (const off of this.offs) off(); this.offs = []; }
 }
