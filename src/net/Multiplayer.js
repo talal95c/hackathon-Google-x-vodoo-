@@ -61,11 +61,12 @@ export class Multiplayer {
     this.#emit('status', 'Connexion au salon…');
     this.net = await this.connectFn(`dino-${code}`, {
       onPeerJoin: (id) => { this.#hello(id); this.#emit('status', 'Un joueur a rejoint !'); },
-      onPeerLeave: (id) => { this.peers.delete(id); this.#emit('lobby'); },
+      onPeerLeave: (id) => { this.peers.delete(id); this.#emit('peer:left', { id }); this.#emit('lobby'); },
     });
     const n = this.net;
     this.color = COLORS[[...n.selfId].reduce((a, c) => a + c.charCodeAt(0), 0) % COLORS.length];
-    this.ch = { hi: n.channel('hi'), st: n.channel('st'), go: n.channel('go'), sh: n.channel('sh'), bp: n.channel('bp'), dn: n.channel('dn'), pg: n.channel('pg'), po: n.channel('po'), fx: n.channel('fx') };
+    this.ch = { hi: n.channel('hi'), st: n.channel('st'), go: n.channel('go'), sh: n.channel('sh'), bp: n.channel('bp'), dn: n.channel('dn'), pg: n.channel('pg'), po: n.channel('po'), fx: n.channel('fx'), fc: n.channel('fc') };
+    this.ch.fc.on((data, from) => this.#emit('duel', { data, from }));
     this.ch.hi.on((d, id) => {
       const p = this.#peer(id);
       Object.assign(p, { name: d.name, skin: d.skin, color: d.color, host: d.host });
@@ -74,7 +75,7 @@ export class Multiplayer {
     this.ch.st.on((d, id) => {
       const p = this.#peer(id);
       p.last = { ...d, t: performance.now() };
-      if (d.st === 'playing') p.alive = true;
+      if (d.st === 'playing' || d.st === 'duel') p.alive = true;
     });
     // ping / pong : latence aller-retour avec chaque rival (lissée)
     this.ch.pg.on((d, id) => this.ch.po.send({ t: d.t }, id));
@@ -125,7 +126,10 @@ export class Multiplayer {
     if (kind === 'shove') this.ch.fx.send(effect);
   }
 
+  sendDuel(data, to) { this.ch?.fc.send(data, to); }
+
   leave() {
+    if (this.net) this.#emit('left');
     this.net?.leave();
     this.net = null; this.code = null; this.inRace = false;
     this.peers.clear();
@@ -159,13 +163,13 @@ export class Multiplayer {
     for (const [id, cd] of this.#bumpRecv) this.#bumpRecv.set(id, cd - dt);
 
     // diffusion de ma position
-    if (this.inRace && (g.state === 'playing' || g.state === 'falling')) {
+    if (this.inRace && (g.state === 'playing' || g.state === 'falling' || g.state === 'duel')) {
       this.#sendTimer -= dt;
       if (this.#sendTimer <= 0) {
         this.#sendTimer = SEND_EVERY;
         this.ch.st.send({
           s: +r.z.toFixed(2), d: +r.x.toFixed(2), y: +r.y.toFixed(2), v: +r.speed.toFixed(1), lat: +(r.latV + r.push + r.knockV).toFixed(1),
-          st: g.state, skin: this.profile.data.skin, l: g.lives,
+          st: g.state, j: !!g.worldJump, c: g.coins, skin: this.profile.data.skin, l: g.lives,
           sh: this.#shoveAnim > 0 ? 1 : 0, shd: this.#shoveDir, hit: r.stumble > 0 ? 1 : 0, // animations de combat
         });
       }
@@ -223,7 +227,7 @@ export class Multiplayer {
   // Classement : les vivants d'abord (distance live), puis les éliminés (distance finale)
   ranking() {
     const g = this.game;
-    const rows = [{ ...this.me, alive: g.state === 'playing' || g.state === 'falling', dist: g.distance, lives: g.lives }];
+    const rows = [{ ...this.me, alive: g.state === 'playing' || g.state === 'falling' || g.state === 'duel', dist: g.distance, lives: g.lives }];
     for (const p of this.peers.values()) rows.push({ ...p, dist: p.final ? p.final.distance : Math.floor(p.view?.s ?? 0), lives: p.final ? 0 : p.last?.l });
     return rows.sort((a, b) => (b.alive - a.alive) || b.dist - a.dist);
   }

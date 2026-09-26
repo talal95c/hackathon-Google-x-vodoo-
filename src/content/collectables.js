@@ -19,3 +19,6 @@ Entities.define('laserBolt', { class: Projectile, hitbox: { hx: 0.4, hz: 0.8, to
 // --- Bonus temporaires (modificateurs de stats)
 Effects.define('magnet', { name: 'Magnet', duration: 10, modifiers: { add: { magnetRange: 14 } } });
 Effects.define('doubleCoins', { name: 'Coins ×2', duration: 12, modifiers: { mul: { coinMultiplier: 2 } } });
+
+// Pénalité du Fight Club, gelée pendant la cinématique comme les autres effets.
+Effects.define('fightSlow', { name: 'Stunned · speed 65%', duration: 5, modifiers: { mul: { baseSpeed: .65, boostSpeed: .65 } } });

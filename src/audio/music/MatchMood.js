@@ -11,6 +11,8 @@ export class MatchMood {
     this.game = game;
     this.race = race;
     const kick = (v) => () => { this.#fightKick = Math.min(1, this.#fightKick + v); };
+    game.on('club:hit', kick(.2));
+    game.on('club:result', () => { this.#triumphKick = 1; });
     game.on('mp:shove', ({ hit }) => kick(hit ? 0.5 : 0.2)());
     game.on('runner:knocked', kick(0.45));
     game.on('mp:bump', kick(0.2));
@@ -21,7 +23,7 @@ export class MatchMood {
 
   update(dt) {
     const g = this.game, r = g.runner;
-    if (g.state !== 'playing' && g.state !== 'falling') return this;
+    if (g.state !== 'playing' && g.state !== 'falling' && g.state !== 'duel') return this;
     // rival le plus proche (encore en course)
     let nearest = Infinity;
     for (const p of this.race()?.rivals() ?? []) {

@@ -4,6 +4,14 @@ Runner 3D : le dino de la page « Pas de connexion » s'enfuit du navigateur en 
 en affrontant ses rivaux (PNJ en solo, amis en multijoueur). Route procédurale (virages serrés, dénivelé), armes,
 boss, boutique (skins, musiques, améliorations) et musique générée en direct par Google DeepMind Lyria.
 
+## Aperçu sur ordinateur
+
+Captures du rendu du jeu en **1440 × 900** : les vrais skins remplissent les gradins, le combo se termine par un salto et une explosion cartoon.
+
+![Salto du dino reggae dans le Fight Club, devant les dinos spectateurs](docs/screenshots/fight-club-salto-desktop.png)
+
+![Coup final : explosion, particules et effets de vitesse dans le ring](docs/screenshots/fight-club-impact-desktop.png)
+
 ## Dino reggae et rendu
 
 - **Riddim**, le dino reggae low poly, est disponible dès le départ. Le bouton « Dino reggae »
@@ -68,3 +76,17 @@ procédural prend le relais. En dev, on peut aussi mettre `VITE_GEMINI_API_KEY=.
 `E` / `F` ou le bouton ✋ donne une claque au rival le plus proche à portée. Un cadre doré repère la cible et la jauge indique les deux secondes de recharge. Une main low poly accompagne le geste ; le joueur touché recule brièvement, avec un éclat « SLAP! », des étoiles et un claquement WebAudio synthétisé (aucun service ni clé requis).
 
 Les animations passent par un pivot visuel séparé des positions réseau : les claques ne font plus accumuler de rotation aux dinos. Les effets et le son d'un coup multijoueur sont confirmés par la victime via le canal cosmétique `fx`, puis affichés au point touché chez les autres joueurs. Le solo avec PNJ utilise les mêmes effets. Tous les joueurs doivent recharger la nouvelle version.
+
+### Fight Club mobile
+
+Un portique annonce le premier duel à **140 m**, puis tous les **360 m**. La course se suspend pendant le combat et reprend au même endroit. En solo, le rival est un bot ; en multijoueur, l'hôte affronte le joueur vivant le plus proche et les autres joueurs en course regardent le duel.
+
+Après le compte à rebours, tapoter le gros bouton pendant **3 secondes** (ou appuyer sur E / F / espace). Chaque tap validé donne une claque, avec main 3D, son, combo, éclats et réaction du rival. Le gagnant place un coup final et prend **la moitié des pièces de course du perdant, arrondie au-dessus, au maximum 20**. Les pièces déjà en banque ne sont pas engagées. Le perdant garde ses vies mais sa vitesse passe à **65 % pendant 5 secondes**. Égalité : aucune pièce volée, aucun ralentissement.
+
+L'arène utilise le même renderer et les mêmes passes de post-processing que la course. Les animations sont faites directement sur les modèles low poly ; aucun appel d'API ni téléchargement ne bloque un duel. L'entrée dans le ring vide les commandes tactiles/clavier pour éviter de repartir en sautant ou en tournant après les taps.
+
+Le canal multijoueur `fc` gère l'entrée, la disponibilité des participants, des comptes cumulatifs et un résultat décidé par l'hôte. Les résultats répétés ne créditent pas le butin deux fois ; une déconnexion ou un score final manquant avant le résultat annule le duel sans pénalité. Tests automatiques avec latence, trois clients, rejeu de messages et déconnexion. Recharger la même version chez tous les joueurs.
+
+Les cookies roulants apparaissent désormais dans les cinq mondes, plus souvent dans le navigateur et le cloud. Le navigateur reçoit aussi des bandeaux cookies. Ce sont des obstacles à esquiver, pas des objets à ramasser ; les exclusions des virages serrés et des transitions de monde restent appliquées à leur génération.
+
+Le ring utilise les vrais skins pour ses 56 dinos spectateurs (géométries regroupées pour limiter les appels de rendu). Les combos alternent claques, uppercuts, coups de pied et saltos ; la finale comprend un salto offensif puis une roulade du perdant, qui se relève. Les rotations sont calculées depuis une pose de référence, sans accumulation. Particules instanciées, fumée, ondes, flashs et traînées accompagnent les impacts. Claquement, souffle de salto, explosion et acclamations sont synthétisés en WebAudio, sans clé ni service externe.

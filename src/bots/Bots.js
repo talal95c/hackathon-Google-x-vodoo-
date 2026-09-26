@@ -27,7 +27,7 @@ export class Bots {
     for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rng.next() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
     this.list = Array.from({ length: this.count }, (_, i) => ({
       id: `bot${i}`, name: NAMES[(i * 3 + (g.seed % NAMES.length)) % NAMES.length], color: COLORS[i % COLORS.length],
-      skin: pool.length ? pool[i % pool.length] : 'classic',
+      skin: pool.length ? pool[i % pool.length] : 'classic', coins: 12 + (g.seed + i * 3) % 12, clubSlow: 0,
       s: r.z - 2 - i * 1.5, d: [-2.8, 2.8, -5.2, 5.2][i % 4], y: 0, vy: 0, speed: RUNNER.startSpeed, latV: 0, knockV: 0,
       stumble: 0, shoveCd: 2 + rng.range(0, 2), bumpCd: 0, alive: true, fall: 0, shoveAnim: 0, shoveDir: 1,
       pace: rng.range(0.93, 1.04),            // plus ou moins rapide
@@ -69,7 +69,9 @@ export class Bots {
 
       // vitesse : suit le rythme de la course, reste à portée du joueur pour se battre
       const gap = r.z - b.s;
-      let target = r.cruise * b.pace + Math.max(-8, Math.min(8, gap * 0.35));
+      let target = (r.cruise / (r.effects.has('fightSlow') ? .65 : 1)) * b.pace + Math.max(-8, Math.min(8, gap * 0.35));
+      b.clubSlow = Math.max(0, (b.clubSlow || 0) - dt);
+      if (b.clubSlow > 0) target *= .65;
       if (b.stumble > 0) target *= 0.6;
       b.speed += (target - b.speed) * Math.min(1, dt * 2.5);
 

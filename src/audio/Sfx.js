@@ -8,7 +8,10 @@ export class Sfx {
     this.ctx = new Ctx();
     this.master = this.ctx.createGain();
     this.master.gain.value = 0.5;
-    this.master.connect(this.ctx.destination);
+    const limiter = this.ctx.createDynamicsCompressor();
+    limiter.threshold.value = -12; limiter.knee.value = 12; limiter.ratio.value = 5;
+    limiter.attack.value = .002; limiter.release.value = .09;
+    this.master.connect(limiter).connect(this.ctx.destination);
     this.onInit?.(this.ctx);
 
     // Crissement de drift : bruit filtré
@@ -17,15 +20,17 @@ export class Sfx {
     const d = buf.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
     this.noiseBuf = buf;
-    // Claque : claquement large bande très court + résonance de paume amortie.
-    this.slapBuf = this.ctx.createBuffer(1, Math.ceil(this.ctx.sampleRate * .18), this.ctx.sampleRate);
+    // Nouveau « smack » : attaque sèche, double contact des doigts, puis corps grave très court.
+    this.slapBuf = this.ctx.createBuffer(1, Math.ceil(this.ctx.sampleRate * .12), this.ctx.sampleRate);
     const slap = this.slapBuf.getChannelData(0);
-    let previous = 0;
+    let previous = 0, low = 0;
     for (let i = 0; i < slap.length; i++) {
       const t = i / this.ctx.sampleRate, white = Math.random() * 2 - 1;
-      const crack = (white - previous * .65) * (Math.exp(-t * 130) + .4 * Math.exp(-Math.abs(t - .008) * 300));
-      const palm = Math.sin(2 * Math.PI * (190 * t - 220 * t * t)) * Math.exp(-t * 48) * .5;
-      slap[i] = Math.tanh((crack + palm) * 1.3) * Math.min(1, t * 8000);
+      low += (white - low) * .24;
+      const snap = (white - previous * .88) * Math.exp(-t * 280) * 1.1;
+      const fingers = low * (Math.exp(-Math.abs(t - .005) * 420) * 1.2 + Math.exp(-Math.abs(t - .012) * 550) * .6);
+      const palm = (Math.sin(2 * Math.PI * 235 * t) + .38 * Math.sin(2 * Math.PI * 470 * t)) * Math.exp(-t * 70) * .62;
+      slap[i] = Math.tanh((snap + fingers + palm) * 2) * Math.min(1, t * 12000);
       previous = white;
     }
     const src = this.ctx.createBufferSource(); src.buffer = buf; src.loop = true;
@@ -68,12 +73,31 @@ export class Sfx {
   slap(dir = 0, volume = 1) {
     if (!this.ctx) return;
     const src = this.ctx.createBufferSource(); src.buffer = this.slapBuf;
-    src.playbackRate.value = .96 + Math.random() * .08;
-    const gain = this.ctx.createGain(); gain.gain.value = .85 * volume;
+    src.playbackRate.value = .85 + Math.random() * .18;
+    const gain = this.ctx.createGain(); gain.gain.value = 1.05 * volume;
     const pan = this.ctx.createStereoPanner(); pan.pan.value = Math.max(-.45, Math.min(.45, -dir * .3));
     src.connect(gain).connect(pan).connect(this.master);
     src.onended = () => { src.disconnect(); gain.disconnect(); pan.disconnect(); };
     src.start();
+  }
+
+  explosion() {
+    this.slap(0, 1.1); this.noise(.38, .45, 1900); this.noise(.65, .3, 360);
+    this.tone(105, .32, 'sine', .45, -72);
+  }
+  whoosh() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime, src = this.ctx.createBufferSource(), filter = this.ctx.createBiquadFilter(), gain = this.ctx.createGain();
+    src.buffer = this.noiseBuf; filter.type = 'bandpass'; filter.Q.value = .8;
+    filter.frequency.setValueAtTime(600, t); filter.frequency.exponentialRampToValueAtTime(3600, t + .18); filter.frequency.exponentialRampToValueAtTime(700, t + .38);
+    gain.gain.setValueAtTime(.001, t); gain.gain.linearRampToValueAtTime(.24, t + .12); gain.gain.exponentialRampToValueAtTime(.001, t + .4);
+    src.connect(filter).connect(gain).connect(this.master); src.start(t); src.stop(t + .4);
+    src.onended = () => { src.disconnect(); filter.disconnect(); gain.disconnect(); };
+  }
+  cheer() {
+    this.noise(.42, .14, 1800);
+    this.tone(620, .16, 'triangle', .055, 180);
+    setTimeout(() => this.tone(880, .18, 'triangle', .045, 130), 100);
   }
 
   coin() { this.tone(988, 0.08, 'square', 0.1); setTimeout(() => this.tone(1319, 0.12, 'square', 0.1), 60); }
@@ -88,6 +112,11 @@ export class Sfx {
 
 export function bindSfx(game, sfx) {
   const on = (t, fn) => game.on(t, fn);
+  on('club:countdown', ({ tick }) => sfx.tone(tick === 1 ? 880 : 440, .11, 'triangle', .15));
+  on('club:phase', ({ phase }) => { if (phase === 'tapping') { sfx.tone(880, .2, 'triangle', .18, 440); } });
+  on('club:hit', ({ index, count }) => { sfx.slap(index ? 1 : -1, .8); if (count > 0 && count % 10 === 0) sfx.cheer(); });
+  on('club:finisher', () => { sfx.explosion(); sfx.cheer(); });
+  on('club:acrobatics', () => sfx.whoosh());
   on('mp:shove', () => sfx.noise(.09, .13, 3200));
   on('combat:impact', e => {
     if (Math.abs(e.s - game.runner.z) > 40) return;

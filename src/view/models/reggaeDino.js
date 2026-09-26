@@ -89,6 +89,7 @@ Models.register('reggaeDino', () => {
   let squash = 0;
   return {
     object: root,
+    rig: { body, head, arms, legs, tail },
     update(p, dt, time) {
       const beat = Math.sin(p.gait), energy = Math.min(1.3, p.speed / 26);
       const idle = p.state === 'idle';
