@@ -56,7 +56,9 @@ You can also play without a key using the built-in synthesized soundtrack.
 
 ## Skin voices
 
-Every skin has **its own voice**: when a dino slaps, it shouts a one-to-three-word line from its own inventory (a deep menacing Vader, a cheerful Mario plumber, a chill reggae Riddim, an offline Classic robot...). The clips are **generated ahead of time** with Gemini TTS (`npm run voices:gen`, key in `.env`) into `public/voices/` and shipped with the game, so players need no key and no API call. Turn them off with the **Skin voices** checkbox in the Music panel.
+Every skin has **its own voice** and shouts a short line when it slaps a rival, adding personality to each fight.
+
+We used **Gradium** to generate voices during the hackathon. The project also includes **Gemini TTS** generation for skin voice clips. The clips are created ahead of time and shipped with the game, so players need no API key to hear them. Toggle **Skin voices** in the Music panel to turn them on or off.
 
 ## Run the game locally
 
