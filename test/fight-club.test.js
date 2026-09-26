@@ -122,8 +122,8 @@ test('mobile/clavier : la saisie de course est vidée pendant le duel, aucun sau
  const target=new EventTarget(),input=new Input(target);
  const key=code=>{const e=new Event('keydown',{cancelable:true});Object.defineProperty(e,'code',{value:code});target.dispatchEvent(e);};
  key('KeyW');key('ArrowLeft');key('Space');input.enabled=false;
- assert.deepEqual(input.read(.1),{steer:0,throttle:0,drift:false,brake:false,jump:false,shove:false});
- input.enabled=true;assert.deepEqual(input.read(.1),{steer:0,throttle:0,drift:false,brake:false,jump:false,shove:false});
+ assert.deepEqual(input.read(.1),{steer:0,throttle:0,drift:false,brake:false,jump:false,shove:false,attack:false});
+ input.enabled=true;assert.deepEqual(input.read(.1),{steer:0,throttle:0,drift:false,brake:false,jump:false,shove:false,attack:false});
 });
 
 

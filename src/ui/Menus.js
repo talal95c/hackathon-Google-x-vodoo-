@@ -2,6 +2,7 @@ import { Skins, MusicThemes } from '../kernel/Registry.js';
 import { GAME } from '../kernel/config.js';
 import { skinPortraits } from './SkinPortraits.js';
 import './skins.css';
+import { CHALLENGES } from '../content/challenges.js';
 
 // Écrans (titre, fin de partie) et panneaux (boutique, musique Lyria).
 // Ne connaît le jeu qu'à travers des callbacks : onPlay(), onBack() (retour depuis l'écran de fin).
@@ -16,7 +17,7 @@ export class Menus {
   constructor({ game, profile, shop, lyria, music, voices, onPlay, onBack }) {
     Object.assign(this, { game, profile, shop, lyria, music, voices, onPlay, onBack });
     this.screens = { start: $('start'), over: $('over') };
-    this.panels = { shop: $('shop'), music: $('musicPanel') };
+    this.panels = { shop: $('shop'), music: $('musicPanel'), challenges: $('challengesPanel') };
 
     document.addEventListener('click', (e) => {
       const b = e.target.closest('button');
@@ -27,6 +28,7 @@ export class Menus {
       else if (a === 'shop') this.open('shop');
       else if (a === 'music') { this.#nudge(false); this.open('music'); if (!lyria.hasKey()) $('apiKey').focus(); }
       else if (a === 'nudge-later') this.#nudge(false, true);
+      else if (a === 'challenges') this.open('challenges');
       else if (a === 'close') this.closePanels();
       else if (a === 'connect') this.#connect();
       else if (a === 'forget') { lyria.setApiKey(''); $('apiKey').value = ''; this.#renderMusic(); }
@@ -34,6 +36,7 @@ export class Menus {
       else if (b.dataset.buy) { shop.buy(b.dataset.buy); this.refresh(); }
       else if (b.dataset.skin) { profile.selectSkin(b.dataset.skin); game.emit('skin:preview', { skin: b.dataset.skin }); this.refresh(); }
       else if (b.dataset.theme) { profile.selectTheme(b.dataset.theme); this.refresh(); }
+      else if (b.dataset.challenge) { profile.selectChallenge(b.dataset.challenge === 'none' ? null : b.dataset.challenge); this.refresh(); }
     });
     lyria.onStatus(() => this.#renderMusic());
     const voc = $('vocals');
@@ -81,7 +84,7 @@ export class Menus {
   closePanels() { for (const p of Object.values(this.panels)) p.classList.add('hidden'); }
 
   // multi : le bouton de retour ramène au salon plutôt qu'au menu
-  showGameOver(result, { isBest, best }, { multiplayer = false } = {}) {
+  showGameOver(result, { isBest, best, challengeReward }, { multiplayer = false } = {}) {
     $('overBack').querySelector('span').textContent = multiplayer ? 'Back to lobby' : 'Back to menu';
     const TXT = {
       fall: ['ERR_404 — the dino fell off the page', 'Page not found.'],
@@ -92,6 +95,7 @@ export class Menus {
     $('overScore').textContent = `${result.score} pts`;
     const tile = (v, l, cls = '') => `<div class="stat ${cls}"><b>${v}</b><span>${l}</span></div>`;
     $('overStats').innerHTML = tile(`${result.distance} m`, 'distance') + tile(`+${result.coins} ★`, `${this.profile.coins} ★ total`)
+      + (challengeReward ? tile(`+${challengeReward} ★`, 'challenge', 'best') : '')
       + (isBest ? tile('🏆', 'new best!', 'best') : tile(`${best}`, 'best score'));
     $('overRace').innerHTML = '';
     this.show('over');
@@ -100,6 +104,16 @@ export class Menus {
   refresh() {
     this.#renderShop();
     this.#renderMusic();
+    this.#renderChallenges();
+  }
+
+  #renderChallenges() {
+    const selected = this.profile.data.challenge;
+    $('challengeGrid').innerHTML = CHALLENGES.map((c) => `<div class="card ${selected === c.id ? 'selected' : ''}">
+      <div class="name">${c.name}</div><div class="desc">${c.description} · +${c.reward} ★ per completed run</div>
+      <button data-challenge="${c.id}" ${selected === c.id ? 'disabled' : ''}>${selected === c.id ? 'Selected' : 'Pick'}</button></div>`).join('')
+      + `<div class="card"><div class="name">No challenge</div><div class="desc">Play freely with no extra goal.</div>
+      <button data-challenge="none" ${selected ? '' : 'disabled'}>${selected ? 'Pick' : 'Selected'}</button></div>`;
   }
 
   #renderShop() {

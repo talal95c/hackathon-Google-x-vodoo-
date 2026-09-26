@@ -13,6 +13,8 @@ A colorful 3D racing game for desktop and mobile. Dodge obstacles, drift around 
 - Stay on the road, dodge cactus and cookie obstacles, and collect coins to spend in the shop. Pick your favorite dino skin and music style.
 - You start with **three lives**. Outlast your rivals and see how far you can go!
 
+Collecting coins fills the **Frenzy** gauge: for 6 seconds your dino smashes through obstacles (it can still fall off the road). Some sections split into a safe lane with regular coins and a risky edge lane with **gold coins**. Purple blocks can be **parried** with E / F (or a quick tap on mobile) just before impact. Pick an optional **challenge** per run from the menu.
+
 ## Multiplayer powered by MQTT
 
 Race with friends directly in the browser. One player selects **Multiplayer → Create a game**, shares the room code, and starts the race once everyone has joined. No account or multiplayer API key is needed.

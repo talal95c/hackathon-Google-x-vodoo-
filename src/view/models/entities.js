@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { Models, box, cube, lambert } from '../ModelRegistry.js';
 import * as TX from '../textures.js';
+import { GAME } from '../../kernel/config.js';
 
 // Modèles des entités : volumes arrondis low-poly (même rendu que le décor et le dino),
 // textures dessinées au canvas. Remplacer un modèle : Models.register('<type>', ...) depuis un autre fichier.
@@ -44,6 +45,7 @@ function extrude(shape, depth, bevel = 0.03) {
 
 const plane = (w, h) => cached(`pl:${w}:${h}`, () => new THREE.PlaneGeometry(w, h));
 const faceMat = (key, make) => cached(`face:${key}`, () => new THREE.MeshStandardMaterial({ map: make(), transparent: true, roughness: 0.7, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
+
 
 // --- Ombre de contact + halo
 const shadowMat = lazy(() => new THREE.MeshBasicMaterial({ map: TX.shadowTex(), transparent: true, depthWrite: false }));
@@ -96,6 +98,7 @@ const G = lazy(() => ({
   orbit: new THREE.TorusGeometry(1.32, 0.045, 6, 40),
   ring: new THREE.RingGeometry(1.1, 1.32, 40).rotateX(-Math.PI / 2),
   shield: extrude(shieldShape(0.42, 0.34), 0.16, 0.04),
+  twinkle: new THREE.OctahedronGeometry(0.13, 0),
   shieldInner: extrude(shieldShape(0.26, 0.2), 0.08, 0.02),
   bolt: extrude(boltShape(), 0.16, 0.03),
   thin: new THREE.BoxGeometry(1, 1, 1),
@@ -121,6 +124,12 @@ const coin = (type) => () => {
   const shadow = contactShadow(root, 1.7 * p.size);
   const { disc, faceM } = coinDisc(float, p);
   float.scale.setScalar(p.size);
+  const twinkles = [];
+  let glow = null;
+  if (type === 'goldCoin') {
+    glow = halo(float, 0xffc233, 3.4, 0.45);
+    for (let i = 0; i < 3; i++) twinkles.push(mesh(float, G().twinkle, own(new THREE.MeshBasicMaterial({ color: 0xffffff })), 0, 0, 0, false));
+  }
   return {
     object: root,
     update(e, dt, t, fx) {
@@ -130,10 +139,17 @@ const coin = (type) => () => {
       disc.rotation.y = t * 3 + ph;
       shadow.scale.setScalar((1.7 - bob * 0.9) * p.size);
       faceM.emissiveIntensity = 0.45 + pulse * 0.6;
+      if (glow) glow.material.opacity = 0.35 + pulse * 0.35 + Math.sin(t * 5 + ph) * 0.08;
+      twinkles.forEach((m, i) => {
+        const a = t * 1.4 + i * 2.09 + ph;
+        m.position.set(Math.cos(a) * 1.15, Math.sin(a * 1.7) * 0.5, Math.sin(a) * 0.4);
+        m.scale.setScalar(Math.max(0, Math.sin(t * 6 + i * 2.1)) * 1.3);
+      });
     },
   };
 };
 register('coin', coin('coin'));
+register('goldCoin', coin('goldCoin'));
 
 // --- Plaque d'accélération : chevrons qui s'allument en vague vers l'avant, s'éteint une fois utilisée
 register('boostPad', () => {
@@ -318,6 +334,29 @@ register('cactusBig', () => {
   const g = new THREE.Group();
   for (let i = -1; i <= 1; i++) { const h = i === 0 ? 2.4 : 1.6; mesh(g, rbox(0.82, h, 0.82, 0.24), std(CACTUS), i * 1.2, h / 2, 0); }
   return g;
+});
+
+register('parryBlock', () => {
+  const root = new THREE.Group(), f = frontGroup(root);
+  mesh(f, rbox(2.1, 2.1, 0.9, 0.2), std(0x6b34d6, { roughness: 0.45 }), 0, 1.05, 0);
+  const neon = glowMat(0xc9a6ff, 1.2);
+  for (const [x, y, w, h] of [[0, 1.93, 1.9, 0.1], [0, 0.17, 1.9, 0.1], [-0.93, 1.05, 0.1, 1.86], [0.93, 1.05, 0.1, 1.86]]) {
+    const b = mesh(f, G().thin, neon, x, y, 0.46, false); b.scale.set(w, h, 0.05);
+  }
+  const icon = new THREE.Group(); icon.position.set(0, 1.08, 0.5); f.add(icon);
+  mesh(icon, G().shield, std(0xffffff, { emissive: 0xe4d4ff, emissiveIntensity: 0.4 }), 0, 0, 0, false);
+  icon.scale.setScalar(1.35);
+  let ready = 0;
+  return {
+    object: root,
+    update(e, dt, t, fx) {
+      const r = e.game.runner, gap = e.s - r.z, reach = Math.max(4, r.speed * GAME.parryWindow);
+      const aligned = Math.abs(e.d - r.x) < e.hitbox.hx + r.stats.get('radius');
+      ready += ((aligned && gap >= -0.6 && gap <= reach ? 1 : 0) - ready) * Math.min(1, dt * 20);
+      neon.emissiveIntensity = 1 + (fx?.pulse ?? 0) * 1.5 + ready * 2.5;
+      icon.scale.setScalar(1.35 * (1 + ready * 0.18 + (fx?.pulse ?? 0) * 0.08));
+    },
+  };
 });
 
 register('rollingCookie', () => {

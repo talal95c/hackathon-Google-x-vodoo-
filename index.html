@@ -33,6 +33,8 @@
       <div class="right"><div class="small">BEST</div><div id="best">0</div></div>
     </div>
     <div id="journey"><span id="worldName">01 / 05 · OFFLINE DESERT</span><div class="bar"><div class="fill" id="worldProgress"></div></div></div>
+    <div id="feverGauge">FRENZY <span id="feverText">0%</span><div class="bar"><div class="fill" id="feverFill"></div></div></div>
+    <div id="challengeHud" class="hidden"></div>
     <div id="boss" class="hidden"><div id="bossName">BOSS</div><div class="bar"><div class="fill" id="bossFill"></div></div></div>
     <div id="buffs"></div>
     <div class="row" id="bottom">
@@ -68,8 +70,8 @@
       <button class="nudge-close" data-action="nudge-later" aria-label="Close">✕</button>
     </div>
     <div class="menu-footer">
-      <div class="controls"><span><b>↑</b> run</span><span><b>← →</b> steer</span><span><b>SPACE</b> jump</span><span><b>SHIFT</b> slide</span><span><b>E / F</b> slap</span></div>
-      <div class="buttons"><button data-action="shop"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l1 13H5zM9 7a3 3 0 0 1 6 0"/></svg><span>Shop</span></button><button data-action="music"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><span>Music</span></button></div>
+      <div class="controls"><span><b>↑</b> run</span><span><b>← →</b> steer</span><span><b>SPACE</b> jump</span><span><b>SHIFT</b> slide</span><span><b>E / F</b> slap · parry</span></div>
+      <div class="buttons"><button data-action="challenges"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></svg><span>Challenges</span></button><button data-action="shop"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l1 13H5zM9 7a3 3 0 0 1 6 0"/></svg><span>Shop</span></button><button data-action="music"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><span>Music</span></button></div>
     </div>
   </div>
 
@@ -93,6 +95,12 @@
       <button data-tab="upgrade">Upgrades</button>
     </div>
     <div class="grid" id="shopGrid"></div>
+  </div>
+
+  <div class="panel hidden" id="challengesPanel">
+    <div class="panel-head"><h2>Optional challenges</h2><button data-action="close">✕</button></div>
+    <p>Pick a goal for your next runs. No timer: retry as many times as you like.</p>
+    <div class="grid" id="challengeGrid"></div>
   </div>
 
   <div class="panel hidden mp-panel" id="mpPanel">

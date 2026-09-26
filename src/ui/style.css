@@ -404,3 +404,12 @@ button.ghost:hover { background: #f4f4f4; transform: none; box-shadow: none; }
 }
 @media (prefers-reduced-motion: reduce) { .nudge, .lyria-pill i { animation: none; } }
 .lyria-card[data-state="ready"] #lyriaConnect, .lyria-card[data-state="playing"] #lyriaConnect { display: none; } /* déjà connecté */
+#feverGauge { position: absolute; top: 58px; left: 50%; transform: translateX(-50%); width: min(250px, 38vw); padding: 7px 10px; border-radius: 9px; background: #ffffffda; color: #804700; font-size: 9px; font-weight: 800; letter-spacing: 1px; }
+#feverText { float: right; } #feverGauge .bar { height: 5px; margin-top: 6px; } #feverFill { background: #ffb300; transition: width .1s; }
+#feverGauge.active { color: #ffffff; background: #dd7500; box-shadow: 0 0 25px #ffb300aa; }
+#feverGauge.active #feverFill { background: #ffffff; }
+#challengeHud { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); max-width: min(400px, 65vw); padding: 7px 12px; border-radius: 9px; background: #ffffffe6; font-size: 10px; font-weight: 750; text-align: center; }
+@media (max-width: 600px) {
+  #feverGauge { top: 40px; width: 42vw; font-size: 7px; }
+  #challengeHud { top: 80px; font-size: 8px; }
+}

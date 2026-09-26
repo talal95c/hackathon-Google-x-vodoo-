@@ -116,7 +116,7 @@ function play() {
     return;
   }
   menus.show(null);
-  game.start({ ...shop.prepareRun(), respawn: true }); // solo aussi : une chute coûte une vie, on réapparaît
+  game.start({ ...shop.prepareRun(), respawn: true, challenge: profile.data.challenge }); // solo aussi : une chute coûte une vie, on réapparaît
   bots.start(Skins.ids(), profile.data.skin); // solo : 3 dinos IA, tous différents (et différents du tien)
 }
 

@@ -64,6 +64,9 @@ export const GAME = {
   respawnInvul: 2,       // invulnérabilité après une réapparition
   coinValue: 25,
   startS: 5,
+  parryWindow: 0.14,
+  parryCooldown: 0.5,
+  feverDuration: 6,
 };
 
 // Génération de la route

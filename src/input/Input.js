@@ -1,5 +1,5 @@
 // Clavier (QWERTY + AZERTY) et tactile → "intention" lue par le kernel à chaque frame :
-//   { steer: -1..1 (+1 = gauche), throttle: 0/1 (courir), drift, brake, jump (front montant), shove }
+//   { steer: -1..1 (+1 = gauche), throttle: 0/1 (courir), drift, brake, jump, shove, attack (fronts montants) }
 // onAction(fn) : fn('confirm') sur ESPACE / ENTRÉE / tap (démarrer, réessayer).
 export class Input {
   #keys = new Set();
@@ -7,6 +7,7 @@ export class Input {
   #swipe = new Map();
   #jump = false;
   #shove = false;
+  #attack = false;
   #listeners = new Set();
   steer = 0;
   enabled = true; // false quand un menu a le focus
@@ -18,7 +19,7 @@ export class Input {
       if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code)) e.preventDefault();
       this.#keys.add(e.code);
       if (!e.repeat && JUMP.includes(e.code)) this.#jump = true;
-      if (!e.repeat && (e.code === 'KeyE' || e.code === 'KeyF')) this.#shove = true;
+      if (!e.repeat && (e.code === 'KeyE' || e.code === 'KeyF')) this.#shove = this.#attack = true;
       if (!e.repeat && (e.code === 'Space' || e.code === 'Enter')) this.#fire('confirm');
     });
     target.addEventListener('keyup', (e) => this.#keys.delete(e.code));
@@ -29,8 +30,13 @@ export class Input {
       this.#touches.clear();
       for (const t of e.touches) this.#touches.set(t.identifier, t.clientX < window.innerWidth / 2 ? 1 : -1);
       for (const t of e.changedTouches) {
-        if (e.type === 'touchstart') this.#swipe.set(t.identifier, t.clientY);
-        else if (this.#swipe.has(t.identifier) && this.#swipe.get(t.identifier) - t.clientY > 50) { this.#jump = true; this.#swipe.delete(t.identifier); }
+        if (e.type === 'touchstart') this.#swipe.set(t.identifier, { y: t.clientY, x: t.clientX, at: performance.now() });
+        else if (this.#swipe.has(t.identifier)) {
+          const start = this.#swipe.get(t.identifier);
+          if (e.type !== 'touchcancel' && start.y - t.clientY > 50) { this.#jump = true; this.#swipe.delete(t.identifier); }
+          else if (e.type === 'touchend' && performance.now() - start.at < 300
+            && Math.hypot(t.clientX - start.x, t.clientY - start.y) < 25 && e.touches.length === 0) this.#attack = true;
+        }
         if (e.type === 'touchend' || e.type === 'touchcancel') this.#swipe.delete(t.identifier);
       }
       if (e.type === 'touchstart') this.#fire('confirm');
@@ -40,7 +46,7 @@ export class Input {
 
   reset() {
     this.#keys.clear(); this.#touches.clear(); this.#swipe.clear();
-    this.#jump = this.#shove = false; this.steer = 0;
+    this.#jump = this.#shove = this.#attack = false; this.steer = 0;
   }
 
   shove() { this.#shove = true; } // bouton tactile
@@ -50,7 +56,7 @@ export class Input {
 
   // À appeler une fois par frame
   read(dt) {
-    if (!this.enabled) { this.reset(); return { steer: 0, throttle: 0, drift: false, brake: false, jump: false, shove: false }; }
+    if (!this.enabled) { this.reset(); return { steer: 0, throttle: 0, drift: false, brake: false, jump: false, shove: false, attack: false }; }
     const k = this.#keys;
     let target = 0;
     if (k.has('ArrowLeft') || k.has('KeyA') || k.has('KeyQ')) target += 1;
@@ -64,9 +70,10 @@ export class Input {
     this.steer += (target - this.steer) * Math.min(1, dt * 10);
     const jump = this.#jump && this.enabled;
     const shove = this.#shove && this.enabled;
-    this.#jump = false; this.#shove = false;
+    const attack = this.#attack && this.enabled;
+    this.#jump = false; this.#shove = false; this.#attack = false;
     // courir : ↑ / W / Z maintenu (tactile : un doigt posé)
     const throttle = k.has('ArrowUp') || k.has('KeyW') || k.has('KeyZ') || this.#touches.size > 0 ? 1 : 0;
-    return { steer: this.steer, throttle, drift, brake: k.has('ArrowDown') || k.has('KeyS'), jump, shove };
+    return { steer: this.steer, throttle, drift, brake: k.has('ArrowDown') || k.has('KeyS'), jump, shove, attack };
   }
 }
