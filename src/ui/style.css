@@ -1,5 +1,6 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { width: 100%; height: 100%; overflow: hidden; background: #f4f4f4; font-family: 'Courier New', monospace; user-select: none; -webkit-user-select: none; touch-action: none; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #f4f4f4; font-family: 'Courier New', monospace; user-select: none; -webkit-user-select: none; }
+body.in-game { touch-action: none; }
 canvas { display: block; }
 .hidden { display: none !important; }
 
@@ -125,7 +126,7 @@ body:not(.in-game) #hud { opacity: 0; }
 .tabs button.active { background: var(--ink); }.rarity-rare { color: #22756c; }.rarity-epic { color: #9363b8; }
 @media (max-width: 759px) {
   .menu-brand { top: 18px; left: 20px; right: 20px; font-size: 10px; }.edition { font-size: 7px; letter-spacing: 1px; }
-  #start { display: flex; flex-direction: column; gap: 18px; padding: 70px 7vw 18px; overflow-y: auto; background: linear-gradient(0deg, #f4f4f4f5 0%, #f4f4f4df 33%, transparent 66%); }
+  #start { display: flex; flex-direction: column; gap: 18px; padding: 70px 7vw 18px; overflow-y: auto; touch-action: pan-y; background: linear-gradient(0deg, #f4f4f4f5 0%, #f4f4f4df 33%, transparent 66%); }
   .hero-copy { position: static; transform: none; width: 100%; margin-top: auto; }
   #start h1 { font-size: clamp(42px, 13vw, 68px); line-height: .9; } #start h1 br { display: none; }
   #start .eyebrow { font-size: 8px; letter-spacing: 1.2px; margin-bottom: 12px; }

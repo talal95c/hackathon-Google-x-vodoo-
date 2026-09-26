@@ -70,6 +70,39 @@ test('une glissade à deux doigts ou un déplacement revenu au départ ne décle
   }
 });
 
+test('le menu laisse défiler les gestes tactiles sans démarrer la partie', () => {
+  const handlers = {}, oldWindow = globalThis.window;
+  globalThis.window = { innerWidth: 390 };
+  try {
+    const input = new Input({ addEventListener: (type, fn) => { handlers[type] = fn; } });
+    let confirms = 0, prevented = 0;
+    input.onAction(() => confirms++);
+    const menu = { closest: (selector) => selector === '#start' ? menu : null };
+    const touch = (y) => ({ identifier: 1, clientX: 200, clientY: y });
+    const event = (type, y, touches, target = menu) => ({
+      type, changedTouches: [touch(y)], touches, target,
+      preventDefault: () => prevented++,
+    });
+    handlers.touchstart(event('touchstart', 300, [touch(300)]));
+    handlers.touchmove(event('touchmove', 200, [touch(200)]));
+    handlers.touchend(event('touchend', 200, []));
+    assert.equal(prevented, 0);
+    assert.equal(confirms, 0);
+    assert.equal(input.read(1 / 60).jump, false);
+
+    handlers.touchstart(event('touchstart', 300, [touch(300)]));
+    handlers.touchend(event('touchend', 300, []));
+    assert.equal(confirms, 1);
+    assert.equal(input.read(1 / 60).attack, false);
+
+    handlers.touchstart(event('touchstart', 300, [touch(300)], {}));
+    assert.equal(prevented, 1);
+  } finally {
+    if (oldWindow === undefined) delete globalThis.window;
+    else globalThis.window = oldWindow;
+  }
+});
+
 test('parade : cible violette proche uniquement, cooldown et récompense', () => {
   const g = new Game({ seed: 10 });
   g.start({ seed: 10 });
