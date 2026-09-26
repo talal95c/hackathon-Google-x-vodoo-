@@ -2,9 +2,11 @@
 
 The offline dinosaur is escaping the browser — and taking the fight with it.
 
-A colorful 3D racing game for desktop and mobile. Dodge obstacles, drift around corners, slap nearby rivals and battle in quick Fight Club duels, with a soundtrack generated live by AI.
+A colorful 3D racing game for desktop. Dodge obstacles, drift around corners, slap nearby rivals and battle in quick Fight Club duels, with a soundtrack generated live by AI.
 
 ![Racing through the desert and its glowing tunnels](docs/screenshots/race-desert-desktop.png)
+
+> **PC version only for now.** The game is designed for desktop browsers with a keyboard. Mobile support is a work in progress.
 
 ## How to play
 
@@ -33,7 +35,7 @@ This hackathon version uses public brokers from **HiveMQ, Mosquitto and EMQX**, 
 | Slap a nearby rival | E / F or the hand button |
 | Fight Club | Repeatedly press Space / E / F, or click the tap button |
 
-**On mobile:** hold the left or right half of the screen to run and steer, swipe up to jump, use two fingers to drift and tap the hand button to slap. In Fight Club, tap the big button as fast as you can.
+**On mobile:** touch controls are a work in progress and not fully supported yet. Play on a PC with a keyboard for the best experience.
 
 ## Fight Club: three seconds to win
 
@@ -67,7 +69,7 @@ npm install
 npm run dev
 ```
 
-Open **http://localhost:5173** in your browser, then select **Play**. To test on a phone on the same Wi-Fi network, use the network address printed in the terminal.
+Open **http://localhost:5173** in your browser, then select **Play**.
 
 ## More screenshots
 
