@@ -7,6 +7,7 @@ export class CameraRig extends View {
   pos = new THREE.Vector3();
   look = new THREE.Vector3();
   shake = 0;
+  combatKick = 0;
   snap = true;
   #fc = {}; #fl = {}; #t = new THREE.Vector3(); #l = new THREE.Vector3();
 
@@ -14,8 +15,13 @@ export class CameraRig extends View {
     super(ctx);
     this.camera = ctx.world.camera;
     this.focus = ctx.focus; // position monde du dino (Vector3 partagé)
-    this.listen('game:start', () => { this.snap = true; });
-    this.listen('runner:respawn', () => { this.snap = true; }); // réapparition (multijoueur)
+    this.listen('game:start', () => { this.snap = true; this.combatKick = 0; this.shake = 0; });
+    this.listen('runner:respawn', () => { this.snap = true; this.combatKick = 0; this.shake = 0; }); // réapparition (multijoueur)
+    this.listen('combat:impact', e => {
+      if (!e.local || e.kind !== 'shove') return;
+      this.combatKick = e.local === 'received' ? 1 : .65;
+      this.addShake(e.local === 'received' ? .3 : .18);
+    });
     this.listen('runner:hit', () => this.addShake(1));
     this.listen('runner:land', ({ impact }) => this.addShake(impact * 0.4));
     this.listen('runner:boost', () => this.addShake(0.25));
@@ -61,7 +67,8 @@ export class CameraRig extends View {
     cam.position.x += (Math.random() - 0.5) * this.shake * 0.8;
     cam.position.y += (Math.random() - 0.5) * this.shake * 0.8;
     cam.lookAt(this.look);
-    const fov = 57 + (g.worldJump ? Math.sin(g.worldJump.progress * Math.PI) * 10 : 0) + Math.max(0, speed - 30) * 0.32 + (r.boost > 0 ? 8 : 0);
+    this.combatKick *= Math.exp(-dt * 14);
+    const fov = 57 - this.combatKick * 4 + (g.worldJump ? Math.sin(g.worldJump.progress * Math.PI) * 10 : 0) + Math.max(0, speed - 30) * 0.32 + (r.boost > 0 ? 8 : 0);
     cam.fov += (fov - cam.fov) * Math.min(1, dt * 4);
     cam.fov += (this.ctx.fx?.down ?? 0) * 0.35; // "kick" de caméra sur le temps fort
     cam.updateProjectionMatrix();

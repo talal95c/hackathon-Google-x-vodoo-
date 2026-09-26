@@ -32,6 +32,10 @@ export class Multiplayer {
     this.game = game;
     this.profile = profile;
     this.connectFn = connectFn;
+    game.on('game:start', () => {
+      this.#shoveCd = this.#shoveAnim = 0;
+      this.#bumpCd.clear(); this.#bumpRecv.clear();
+    });
     try { this.name = localStorage.getItem(NAME_KEY) || ''; } catch { this.name = ''; }
     if (!this.name) this.name = `Dino${Math.floor(Math.random() * 900 + 100)}`;
   }
@@ -61,7 +65,7 @@ export class Multiplayer {
     });
     const n = this.net;
     this.color = COLORS[[...n.selfId].reduce((a, c) => a + c.charCodeAt(0), 0) % COLORS.length];
-    this.ch = { hi: n.channel('hi'), st: n.channel('st'), go: n.channel('go'), sh: n.channel('sh'), bp: n.channel('bp'), dn: n.channel('dn'), pg: n.channel('pg'), po: n.channel('po') };
+    this.ch = { hi: n.channel('hi'), st: n.channel('st'), go: n.channel('go'), sh: n.channel('sh'), bp: n.channel('bp'), dn: n.channel('dn'), pg: n.channel('pg'), po: n.channel('po'), fx: n.channel('fx') };
     this.ch.hi.on((d, id) => {
       const p = this.#peer(id);
       Object.assign(p, { name: d.name, skin: d.skin, color: d.color, host: d.host });
@@ -79,9 +83,14 @@ export class Multiplayer {
       p.rtt = p.rtt ? p.rtt * 0.7 + rtt * 0.3 : rtt;
     });
     this.ch.go.on((d) => this.#onGo(d));
+    this.ch.fx.on((d, id) => {
+      if (!this.inRace || !this.peers.has(id) || !['s', 'd', 'y', 'dir'].every(k => Number.isFinite(d[k])) || d.kind !== 'shove') return;
+      this.game.emit('combat:impact', { ...d, targetId: id, local: d.sourceId === this.net.selfId ? 'dealt' : null });
+    });
     this.ch.sh.on((d, id) => {
       if (this.game.state !== 'playing') return;
       this.game.runner.knock(d.dir * FIGHT.shovePower, { stumble: FIGHT.shoveStumble, source: 'shove' });
+      this.#impact('shove', d.dir, id);
       this.game.emit('mp:shoved', { from: this.peers.get(id)?.name });
       this.#emit('shoved', { from: this.peers.get(id)?.name });
     });
@@ -91,6 +100,7 @@ export class Multiplayer {
       if (this.game.state !== 'playing' || (this.#bumpRecv.get(id) ?? 0) > 0) return;
       this.#bumpRecv.set(id, FIGHT.bumpCooldown);
       this.game.runner.knock(d.imp, { source: 'bump' });
+      this.#impact('bump', Math.sign(d.imp), id);
       this.game.emit('mp:bump', {});
     });
     this.ch.dn.on((d, id) => { const p = this.#peer(id); p.alive = false; p.final = d; this.game.emit('mp:out', { name: p.name }); this.#emit('lobby'); this.#emit('results'); });
@@ -107,6 +117,13 @@ export class Multiplayer {
   }
 
   #hello(to) { this.ch?.hi.send({ name: this.name, skin: this.profile.data.skin, color: this.color, host: this.isHost }, to); }
+
+  #impact(kind, dir, sourceId) {
+    const r = this.game.runner;
+    const effect = { kind, s: r.z, d: r.x, y: r.y, dir: Math.sign(dir) || 1, sourceId };
+    this.game.emit('combat:impact', { ...effect, targetId: this.net.selfId, local: 'received' });
+    if (kind === 'shove') this.ch.fx.send(effect);
+  }
 
   leave() {
     this.net?.leave();
@@ -178,6 +195,7 @@ export class Multiplayer {
       const toward = me.lat * toOther;                 // ma vitesse latérale vers lui
       r.knock(-toOther * FIGHT.bumpBase * (toward > 3 ? 0.6 : 1), { source: 'bump' });
       if (toward > 3) this.ch.bp.send({ imp: toOther * (FIGHT.bumpBase + toward * FIGHT.bumpRam) }, p.id);
+      this.#impact('bump', -toOther, p.id);
       g.emit('mp:bump', {});
     }
     if (intent.shove && this.#shoveCd <= 0) {

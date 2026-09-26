@@ -62,3 +62,9 @@ ajouter un ennemi, un boss, une arme, un skin (y compris un .glb), une musique o
 Menu 🎵 MUSIQUE → saisir une clé API Gemini (https://aistudio.google.com/apikey). Sans clé, un synthé
 procédural prend le relais. En dev, on peut aussi mettre `VITE_GEMINI_API_KEY=...` dans `.env.local`
 (jamais dans un build publié).
+
+### Claques et feedback de combat
+
+`E` / `F` ou le bouton ✋ donne une claque au rival le plus proche à portée. Un cadre doré repère la cible et la jauge indique les deux secondes de recharge. Une main low poly accompagne le geste ; le joueur touché recule brièvement, avec un éclat « SLAP! », des étoiles et un claquement WebAudio synthétisé (aucun service ni clé requis).
+
+Les animations passent par un pivot visuel séparé des positions réseau : les claques ne font plus accumuler de rotation aux dinos. Les effets et le son d'un coup multijoueur sont confirmés par la victime via le canal cosmétique `fx`, puis affichés au point touché chez les autres joueurs. Le solo avec PNJ utilise les mêmes effets. Tous les joueurs doivent recharger la nouvelle version.

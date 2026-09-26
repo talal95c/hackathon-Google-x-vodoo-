@@ -37,11 +37,13 @@ import { Multiplayer } from './net/Multiplayer.js';
 import { Lobby } from './ui/Lobby.js';
 import { RivalView } from './view/RivalView.js';
 import { Bots } from './bots/Bots.js';
+import { CombatView } from './view/CombatView.js';
+import { CombatHud } from './ui/CombatHud.js';
 import { Skins } from './kernel/Registry.js';
 import { MusicThemes } from './kernel/Registry.js';
 
 // --- Logique
-const game = new Game();
+const game = new Game({ seed: (Math.random() * 2 ** 32) >>> 0 }); // le menu aussi change à chaque chargement
 const profile = new Profile(new LocalStorage());
 const shop = new Shop(profile, game.bus);
 
@@ -96,6 +98,7 @@ function play() {
 }
 
 const lobby = new Lobby({ mp, bots, menus, hud, onLaunch: () => play() });
+views.push(new CombatView(ctx, [mp, bots]), new CombatHud(ctx, () => lobby.race));
 music.setRaceSource(() => lobby.race); // la musique réagit au match (rivaux proches, coups…)
 game.on('bot:out', ({ bot }) => hud.banner(`💥 ${bot} est tombé !`, 1));
 game.on('runner:respawn', ({ lives }) => hud.banner(`Retour en piste ! ${'♥'.repeat(lives)}`, 1.2));
@@ -106,9 +109,7 @@ mp.on('start', ({ seed, delay, lane }) => {
   lobby.countdown(delay, () => { game.start({ ...shop.prepareRun(), seed, respawn: true }); game.runner.x = lane; }); // multi : 3 vies, on réapparaît
 });
 document.getElementById('shoveBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); input.shove(); });
-game.on('mp:shove', ({ hit }) => sfx.tone(hit ? 180 : 420, 0.18, 'square', 0.15, hit ? -80 : -200));
-game.on('mp:bump', () => sfx.tone(140, 0.08, 'triangle', 0.18, -60));
-game.on('runner:knocked', ({ lateral }) => views.find((v) => v instanceof CameraRig)?.addShake(Math.min(1, Math.abs(lateral) / 30)));
+
 
 input.onAction((a) => {
   if (a !== 'confirm' || menus.panelOpen) return;

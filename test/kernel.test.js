@@ -270,3 +270,12 @@ test('multijoueur : une chute coûte une vie et on réapparaît au bon endroit ;
   assert.equal(over?.reason, 'fall');
   assert.equal(g.lives, 0);
 });
+
+test('chaque partie génère une nouvelle carte (route et décor), même graine = même carte', () => {
+  const runs = [1, 2, 3].map(() => { const g = new Game(); g.start({}); g.track.ensure(1500); return g; });
+  assert.notEqual(runs[0].seed, runs[1].seed);
+  assert.notDeepEqual(runs[0].track.X.slice(0, 700), runs[1].track.X.slice(0, 700), 'route différente');
+  assert.ok(new Set(runs.map((g) => g.track.salt)).size > 1, 'décor différent');
+  const a = new Game(); a.start({ seed: 77 }); const b = new Game(); b.start({ seed: 77 });
+  assert.equal(a.track.salt, b.track.salt);
+});
