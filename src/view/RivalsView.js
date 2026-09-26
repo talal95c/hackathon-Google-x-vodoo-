@@ -35,8 +35,7 @@ export class RivalsView extends View {
   }
 
   #rebuild() {
-    for (const v of this.rivals.values()) this.scene.remove(v.root);
-    this.rivals.clear();
+    this.#clear();
     const p = this.race.p;
     if (!p) return;
     for (const r of p.rivals.values()) {
@@ -51,6 +50,22 @@ export class RivalsView extends View {
       this.scene.add(root);
       this.rivals.set(r.id, { root, model, shield, gait: 0, dying: 0, yaw: 0, lastX: 0 });
     }
+  }
+
+  #clear() {
+    for (const v of this.rivals.values()) {
+      this.scene.remove(v.root);
+      v.model.dispose?.();
+      v.root.traverse((o) => {
+        if (o === v.model.object) return;
+        o.geometry?.dispose();
+        o.material?.map?.dispose();
+        o.material?.dispose();
+      });
+    }
+    this.rivals.clear();
+    for (const sh of this.shots) { this.scene.remove(sh.m); sh.m.geometry.dispose(); }
+    this.shots = [];
   }
 
   // Position monde d'un coureur (null si inconnu)
@@ -72,6 +87,7 @@ export class RivalsView extends View {
   }
 
   update(dt, time) {
+    if (!this.race.p && this.rivals.size) this.#clear();
     const p = this.race.p;
     if (!p) { for (const v of this.rivals.values()) v.root.visible = false; return; }
     for (const [id, v] of this.rivals) {

@@ -39,7 +39,7 @@ export class RaceCore {
     const p = {
       id, name: String(name).slice(0, 16), skin, bot, elo, trophies, color,
       alive: true, connected: true, place: 0, snap: null, hist: [],
-      item: null, lastBox: -9, lastShove: -9, lastEmote: -9, lastBonus: {},
+      item: null, lastBox: -9, lastShove: -9, lastEmote: -9, lastBonus: {}, seen: {},
       combo: { level: 0, until: 0, best: 0 }, shovedBy: null, suspicious: 0,
       stats: { overtakes: 0, shoves: 0, ringOuts: 0, hits: 0, points: 0, falls: 0 },
     };
@@ -164,7 +164,7 @@ export class RaceCore {
         return;
       }
       case 'drift': case 'trick': {
-        if (t - (p.lastBonus[msg.t] ?? -9) < 1) return;
+        if (t - (p.lastBonus[msg.t] ?? -9) < 1 || t - (p.seen[msg.t] ?? -9) > 2) return;
         p.lastBonus[msg.t] = t;
         return this.#addCombo(p, msg.t, t);
       }
@@ -177,13 +177,12 @@ export class RaceCore {
     if (!Number.isFinite(z) || !Number.isFinite(x)) return;
     const ts = Number.isFinite(+m.ts) ? Math.min(+m.ts, t + 0.5) : t;
     const prev = p.snap;
+    const maxZ = prev ? prev.z + MAX_SPEED * Math.max(0.05, ts - prev.ts) + 10 : MAX_SPEED * Math.max(0, t) + 20;
     let zz = z;
-    if (prev) {
-      const dt = Math.max(0.05, ts - prev.ts);
-      const maxZ = prev.z + MAX_SPEED * dt + 10;
-      if (z > maxZ) { zz = maxZ; p.suspicious++; }
-    }
+    if (z > maxZ) { zz = maxZ; p.suspicious++; }
     p.snap = { ts, z: zz, x, y: +m.y || 0, sp: +m.sp || 0, st: String(m.st ?? 'run').slice(0, 8), f: m.f | 0 };
+    if (p.snap.st === 'slide') p.seen.drift = t;
+    if (p.snap.st === 'jump' || p.snap.y > 0.5) p.seen.trick = t;
     p.hist.push(p.snap);
     if (p.hist.length > 30) p.hist.shift();
   }

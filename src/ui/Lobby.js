@@ -42,7 +42,7 @@ export class Lobby {
     });
     game.on('race:end', (m) => setTimeout(() => this.#results(m), 1200));
     const code = new URLSearchParams(location.search).get('room');
-    if (code) { $('rCode').value = code.toUpperCase(); setTimeout(() => this.open(), 0); }
+    if (code) { $('rCode').value = code.toUpperCase(); setTimeout(() => { this.open(); this.#online({ t: 'join', code: $('rCode').value }); }, 0); }
   }
 
   get name() { return ($('rName').value.trim() || 'Dino').slice(0, 16); }
@@ -139,8 +139,7 @@ export class Lobby {
   #renderRewards() {
     const r = this.rewards;
     if (!r) return;
-    this.profile.earn(r.coins);
-    this.rewards = { ...r, coins: 0 };
+    if (!r.credited) { this.profile.earn(r.coins); r.credited = true; }
     const rank = rankOf(r.profile.elo);
     $('roRewards').innerHTML = `+${r.coins} ★${r.trophies ? ` · ${r.trophies > 0 ? '+' : ''}${r.trophies} 🏆` : ''}${r.mode === 'ranked' ? ` · Elo ${r.elo >= 0 ? '+' : ''}${r.elo} → ${r.profile.elo} (${rank.name})` : ''}`;
     this.#render();

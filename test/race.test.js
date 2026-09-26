@@ -178,3 +178,19 @@ test('pouce : glisser = direction analogique, coup vers le haut = saut, bas = gl
   g.down(3, 500, 300, 2000); g.up(3, 502, 301, 2100);
   assert.equal(g.take().item, true, 'tap bref seul = objet');
 });
+
+test('anti-triche : premier instantané borné, drift/figure refusés sans glissade/saut observés', () => {
+  const c = fakeClock(), out = [];
+  const core = new RaceCore({ now: c.now, send: (to, msg) => out.push([to, msg]) });
+  core.addPlayer({ id: 'a' }); core.addPlayer({ id: 'b' });
+  core.start({ seed: 1 }); c.t = 3000; core.tick(); c.t = 4000;
+  core.onMessage('a', { t: 'snap', ts: 1, z: 1e9, x: 0 });
+  assert.ok(core.players.get('a').snap.z < 200);
+  assert.ok(core.players.get('a').suspicious > 0);
+  core.onMessage('b', { t: 'snap', ts: 1, z: 10, x: 0, st: 'run' });
+  core.onMessage('b', { t: 'drift' }); core.onMessage('b', { t: 'trick' });
+  assert.equal(core.players.get('b').combo.level ?? 0, 0);
+  core.onMessage('b', { t: 'snap', ts: 1.05, z: 11, x: 0, st: 'slide' });
+  core.onMessage('b', { t: 'drift' });
+  assert.ok(out.some(([to, m]) => to === 'b' && m.t === 'combo' && m.kind === 'drift'));
+});

@@ -46,8 +46,23 @@ export class Progress {
   static view(profile) { return { ...profile, rank: rankOf(profile.elo) }; }
 
   // results : sortie de RaceCore ; players : Map id → { key, profile } (humains connectés)
+  #locks = new Map();
+
+  // Mises à jour d'un même compte sérialisées, relues depuis le stockage (plusieurs onglets / parties)
+  async #withAccount(key, fn) {
+    const prev = this.#locks.get(key) ?? Promise.resolve();
+    const run = prev.then(fn, fn);
+    const tail = run.catch(() => {});
+    this.#locks.set(key, tail);
+    try { return await run; } finally { if (this.#locks.get(key) === tail) this.#locks.delete(key); }
+  }
+
   async apply({ mode, results, players }) {
     const humans = results.filter((r) => players.has(r.id));
+    for (const r of humans) {
+      const acc = players.get(r.id);
+      if (acc.key) Object.assign(acc.profile, await this.store.get(acc.key), { name: acc.profile.name });
+    }
     const elo = mode === 'ranked'
       ? eloUpdate(results.map((r) => ({ id: r.id, place: r.place, elo: players.get(r.id)?.profile.elo ?? START_ELO })))
       : new Map();
@@ -55,15 +70,20 @@ export class Progress {
     for (const r of humans) {
       const acc = players.get(r.id), p = acc.profile;
       const honest = !r.suspicious;
-      const trophies = mode === 'friends' || !honest ? 0 : Math.max(-p.trophies, r.trophies);
       const dElo = honest ? elo.get(r.id) ?? 0 : 0;
       const coins = honest ? r.coins : 0;
-      Object.assign(p, {
-        trophies: p.trophies + trophies, elo: Math.max(0, p.elo + dElo), coins: p.coins + coins,
-        played: p.played + 1, wins: p.wins + (r.place === 1 ? 1 : 0),
-      });
-      p.bestTrophies = Math.max(p.bestTrophies, p.trophies);
-      if (acc.key) await this.store.put(acc.key, p);
+      let trophies = 0;
+      const credit = async () => {
+        if (acc.key) Object.assign(p, await this.store.get(acc.key), { name: p.name });
+        trophies = mode === 'friends' || !honest ? 0 : Math.max(-p.trophies, r.trophies);
+        Object.assign(p, {
+          trophies: p.trophies + trophies, elo: Math.max(0, p.elo + dElo), coins: p.coins + coins,
+          played: p.played + 1, wins: p.wins + (r.place === 1 ? 1 : 0),
+        });
+        p.bestTrophies = Math.max(p.bestTrophies, p.trophies);
+        if (acc.key) await this.store.put(acc.key, p);
+      };
+      if (acc.key) await this.#withAccount(acc.key, credit); else await credit();
       out.set(r.id, { coins, trophies, elo: dElo, place: r.place, profile: Progress.view(p) });
     }
     return out;

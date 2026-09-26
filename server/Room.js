@@ -58,8 +58,8 @@ export class Room {
     this.broadcastLobby();
   }
 
-  start(by) {
-    if (this.phase !== 'lobby' || (by && by !== this.host && this.mode === 'friends')) return;
+  start() {
+    if (this.phase !== 'lobby') return;
     while (this.size < Math.min(MIN_RACERS, ROYALE.maxPlayers) && this.mode !== 'friends') this.addBot();
     if (this.size < ROYALE.minPlayers) this.addBot();
     this.core.start({});
@@ -84,7 +84,7 @@ export class Room {
 
   onMessage(id, msg) {
     if (msg.t === 'addBot' && id === this.host && this.mode === 'friends') return this.addBot();
-    if (msg.t === 'start') return this.start(id);
+    if (msg.t === 'start') { if (this.mode === 'friends' && id === this.host) this.start(); return; }
     if (RACE_TYPES.has(msg.t)) this.core.onMessage(id, msg);
   }
 
