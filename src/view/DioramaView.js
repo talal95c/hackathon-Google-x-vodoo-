@@ -49,7 +49,7 @@ export class DioramaView extends View {
     for(let j=0;j<16;j++) {
       const s=chunk.s0+4+j*7.5;
       if(isWorldSafe(s,80) || (tunnel && s>tunnel.start-8 && s<tunnel.end+8))continue;
-      const f=this.track.frame(s,{}), seed=chunk.index*357+j*13;
+      const f=this.track.frame(s,{}), seed=(chunk.index+this.track.salt)*357+j*13; // track.salt : décor différent à chaque partie
       for(const side of [-1,1]) {
         const n=seed+(side+1)*67, x=side*(f.w/2+3.8+rand(n)*2.4);
         if(this.track.clearance(f.x+f.lx*x,f.z+f.lz*x,s)<f.w/2+2.6)continue;

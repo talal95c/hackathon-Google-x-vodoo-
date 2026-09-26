@@ -192,7 +192,7 @@ Ajoute une entrée dans `content/zones.js` : `palette`, `decor` (clé `decor:<no
   15 fois par seconde. Les rivaux sont affichés lissés (`RivalView`).
 - **Combat** (`rules.js`, fonctions pures testées) : lors d'un contact, celui qui fonce envoie la poussée au percuté.
   Le coup d'épaule (touche E) éjecte le rival le plus proche. Chacun applique à son dino ce qu'il subit
-  (`runner.knock`). Tomber = éliminé ; le dernier en vie gagne.
+  (`runner.knock`). Tomber coûte une vie (réapparition là où on est tombé) ; à 0 vie, éliminé ; le dernier en vie gagne.
 - Tests : `test/multiplayer.test.js` relie deux joueurs par un faux réseau en mémoire (`connectFn` injectable).
 
 ## Règles

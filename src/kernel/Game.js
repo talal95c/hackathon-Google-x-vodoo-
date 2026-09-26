@@ -53,7 +53,7 @@ export class Game {
   }
 
   // loadout : { seed?, modifiers?: [{source, add, mul}], skin?, theme?, respawn? } (préparé par meta/)
-  //   respawn : true en multijoueur → une chute coûte une vie au lieu de finir la partie
+  //   respawn : true (solo et multi dans le jeu) → une chute coûte une vie au lieu de finir la partie
   start(loadout = {}) {
     this.loadout = loadout;
     this.#resetWorld(loadout.seed ?? (Math.random() * 2 ** 32) >>> 0, loadout.modifiers);

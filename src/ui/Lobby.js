@@ -26,8 +26,6 @@ export class Lobby {
     mp.on('lobby', () => { this.render(); this.board(); });
     mp.on('status', (t) => this.status(t));
     mp.on('results', () => this.board());
-    mp.on('shoved', ({ from }) => hud.banner(`💥 ${from || 'A rival'} shoved you!`, 0.9));
-    mp.on('shove', ({ hit }) => { if (!hit) hud.banner('Missed! Nobody in range', 0.7); });
 
     // Lien partagé : ?partie=CODE → rejoint directement
     const code = new URLSearchParams(location.search).get('partie');
