@@ -3,6 +3,7 @@
 #start .menu-brand { position: static; }
 #start .hero-copy { position: static; transform: none; align-self: center; margin-left: 2.5vw; width: 46vw; }
 #start .menu-footer { position: static; display: block; padding: 18px 20px; border: 1px solid #fff; border-radius: 22px; background: #fffffff2; box-shadow: 0 8px 0 #27333612, 0 18px 50px #2733361a; backdrop-filter: blur(14px); }
+#start .nudge { top: 80px; bottom: auto; }
 .controls-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
 #start .controls-heading h2 { font-size: 16px; letter-spacing: 1.5px; color: #263331; }
 #start .controls-heading p { font-size: 13px; color: #58635d; margin-top: 3px; }
