@@ -16,25 +16,25 @@ function canvasTex(w, h, draw) {
 export const popupTex = () => canvasTex(512, 320, (g, w, h) => {
   g.fillStyle = '#fff'; g.fillRect(0, 0, w, h);
   g.fillStyle = '#1a73e8'; g.fillRect(0, 0, w, 56);
-  g.fillStyle = '#fff'; g.font = 'bold 30px sans-serif'; g.fillText('Félicitations !', 18, 39);
+  g.fillStyle = '#fff'; g.font = 'bold 30px sans-serif'; g.fillText('Congratulations!', 18, 39);
   g.fillStyle = '#e53935'; g.fillRect(w - 56, 0, 56, 56);
   g.fillStyle = '#fff'; g.font = 'bold 40px sans-serif'; g.fillText('✕', w - 44, 43);
   g.fillStyle = '#222'; g.font = 'bold 40px sans-serif'; g.textAlign = 'center';
-  g.fillText('Vous avez gagné', w / 2, 140);
-  g.fillText('un iPhone 27 !', w / 2, 190);
+  g.fillText('You have won', w / 2, 140);
+  g.fillText('an iPhone 27!', w / 2, 190);
   g.fillStyle = '#34a853'; g.fillRect(w / 2 - 120, 220, 240, 64);
-  g.fillStyle = '#fff'; g.font = 'bold 32px sans-serif'; g.fillText('RÉCLAMER', w / 2, 264);
+  g.fillStyle = '#fff'; g.font = 'bold 32px sans-serif'; g.fillText('CLAIM', w / 2, 264);
   g.strokeStyle = '#999'; g.lineWidth = 6; g.strokeRect(0, 0, w, h);
 });
 
 export const cookieTex = () => canvasTex(1024, 200, (g, w, h) => {
   g.fillStyle = '#fffbe8'; g.fillRect(0, 0, w, h);
   g.fillStyle = '#222'; g.font = 'bold 44px sans-serif';
-  g.fillText('🍪 Ce site utilise des cookies', 30, 80);
+  g.fillText('🍪 This site uses cookies', 30, 80);
   g.font = '30px sans-serif'; g.fillStyle = '#555';
-  g.fillText('pour améliorer votre expérience de fuite.', 30, 135);
+  g.fillText('to improve your escape experience.', 30, 135);
   g.fillStyle = '#1a73e8'; g.fillRect(w - 290, 55, 250, 90);
-  g.fillStyle = '#fff'; g.font = 'bold 38px sans-serif'; g.fillText('ACCEPTER', w - 262, 115);
+  g.fillStyle = '#fff'; g.font = 'bold 38px sans-serif'; g.fillText('ACCEPT', w - 250, 115);
   g.strokeStyle = '#c9a227'; g.lineWidth = 10; g.strokeRect(0, 0, w, h);
 });
 

@@ -5,7 +5,7 @@ import { RUNNER } from '../kernel/config.js';
 // ceux qui sont bas… et viennent chercher la bagarre (bousculades, coups d'épaule).
 // Mêmes règles de combat que le multijoueur (net/rules.js). Aucune dépendance graphique :
 // RivalView les affiche comme des rivaux (interface rivals()).
-const NAMES = ['Rex', 'Trixie', 'Ptéra', 'Dino404', 'Bronto', 'Raptor', 'Spino', 'Diplo'];
+const NAMES = ['Rex', 'Trixie', 'Ptera', 'Dino404', 'Bronto', 'Raptor', 'Spino', 'Diplo'];
 const COLORS = ['#ff6d00', '#a142f4', '#00bcd4', '#e53935', '#43a047', '#fdd835'];
 const SKINS = ['classic', 'neon', 'gold'];
 

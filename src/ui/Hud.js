@@ -19,21 +19,21 @@ export class Hud {
 
     const on = (t, fn) => game.on(t, fn);
     on('game:start', () => { this.#lives(false); this.el.boss.classList.add('hidden'); });
-    on('tempo', ({ level }) => { if (level > 0) this.banner(`VITESSE ×${game.tempo.ratio.toFixed(1)}`, 1.4); });
-    on('zone', ({ number, zone }) => { this.banner(`MONDE ${Math.min(number + 1, 5)} — ${zone.name}`); this.el.hud.style.color = zone.palette.text; this.el.banner.style.color = zone.palette.text; });
-    on('world:jump', ({ to }) => this.banner(`ÉVASION → ${to.name}`, 1.8));
+    on('tempo', ({ level }) => { if (level > 0) this.banner(`SPEED ×${game.tempo.ratio.toFixed(1)}`, 1.4); });
+    on('zone', ({ number, zone }) => { this.banner(`WORLD ${Math.min(number + 1, 5)} — ${zone.name}`); this.el.hud.style.color = zone.palette.text; this.el.banner.style.color = zone.palette.text; });
+    on('world:jump', ({ to }) => this.banner(`ESCAPE → ${to.name}`, 1.8));
     on('world:land', ({ zone }) => this.banner(zone.subtitle, 2.2));
     on('life:lost', () => this.#lives(true));
     on('runner:respawn', () => this.flash(0.5));
-    on('runner:manual', ({ on: m, dir }) => { if (m) this.banner(dir > 0 ? '⬅ TIENS À GAUCHE !' : 'TIENS À DROITE ! ➡', 1.2); });
+    on('runner:manual', ({ on: m, dir }) => { if (m) this.banner(dir > 0 ? '⬅ KEEP LEFT!' : 'KEEP RIGHT! ➡', 1.2); });
     on('runner:hit', () => this.flash(0.6));
-    on('boss:start', ({ boss }) => { this.el.boss.classList.remove('hidden'); this.el.bossName.textContent = `⚠ ${boss.def.name}`; this.banner('BOSS !', 1.6); });
+    on('boss:start', ({ boss }) => { this.el.boss.classList.remove('hidden'); this.el.bossName.textContent = `⚠ ${boss.def.name}`; this.banner('BOSS!', 1.6); });
     on('boss:damage', ({ hp, max }) => { this.el.bossFill.style.width = `${(hp / max) * 100}%`; });
-    on('boss:defeated', ({ reward }) => { this.el.boss.classList.add('hidden'); this.banner(`BOSS VAINCU ! +${reward} ★`, 2); this.flash(0.8); });
-    on('boss:escaped', () => { this.el.boss.classList.add('hidden'); this.banner('Le boss s\'est enfui…', 1.6); });
+    on('boss:defeated', ({ reward }) => { this.el.boss.classList.add('hidden'); this.banner(`BOSS DEFEATED! +${reward} ★`, 2); this.flash(0.8); });
+    on('boss:escaped', () => { this.el.boss.classList.add('hidden'); this.banner('The boss got away…', 1.6); });
     on('weapon:equip', ({ weapon }) => this.banner(`${Weapons.get(weapon.type).name.toUpperCase()} !`, 1));
     on('effect:add', ({ effect }) => this.banner(`${Effects.get(effect.type).name.toUpperCase()} !`, 1));
-    on('game:over', () => this.setTitle('✕ Onglet fermé — Dino Escape'));
+    on('game:over', () => this.setTitle('✕ Tab closed — Dino Race Fight Club'));
     this.#lives(false);
   }
 
@@ -75,8 +75,8 @@ export class Hud {
     el.driftFill.style.width = `${r.slideGauge * 100}%`;
     el.driftFill.style.background = r.boost > 0 ? '#34a853' : r.drifting ? (r.driftCharge > 1 ? '#ff9800' : r.driftCharge > 0.35 ? '#42a5f5' : '#90caf9')
       : r.slideGauge < r.stats.get('slideMin') ? '#bdbdbd' : '#1a73e8';
-    this.#set('drift', (v) => { el.driftLabel.textContent = v; }, r.boost > 0 ? 'SPRINT !' : r.drifting ? (r.driftCharge > 1 ? 'GLISSADE MAX' : 'GLISSADE…')
-      : r.slideGauge < r.stats.get('slideMin') ? 'RECHARGE…' : 'GLISSADE (SHIFT)');
+    this.#set('drift', (v) => { el.driftLabel.textContent = v; }, r.boost > 0 ? 'SPRINT!' : r.drifting ? (r.driftCharge > 1 ? 'MAX SLIDE' : 'SLIDING…')
+      : r.slideGauge < r.stats.get('slideMin') ? 'RECHARGING…' : 'SLIDE (SHIFT)');
 
     // arme + bonus actifs avec leur minuteur
     const buffs = [];
@@ -87,7 +87,7 @@ export class Hud {
     }, buffs.map((b) => b.name).join('|'));
     el.buffs.querySelectorAll('.fill').forEach((f, i) => { f.style.width = `${(buffs[i]?.p ?? 0) * 100}%`; });
 
-    if (g.state === 'playing') this.setTitle(g.boss ? '👾 BOSS !' : '🦖 AIDEZ-MOI');
+    if (g.state === 'playing') this.setTitle(g.boss ? '👾 BOSS!' : '🦖 HELP ME');
     if (this.#bannerTimer > 0 && (this.#bannerTimer -= dt) <= 0) el.banner.style.opacity = 0;
   }
 }

@@ -97,8 +97,8 @@ function play() {
 
 const lobby = new Lobby({ mp, bots, menus, hud, onLaunch: () => play() });
 music.setRaceSource(() => lobby.race); // la musique réagit au match (rivaux proches, coups…)
-game.on('bot:out', ({ bot }) => hud.banner(`💥 ${bot} est tombé !`, 1));
-game.on('runner:respawn', ({ lives }) => hud.banner(`Retour en piste ! ${'♥'.repeat(lives)}`, 1.2));
+game.on('bot:out', ({ bot }) => hud.banner(`💥 ${bot} is out!`, 1));
+game.on('runner:respawn', ({ lives }) => hud.banner(`Back on track! ${'♥'.repeat(lives)}`, 1.2));
 mp.on('start', ({ seed, delay, lane }) => {
   sfx.init();
   menus.show(null);
@@ -124,13 +124,13 @@ game.on('game:over', (result) => {
   mp.finish(result);
   setTimeout(() => {
     menus.showGameOver(result, record);
-    if (mp.inRace || bots.list.length) document.getElementById('overDetails').insertAdjacentHTML('beforeend', lobby.resultsHtml() + (mp.inRace && !mp.isHost ? '<p class="small">L\'hôte peut relancer une revanche.</p>' : ''));
+    if (mp.inRace || bots.list.length) document.getElementById('overDetails').insertAdjacentHTML('beforeend', lobby.resultsHtml() + (mp.inRace && !mp.isHost ? '<p class="small">The host can start a rematch.</p>' : ''));
   }, 700);
 });
 
 // --- Boucle
 let last = performance.now(), time = 0;
-hud.setTitle('Dino Escape');
+hud.setTitle('Dino Race Fight Club');
 
 function frame(now) {
   const dt = Math.min(1 / 20, (now - last) / 1000);

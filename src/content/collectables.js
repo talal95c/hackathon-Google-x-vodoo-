@@ -13,9 +13,9 @@ Entities.define('doubleCoinsPickup', { class: EffectPickup, hitbox: { hx: 1.2, h
 
 // --- Armes (durée en secondes, multipliée par la stat weaponDuration)
 Weapons.define('laser', { class: LaserWeapon, name: 'Laser', duration: 8, fireRate: 0.2, projectile: 'laserBolt', projectileSpeed: 60 });
-Weapons.define('shield', { class: ShieldWeapon, name: 'Bouclier', duration: 6 });
+Weapons.define('shield', { class: ShieldWeapon, name: 'Shield', duration: 6 });
 Entities.define('laserBolt', { class: Projectile, hitbox: { hx: 0.4, hz: 0.8, top: 1 }, damage: 1, life: 1.2 });
 
 // --- Bonus temporaires (modificateurs de stats)
-Effects.define('magnet', { name: 'Aimant', duration: 10, modifiers: { add: { magnetRange: 14 } } });
-Effects.define('doubleCoins', { name: 'Pièces ×2', duration: 12, modifiers: { mul: { coinMultiplier: 2 } } });
+Effects.define('magnet', { name: 'Magnet', duration: 10, modifiers: { add: { magnetRange: 14 } } });
+Effects.define('doubleCoins', { name: 'Coins ×2', duration: 12, modifiers: { mul: { coinMultiplier: 2 } } });

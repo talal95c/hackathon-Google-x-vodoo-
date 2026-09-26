@@ -13,7 +13,7 @@ export class World {
     r.toneMapping = THREE.ACESFilmicToneMapping;
     r.toneMappingExposure = .96;
     r.outputColorSpace = THREE.SRGBColorSpace;
-    r.domElement.setAttribute('aria-label', 'Dino Escape — scène 3D');
+    r.domElement.setAttribute('aria-label', 'Dino Race Fight Club — 3D scene');
     r.setSize(window.innerWidth, window.innerHeight);
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFShadowMap;
