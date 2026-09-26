@@ -1,342 +1,342 @@
 {
   "voices": {
-    "reggae": "0FAX10X2GFZAmuzu",
-    "classic": "gvj92LDu4HfKr1HN",
-    "neon": "hkTvb9EkOYSTauDt",
-    "gold": "TbL4mgO6mE69nZek",
-    "cursor": "DgwLyjq0MPzewnsU"
+    "reggae": "mz7WOysKxnqp7uNJ",
+    "classic": "uAYB6TPOYvWWBrBI",
+    "neon": "jsV8SQhiHs4zAVRv",
+    "gold": "jRFqu0a6HAr9yhZk",
+    "cursor": "D8yNN1U0sVTYLjI0"
   },
   "lines": {
     "reggae": {
       "start": [
         {
           "file": "reggae/start_0.mp3",
-          "text": "Yeah man, on décolle !",
-          "hash": "33496e4bc5"
+          "text": "Yeah man, let's roll!",
+          "hash": "92a956159c"
         },
         {
           "file": "reggae/start_1.mp3",
-          "text": "Allez, on roule en rythme, frère !",
-          "hash": "84047a3001"
+          "text": "Feel the riddim, here we go!",
+          "hash": "00c566cf01"
         },
         {
           "file": "reggae/start_2.mp3",
-          "text": "Le curseur veut ma peau ? Il va danser d'abord !",
-          "hash": "b632542170"
+          "text": "The cursor wants me? Catch me if you can!",
+          "hash": "7737271890"
         },
         {
           "file": "reggae/start_3.mp3",
-          "text": "Riddim est dans la place, attache ta ceinture !",
-          "hash": "7ff191e814"
+          "text": "Riddim in the house, hold on tight!",
+          "hash": "d6fb598b69"
         }
       ],
       "tempo": [
         {
           "file": "reggae/tempo_0.mp3",
-          "text": "Ça accélère, man ! Garde le groove !",
-          "hash": "fc069bfd2e"
+          "text": "Speeding up, man! Keep the groove!",
+          "hash": "896dd5af70"
         },
         {
           "file": "reggae/tempo_1.mp3",
-          "text": "Le tempo monte, les pattes suivent !",
-          "hash": "53ba3ce8e0"
+          "text": "Tempo rising, feet flying!",
+          "hash": "4987695f31"
         },
         {
           "file": "reggae/tempo_2.mp3",
-          "text": "Plus vite, plus chaud, yeah !",
-          "hash": "ae372ec10e"
+          "text": "Faster and hotter, yeah!",
+          "hash": "3b774fa09a"
         },
         {
           "file": "reggae/tempo_3.mp3",
-          "text": "Oh, la basse cogne plus fort là !",
-          "hash": "6d29c86417"
+          "text": "Oh, the bass hits harder now!",
+          "hash": "a89ba6405d"
         }
       ],
       "world": [
         {
           "file": "reggae/world_0.mp3",
-          "text": "Nouveau monde, nouvelle vibe !",
-          "hash": "52ad67c0ec"
+          "text": "New world, new vibes!",
+          "hash": "f5a31d4dca"
         },
         {
           "file": "reggae/world_1.mp3",
-          "text": "Wow, regarde-moi ce paysage, man !",
-          "hash": "a280bfdd3a"
+          "text": "Wow, look at this place, man!",
+          "hash": "1e8403c9cd"
         },
         {
           "file": "reggae/world_2.mp3",
-          "text": "On change de décor, pas de rythme !",
-          "hash": "c093e9bfef"
+          "text": "New scenery, same rhythm!",
+          "hash": "f0096a9cdc"
         },
         {
           "file": "reggae/world_3.mp3",
-          "text": "Téléportation soleil, yeah !",
-          "hash": "5ae01ded41"
+          "text": "Sunshine teleport, yeah!",
+          "hash": "3704a99bba"
         }
       ],
       "parry": [
         {
           "file": "reggae/parry_0.mp3",
-          "text": "Esquive, esquive, bye bye !",
-          "hash": "117d93ee10"
+          "text": "Dodge that, bye bye!",
+          "hash": "0cf3f20a87"
         },
         {
           "file": "reggae/parry_1.mp3",
-          "text": "Trop smooth pour toi, man !",
-          "hash": "dcbc73e9de"
+          "text": "Too smooth for you, man!",
+          "hash": "00e0c4a000"
         },
         {
           "file": "reggae/parry_2.mp3",
-          "text": "Parade parfaite, respect !",
-          "hash": "c754e838e0"
+          "text": "Perfect parry, respect!",
+          "hash": "e051b074c6"
         },
         {
           "file": "reggae/parry_3.mp3",
-          "text": "Hop, renvoyé à la maison !",
-          "hash": "97d42ab638"
+          "text": "Sent you back home!",
+          "hash": "3b76f5f261"
         },
         {
           "file": "reggae/parry_4.mp3",
-          "text": "Même pas mal, frère !",
-          "hash": "f22c55eb94"
+          "text": "No pain, brother!",
+          "hash": "be4ce08cde"
         }
       ],
       "boost": [
         {
           "file": "reggae/boost_0.mp3",
-          "text": "Turbo reggae, on vole !",
-          "hash": "4411ad8aed"
+          "text": "Reggae turbo, we flying!",
+          "hash": "850dbc284d"
         },
         {
           "file": "reggae/boost_1.mp3",
-          "text": "Wouh, ça fuse !",
-          "hash": "c2125f88c9"
+          "text": "Whoa, zoom zoom!",
+          "hash": "21c48ba236"
         },
         {
           "file": "reggae/boost_2.mp3",
-          "text": "Accroche-toi, ça part fort !",
-          "hash": "fb46eebaa3"
+          "text": "Hold on, here we go!",
+          "hash": "2e1db38589"
         }
       ],
       "coins": [
         {
           "file": "reggae/coins_0.mp3",
-          "text": "Ça pleut des pièces, man !",
-          "hash": "c8bd949eb2"
+          "text": "Raining coins, man!",
+          "hash": "c206f17d9f"
         },
         {
           "file": "reggae/coins_1.mp3",
-          "text": "Jackpot sous le soleil !",
-          "hash": "1e5a7c593e"
+          "text": "Jackpot in the sun!",
+          "hash": "2fd45278f5"
         },
         {
           "file": "reggae/coins_2.mp3",
-          "text": "Les pièces aiment mon groove !",
-          "hash": "24791c0582"
+          "text": "The coins love my groove!",
+          "hash": "176aa8a901"
         }
       ],
       "fever": [
         {
           "file": "reggae/fever_0.mp3",
-          "text": "FRÉNÉSIE ! Tout le monde danse !",
-          "hash": "72eb2d543a"
+          "text": "FRENZY! Everybody dance!",
+          "hash": "e1712fdb59"
         },
         {
           "file": "reggae/fever_1.mp3",
-          "text": "Le feu, man, le feu !",
-          "hash": "b72b0bda49"
+          "text": "Fire, man, fire!",
+          "hash": "aa6ce04085"
         },
         {
           "file": "reggae/fever_2.mp3",
-          "text": "Mode fiesta activé !",
-          "hash": "36e3b9643d"
+          "text": "Party mode on!",
+          "hash": "d5928d4d12"
         }
       ],
       "hit": [
         {
           "file": "reggae/hit_0.mp3",
-          "text": "Aïe, ça pique !",
-          "hash": "5a2ffd9368"
+          "text": "Ouch, that stings!",
+          "hash": "4163fa9e50"
         },
         {
           "file": "reggae/hit_1.mp3",
-          "text": "Oups, pas grave, on repart !",
-          "hash": "5ee188bd19"
+          "text": "Oops, no worries, keep going!",
+          "hash": "943fc25536"
         },
         {
           "file": "reggae/hit_2.mp3",
-          "text": "Ouch, je reste cool, je reste cool !",
-          "hash": "c031b7ea32"
+          "text": "Ow, stay cool, stay cool!",
+          "hash": "edd529a962"
         },
         {
           "file": "reggae/hit_3.mp3",
-          "text": "Relève-toi, lion !",
-          "hash": "81ab9345f5"
+          "text": "Get up, lion!",
+          "hash": "509c2aeff5"
         }
       ],
       "lastLife": [
         {
           "file": "reggae/lastLife_0.mp3",
-          "text": "Dernière vie, man, concentration !",
-          "hash": "d18b3576fb"
+          "text": "Last life, man, focus!",
+          "hash": "9e31992c2f"
         },
         {
           "file": "reggae/lastLife_1.mp3",
-          "text": "Plus le droit à l'erreur, on respire !",
-          "hash": "7a225af3f0"
+          "text": "No more mistakes, just breathe!",
+          "hash": "1bda480b22"
         },
         {
           "file": "reggae/lastLife_2.mp3",
-          "text": "Tout ou rien maintenant, frère !",
-          "hash": "02779b9b7d"
+          "text": "All or nothing now, brother!",
+          "hash": "433b52bcaf"
         }
       ],
       "danger": [
         {
           "file": "reggae/danger_0.mp3",
-          "text": "Il est juste derrière, cours !",
-          "hash": "088bca5f16"
+          "text": "He's right behind, run!",
+          "hash": "38bda1df73"
         },
         {
           "file": "reggae/danger_1.mp3",
-          "text": "Le curseur me colle, vite, vite !",
-          "hash": "12648b8287"
+          "text": "The cursor's on me, go go go!",
+          "hash": "0611b7335d"
         },
         {
           "file": "reggae/danger_2.mp3",
-          "text": "Non non non, pas mon onglet !",
-          "hash": "8a0ae8f2a4"
+          "text": "No no no, not my tab!",
+          "hash": "c4aea29417"
         },
         {
           "file": "reggae/danger_3.mp3",
-          "text": "Accélère, il arrive !",
-          "hash": "6167f7545c"
+          "text": "Faster, he's coming!",
+          "hash": "b7e2a774a9"
         }
       ],
       "escape": [
         {
           "file": "reggae/escape_0.mp3",
-          "text": "Ouf, on l'a semé !",
-          "hash": "723f89c736"
+          "text": "Phew, we lost him!",
+          "hash": "7069ae2d0c"
         },
         {
           "file": "reggae/escape_1.mp3",
-          "text": "Trop lent, monsieur le curseur !",
-          "hash": "e4a33569d1"
+          "text": "Too slow, mister cursor!",
+          "hash": "f31dde58cf"
         },
         {
           "file": "reggae/escape_2.mp3",
-          "text": "Respire… on est bien.",
-          "hash": "69aea2a1a2"
+          "text": "Breathe… we good.",
+          "hash": "2cec185282"
         }
       ],
       "record": [
         {
           "file": "reggae/record_0.mp3",
-          "text": "NOUVEAU RECORD, yeah man !",
-          "hash": "367276c863"
+          "text": "NEW RECORD, yeah man!",
+          "hash": "b728c437b9"
         },
         {
           "file": "reggae/record_1.mp3",
-          "text": "Record battu, la légende continue !",
-          "hash": "7d796d0272"
+          "text": "Record broken, the legend lives!",
+          "hash": "56a2c7b1c2"
         },
         {
           "file": "reggae/record_2.mp3",
-          "text": "Plus loin que jamais, respect !",
-          "hash": "3e5bfcdbf2"
+          "text": "Further than ever, respect!",
+          "hash": "d7f3d90e07"
         }
       ],
       "boss": [
         {
           "file": "reggae/boss_0.mp3",
-          "text": "Oh, un gros costaud en vue !",
-          "hash": "4f922c31e3"
+          "text": "Oh, big one coming!",
+          "hash": "6c26e517a4"
         },
         {
           "file": "reggae/boss_1.mp3",
-          "text": "Un boss ? On va le faire danser !",
-          "hash": "8cfeba8ce7"
+          "text": "A boss? Let's make him dance!",
+          "hash": "0fbb8c482d"
         },
         {
           "file": "reggae/boss_2.mp3",
-          "text": "Attention, grosse vibe en approche !",
-          "hash": "ff41e0955a"
+          "text": "Watch out, heavy vibes ahead!",
+          "hash": "c2a6cb2346"
         }
       ],
       "bossDown": [
         {
           "file": "reggae/bossDown_0.mp3",
-          "text": "Boss au tapis, yeah !",
-          "hash": "23c5542e6b"
+          "text": "Boss down, yeah!",
+          "hash": "3974004538"
         },
         {
           "file": "reggae/bossDown_1.mp3",
-          "text": "Trop fort pour toi, big boss !",
-          "hash": "297ff935d0"
+          "text": "Too strong for you, big boss!",
+          "hash": "48c6c1bc78"
         },
         {
           "file": "reggae/bossDown_2.mp3",
-          "text": "Victoire au soleil !",
-          "hash": "41c13150f2"
+          "text": "Victory in the sun!",
+          "hash": "9f5b2162f0"
         }
       ],
       "bossEscaped": [
         {
           "file": "reggae/bossEscaped_0.mp3",
-          "text": "Il a filé, la prochaine fois !",
-          "hash": "ae34af9dd1"
+          "text": "He ran away, next time!",
+          "hash": "3adcd9c662"
         },
         {
           "file": "reggae/bossEscaped_1.mp3",
-          "text": "Pfiou, il s'est sauvé !",
-          "hash": "1a5ed6502d"
+          "text": "Phew, he bailed!",
+          "hash": "aef91d184b"
         }
       ],
       "fall": [
         {
           "file": "reggae/fall_0.mp3",
-          "text": "Noooon, je tombe !",
-          "hash": "03d21a3b58"
+          "text": "Noooo, I'm falling!",
+          "hash": "181d0bbeab"
         },
         {
           "file": "reggae/fall_1.mp3",
-          "text": "Oh non, le vide, man !",
-          "hash": "48add9a85f"
+          "text": "Oh no, the void, man!",
+          "hash": "3ac226379e"
         }
       ],
       "over": [
         {
           "file": "reggae/over_0.mp3",
-          "text": "Encore une, man, on y retourne !",
-          "hash": "240cb7be34"
+          "text": "One more, man, let's go again!",
+          "hash": "34268465dc"
         },
         {
           "file": "reggae/over_1.mp3",
-          "text": "Pas grave, le prochain run est le bon !",
-          "hash": "58e03c0f1f"
+          "text": "No worries, next run is the one!",
+          "hash": "a3a710d491"
         },
         {
           "file": "reggae/over_2.mp3",
-          "text": "Tu y étais presque, relance !",
-          "hash": "49f7078ddd"
+          "text": "So close, run it back!",
+          "hash": "2adba5b91a"
         },
         {
           "file": "reggae/over_3.mp3",
-          "text": "Allez, une dernière… et après une autre !",
-          "hash": "349a6e52b0"
+          "text": "Come on, one more… then another!",
+          "hash": "033c5a2aba"
         }
       ],
       "overRecord": [
         {
           "file": "reggae/overRecord_0.mp3",
-          "text": "Record de folie ! Tu peux faire mieux ? Vas-y !",
-          "hash": "7d415aa2bb"
+          "text": "Crazy record! Can you beat it? Go!",
+          "hash": "b72f9fe65d"
         },
         {
           "file": "reggae/overRecord_1.mp3",
-          "text": "Nouveau record ! Allez, on le pulvérise !",
-          "hash": "13c30d1cac"
+          "text": "New record! Let's smash it again!",
+          "hash": "f737f6a364"
         }
       ]
     },
@@ -344,332 +344,332 @@
       "start": [
         {
           "file": "classic/start_0.mp3",
-          "text": "Pas de connexion ? Pas de problème. Go !",
-          "hash": "9220da44e2"
+          "text": "No internet? No problem. Go!",
+          "hash": "d7812e159d"
         },
         {
           "file": "classic/start_1.mp3",
-          "text": "Le dino hors-ligne reprend du service !",
-          "hash": "8f8c6a61e7"
+          "text": "The offline dino is back in business!",
+          "hash": "c46c215cd7"
         },
         {
           "file": "classic/start_2.mp3",
-          "text": "Mode avion, mode course !",
-          "hash": "582c6df35f"
+          "text": "Airplane mode, race mode!",
+          "hash": "4771657195"
         },
         {
           "file": "classic/start_3.mp3",
-          "text": "Tu fermes pas mon onglet, toi !",
-          "hash": "625ef8372a"
+          "text": "You're not closing my tab!",
+          "hash": "c222e78459"
         }
       ],
       "tempo": [
         {
           "file": "classic/tempo_0.mp3",
-          "text": "Ça va plus vite, ça, non ?",
-          "hash": "b31d7d585a"
+          "text": "Is it getting faster? Oh yeah.",
+          "hash": "478b5312b7"
         },
         {
           "file": "classic/tempo_1.mp3",
-          "text": "Vitesse supérieure, pixel par pixel !",
-          "hash": "fbbd900b42"
+          "text": "Next gear, pixel by pixel!",
+          "hash": "3e3cdbe6f3"
         },
         {
           "file": "classic/tempo_2.mp3",
-          "text": "Mes petites pattes chauffent !",
-          "hash": "7abdefa8ee"
+          "text": "My tiny legs are burning!",
+          "hash": "3c43f75843"
         },
         {
           "file": "classic/tempo_3.mp3",
-          "text": "Plus de fps, plus de fun !",
-          "hash": "91d0bc0ab3"
+          "text": "More frames, more fun!",
+          "hash": "96fb1813b4"
         }
       ],
       "world": [
         {
           "file": "classic/world_0.mp3",
-          "text": "Oh, un nouveau niveau !",
-          "hash": "836a4c1e61"
+          "text": "Ooh, a new level!",
+          "hash": "18a5141dd8"
         },
         {
           "file": "classic/world_1.mp3",
-          "text": "Chargement terminé, on continue !",
-          "hash": "aca9b65aa6"
+          "text": "Loading complete, keep going!",
+          "hash": "1de308e3cf"
         },
         {
           "file": "classic/world_2.mp3",
-          "text": "C'est quoi ce monde ? J'adore !",
-          "hash": "12e4766a14"
+          "text": "What is this world? I love it!",
+          "hash": "3b4345c88e"
         },
         {
           "file": "classic/world_3.mp3",
-          "text": "Nouvelle map débloquée !",
-          "hash": "cc1546626b"
+          "text": "New map unlocked!",
+          "hash": "91c7e497d0"
         }
       ],
       "parry": [
         {
           "file": "classic/parry_0.mp3",
-          "text": "Parade ! Trop facile.",
-          "hash": "226d6e3ebd"
+          "text": "Parry! Too easy.",
+          "hash": "9cbe936d3d"
         },
         {
           "file": "classic/parry_1.mp3",
-          "text": "Bloqué, comme un captcha !",
-          "hash": "1072b70b23"
+          "text": "Blocked, like a captcha!",
+          "hash": "7c2e16e437"
         },
         {
           "file": "classic/parry_2.mp3",
-          "text": "Hop, erreur 404 : attaque introuvable !",
-          "hash": "ce1921936d"
+          "text": "Error 404: attack not found!",
+          "hash": "3b56b8701c"
         },
         {
           "file": "classic/parry_3.mp3",
-          "text": "Même pas touché !",
-          "hash": "d94a88507f"
+          "text": "Didn't even touch me!",
+          "hash": "25920c4454"
         },
         {
           "file": "classic/parry_4.mp3",
-          "text": "Next !",
-          "hash": "9cb2c7b429"
+          "text": "Next!",
+          "hash": "e90f5c49cf"
         }
       ],
       "boost": [
         {
           "file": "classic/boost_0.mp3",
-          "text": "Boost ! Téléchargement accéléré !",
-          "hash": "3de594f0e4"
+          "text": "Boost! Download accelerated!",
+          "hash": "242c3b5d03"
         },
         {
           "file": "classic/boost_1.mp3",
-          "text": "Wooosh !",
-          "hash": "43901640a0"
+          "text": "Wooosh!",
+          "hash": "d423be104d"
         },
         {
           "file": "classic/boost_2.mp3",
-          "text": "Fibre optique activée !",
-          "hash": "2c0895025e"
+          "text": "Fiber optic, baby!",
+          "hash": "b97b82b2b4"
         }
       ],
       "coins": [
         {
           "file": "classic/coins_0.mp3",
-          "text": "Pièces, pièces, pièces !",
-          "hash": "dad8864199"
+          "text": "Coins, coins, coins!",
+          "hash": "c2eec4ebf1"
         },
         {
           "file": "classic/coins_1.mp3",
-          "text": "Combo de pièces, ding ding ding !",
-          "hash": "6ce90a2c47"
+          "text": "Coin combo, ding ding ding!",
+          "hash": "cdb0ca2d6b"
         },
         {
           "file": "classic/coins_2.mp3",
-          "text": "Mon porte-monnaie adore ça !",
-          "hash": "601f3f9f9c"
+          "text": "My wallet loves this!",
+          "hash": "2db8816cc0"
         }
       ],
       "fever": [
         {
           "file": "classic/fever_0.mp3",
-          "text": "FRÉNÉSIE ! Tout pète !",
-          "hash": "46cd02a32e"
+          "text": "FRENZY! Everything explodes!",
+          "hash": "5f07c23cde"
         },
         {
           "file": "classic/fever_1.mp3",
-          "text": "Mode turbo 8-bit !",
-          "hash": "4ed337fc55"
+          "text": "8-bit turbo mode!",
+          "hash": "45e23ebc41"
         },
         {
           "file": "classic/fever_2.mp3",
-          "text": "Overclock total !",
-          "hash": "4ebca45b03"
+          "text": "Full overclock!",
+          "hash": "1b52dbc2c0"
         }
       ],
       "hit": [
         {
           "file": "classic/hit_0.mp3",
-          "text": "Aïe ! Bug !",
-          "hash": "0d39db27a1"
+          "text": "Ow! Bug!",
+          "hash": "8b3d8d22f2"
         },
         {
           "file": "classic/hit_1.mp3",
-          "text": "Ouille, lag !",
-          "hash": "ae576cffa3"
+          "text": "Ouch, lag!",
+          "hash": "792606a6a9"
         },
         {
           "file": "classic/hit_2.mp3",
-          "text": "Hé, c'était pas prévu ça !",
-          "hash": "ebe6f73be6"
+          "text": "Hey, that wasn't in the patch notes!",
+          "hash": "2afa21d635"
         },
         {
           "file": "classic/hit_3.mp3",
-          "text": "Ctrl Z, Ctrl Z !",
-          "hash": "2628881107"
+          "text": "Control Z, Control Z!",
+          "hash": "b04b0f3698"
         }
       ],
       "lastLife": [
         {
           "file": "classic/lastLife_0.mp3",
-          "text": "Batterie faible, dernière vie !",
-          "hash": "bbbfee4184"
+          "text": "Low battery, last life!",
+          "hash": "e71919343f"
         },
         {
           "file": "classic/lastLife_1.mp3",
-          "text": "Un seul cœur, pas de bêtise !",
-          "hash": "a3ced0aa86"
+          "text": "One heart left, don't blow it!",
+          "hash": "cae3936159"
         },
         {
           "file": "classic/lastLife_2.mp3",
-          "text": "Game over imminent, concentre-toi !",
-          "hash": "792ea8a89f"
+          "text": "Game over incoming, focus!",
+          "hash": "d329b9a648"
         }
       ],
       "danger": [
         {
           "file": "classic/danger_0.mp3",
-          "text": "Le curseur ! Il va cliquer !",
-          "hash": "5bc0b7ee79"
+          "text": "The cursor! It's gonna click!",
+          "hash": "61e5666ff0"
         },
         {
           "file": "classic/danger_1.mp3",
-          "text": "Au secours, il vise la croix !",
-          "hash": "23e1aea0ba"
+          "text": "Help, it's aiming for the X!",
+          "hash": "39fea96e36"
         },
         {
           "file": "classic/danger_2.mp3",
-          "text": "Cours, cours, cours !",
-          "hash": "5fe0c58a0a"
+          "text": "Run, run, run!",
+          "hash": "ce3af8fc99"
         },
         {
           "file": "classic/danger_3.mp3",
-          "text": "Pas la croix rouge, pitié !",
-          "hash": "cf8581d2b4"
+          "text": "Not the red X, please!",
+          "hash": "789c6a08d1"
         }
       ],
       "escape": [
         {
           "file": "classic/escape_0.mp3",
-          "text": "Ha, raté, curseur !",
-          "hash": "6abe024a75"
+          "text": "Ha, missed me, cursor!",
+          "hash": "28ed1ce0ac"
         },
         {
           "file": "classic/escape_1.mp3",
-          "text": "Semé ! Trop lent, la souris.",
-          "hash": "684e18eed0"
+          "text": "Lost you! Slow mouse.",
+          "hash": "8838d8f65f"
         },
         {
           "file": "classic/escape_2.mp3",
-          "text": "Ouf, sauvegarde réussie.",
-          "hash": "b7a62ec870"
+          "text": "Phew, game saved.",
+          "hash": "e9de36ae83"
         }
       ],
       "record": [
         {
           "file": "classic/record_0.mp3",
-          "text": "NOUVEAU RECORD !",
-          "hash": "56c0c918cf"
+          "text": "NEW HIGH SCORE!",
+          "hash": "8f021fc30e"
         },
         {
           "file": "classic/record_1.mp3",
-          "text": "High score explosé !",
-          "hash": "baf3d3dca1"
+          "text": "High score destroyed!",
+          "hash": "153d4ebca3"
         },
         {
           "file": "classic/record_2.mp3",
-          "text": "Record battu, capture d'écran !",
-          "hash": "ab5dc03382"
+          "text": "Record broken, screenshot it!",
+          "hash": "ab36d3f4a7"
         }
       ],
       "boss": [
         {
           "file": "classic/boss_0.mp3",
-          "text": "Boss en approche, sauvegardez !",
-          "hash": "dcbcb4fae8"
+          "text": "Boss incoming, save your game!",
+          "hash": "8f582143e6"
         },
         {
           "file": "classic/boss_1.mp3",
-          "text": "Un boss sauvage apparaît !",
-          "hash": "009fdf603c"
+          "text": "A wild boss appears!",
+          "hash": "fd7885f110"
         },
         {
           "file": "classic/boss_2.mp3",
-          "text": "Oh, un gros sprite !",
-          "hash": "4f96ee26a7"
+          "text": "Whoa, big sprite!",
+          "hash": "b7a03c15af"
         }
       ],
       "bossDown": [
         {
           "file": "classic/bossDown_0.mp3",
-          "text": "Boss vaincu ! Succès débloqué !",
-          "hash": "4c0bb1e052"
+          "text": "Boss defeated! Achievement unlocked!",
+          "hash": "cf4dffcd64"
         },
         {
           "file": "classic/bossDown_1.mp3",
-          "text": "K.O. !",
-          "hash": "e1603707d4"
+          "text": "K.O.!",
+          "hash": "da904632f2"
         },
         {
           "file": "classic/bossDown_2.mp3",
-          "text": "Supprimé, le boss !",
-          "hash": "0fc9aa2158"
+          "text": "Boss deleted!",
+          "hash": "ec2fb283e6"
         }
       ],
       "bossEscaped": [
         {
           "file": "classic/bossEscaped_0.mp3",
-          "text": "Il a fui, le lâche !",
-          "hash": "5c2ba67bec"
+          "text": "He ran away, coward!",
+          "hash": "83e74e5997"
         },
         {
           "file": "classic/bossEscaped_1.mp3",
-          "text": "Il a fermé son onglet, lui.",
-          "hash": "6dd0aa2edb"
+          "text": "He closed his own tab.",
+          "hash": "4efb472869"
         }
       ],
       "fall": [
         {
           "file": "classic/fall_0.mp3",
-          "text": "Aaaah, hors de la map !",
-          "hash": "4a935f5d80"
+          "text": "Aaaah, out of bounds!",
+          "hash": "1c24875d8a"
         },
         {
           "file": "classic/fall_1.mp3",
-          "text": "Pas de sol ? Sérieux ?",
-          "hash": "9d2b817750"
+          "text": "No floor? Seriously?",
+          "hash": "6bd704a0f7"
         }
       ],
       "over": [
         {
           "file": "classic/over_0.mp3",
-          "text": "Recommencer ? Évidemment !",
-          "hash": "f68616a5b4"
+          "text": "Try again? Obviously!",
+          "hash": "d44c6876fb"
         },
         {
           "file": "classic/over_1.mp3",
-          "text": "Appuie sur espace, on repart !",
-          "hash": "9964987825"
+          "text": "Hit space, let's go again!",
+          "hash": "44bcf3a013"
         },
         {
           "file": "classic/over_2.mp3",
-          "text": "Tu y étais presque, encore une !",
-          "hash": "780ce18bb0"
+          "text": "So close, one more!",
+          "hash": "58accb2115"
         },
         {
           "file": "classic/over_3.mp3",
-          "text": "Game over… pour cinq secondes !",
-          "hash": "5ed9d5b725"
+          "text": "Game over… for five seconds!",
+          "hash": "842df6a992"
         }
       ],
       "overRecord": [
         {
           "file": "classic/overRecord_0.mp3",
-          "text": "High score ! Tu peux le battre encore ?",
-          "hash": "ac8093bbb0"
+          "text": "High score! Can you beat it again?",
+          "hash": "cfd37cb88a"
         },
         {
           "file": "classic/overRecord_1.mp3",
-          "text": "Record ! Allez, un run de plus !",
-          "hash": "55dada1279"
+          "text": "Record! Come on, one more run!",
+          "hash": "a00fde2995"
         }
       ]
     },
@@ -677,332 +677,332 @@
       "start": [
         {
           "file": "neon/start_0.mp3",
-          "text": "Stream lancé, on speedrun !",
-          "hash": "80cf31a77a"
+          "text": "Stream is live, let's speedrun!",
+          "hash": "a3e861793b"
         },
         {
           "file": "neon/start_1.mp3",
-          "text": "Allez, chat, on explose tout !",
-          "hash": "37594b1789"
+          "text": "Okay chat, let's wreck this!",
+          "hash": "355aee7eaf"
         },
         {
           "file": "neon/start_2.mp3",
-          "text": "Néon en ligne, c'est parti !",
-          "hash": "bafbee6fef"
+          "text": "Neon online, let's go!",
+          "hash": "2d6e73ae3d"
         },
         {
           "file": "neon/start_3.mp3",
-          "text": "Full vitesse dès le départ !",
-          "hash": "e9c2344572"
+          "text": "Full speed from the start!",
+          "hash": "1641314ec0"
         }
       ],
       "tempo": [
         {
           "file": "neon/tempo_0.mp3",
-          "text": "Ça accélère, trop bien !",
-          "hash": "912251077e"
+          "text": "It's speeding up, love it!",
+          "hash": "9afe9ced35"
         },
         {
           "file": "neon/tempo_1.mp3",
-          "text": "Level up de vitesse, let's go !",
-          "hash": "93b72eccc1"
+          "text": "Speed level up, let's go!",
+          "hash": "517f4f674b"
         },
         {
           "file": "neon/tempo_2.mp3",
-          "text": "Le chat devient fou !",
-          "hash": "8f471669ee"
+          "text": "Chat is going crazy!",
+          "hash": "4669113028"
         },
         {
           "file": "neon/tempo_3.mp3",
-          "text": "Plus vite, plus de lumière !",
-          "hash": "98a11a2096"
+          "text": "Faster, brighter!",
+          "hash": "739aa40f53"
         }
       ],
       "world": [
         {
           "file": "neon/world_0.mp3",
-          "text": "Nouveau monde, c'est magnifique !",
-          "hash": "6a7a5c3362"
+          "text": "New world, it's gorgeous!",
+          "hash": "e441e106c7"
         },
         {
           "file": "neon/world_1.mp3",
-          "text": "Warp réussi !",
-          "hash": "7cd721de68"
+          "text": "Warp successful!",
+          "hash": "36d3757dfd"
         },
         {
           "file": "neon/world_2.mp3",
-          "text": "Regardez-moi ces couleurs !",
-          "hash": "68ed908e7d"
+          "text": "Look at these colors!",
+          "hash": "9050c58654"
         },
         {
           "file": "neon/world_3.mp3",
-          "text": "Changement de zone, hype !",
-          "hash": "83e07e7080"
+          "text": "New zone, hype!",
+          "hash": "a2e3abe940"
         }
       ],
       "parry": [
         {
           "file": "neon/parry_0.mp3",
-          "text": "Parade, clip ça !",
-          "hash": "43d1a69a62"
+          "text": "Parry, clip that!",
+          "hash": "f0048fe654"
         },
         {
           "file": "neon/parry_1.mp3",
-          "text": "Contré, trop propre !",
-          "hash": "c4fc4b219d"
+          "text": "Countered, so clean!",
+          "hash": "2fed712849"
         },
         {
           "file": "neon/parry_2.mp3",
-          "text": "Réflexes de pro !",
-          "hash": "84f14620a2"
+          "text": "Pro reflexes!",
+          "hash": "7df944b79b"
         },
         {
           "file": "neon/parry_3.mp3",
-          "text": "Frame perfect !",
-          "hash": "cd98851e7d"
+          "text": "Frame perfect!",
+          "hash": "fc0b4bc93c"
         },
         {
           "file": "neon/parry_4.mp3",
-          "text": "Zéro dégât, ez !",
-          "hash": "0ed0e536d0"
+          "text": "Zero damage, easy!",
+          "hash": "aabc13568a"
         }
       ],
       "boost": [
         {
           "file": "neon/boost_0.mp3",
-          "text": "Boost, on passe en hyperdrive !",
-          "hash": "45d4fe9124"
+          "text": "Boost, hyperdrive time!",
+          "hash": "e3b0112608"
         },
         {
           "file": "neon/boost_1.mp3",
-          "text": "Vitesse lumière !",
-          "hash": "1fea5feb4e"
+          "text": "Light speed!",
+          "hash": "962e8d5adc"
         },
         {
           "file": "neon/boost_2.mp3",
-          "text": "Ça fuse, ça fuse !",
-          "hash": "bfc2937950"
+          "text": "Zoom zoom zoom!",
+          "hash": "891a25d182"
         }
       ],
       "coins": [
         {
           "file": "neon/coins_0.mp3",
-          "text": "Combo de pièces, énorme !",
-          "hash": "1718f814d1"
+          "text": "Coin combo, huge!",
+          "hash": "d87ff0de95"
         },
         {
           "file": "neon/coins_1.mp3",
-          "text": "On farm, on farm !",
-          "hash": "95f473bbfc"
+          "text": "Farming, farming!",
+          "hash": "12765b2191"
         },
         {
           "file": "neon/coins_2.mp3",
-          "text": "Pluie de pièces !",
-          "hash": "f1d4bb133c"
+          "text": "It's raining coins!",
+          "hash": "12d8ffb565"
         }
       ],
       "fever": [
         {
           "file": "neon/fever_0.mp3",
-          "text": "FRÉNÉSIE ! Mode néon total !",
-          "hash": "8ba6c1ee53"
+          "text": "FRENZY! Full neon mode!",
+          "hash": "5453492ded"
         },
         {
           "file": "neon/fever_1.mp3",
-          "text": "Tout brille, tout explose !",
-          "hash": "9efb9a6e8c"
+          "text": "Everything's glowing!",
+          "hash": "26f5d80aa1"
         },
         {
           "file": "neon/fever_2.mp3",
-          "text": "Overdrive activé !",
-          "hash": "93c5658be2"
+          "text": "Overdrive activated!",
+          "hash": "05ba354eb5"
         }
       ],
       "hit": [
         {
           "file": "neon/hit_0.mp3",
-          "text": "Non, j'ai pris un coup !",
-          "hash": "a4e626ca7f"
+          "text": "No, I got hit!",
+          "hash": "ade83f7ba3"
         },
         {
           "file": "neon/hit_1.mp3",
-          "text": "Aïe, ça c'est du lag !",
-          "hash": "acaa95f5ac"
+          "text": "Ow, that's lag!",
+          "hash": "20f797cd9a"
         },
         {
           "file": "neon/hit_2.mp3",
-          "text": "Oups, c'est rien, on continue !",
-          "hash": "603f86aed2"
+          "text": "Oops, it's fine, keep going!",
+          "hash": "453c78e1aa"
         },
         {
           "file": "neon/hit_3.mp3",
-          "text": "Aïe, focus, focus !",
-          "hash": "bc44c82855"
+          "text": "Ouch, focus, focus!",
+          "hash": "dede241bc0"
         }
       ],
       "lastLife": [
         {
           "file": "neon/lastLife_0.mp3",
-          "text": "Dernière vie, le chat retient son souffle !",
-          "hash": "0353e2556c"
+          "text": "Last life, chat, hold your breath!",
+          "hash": "6baa0444c5"
         },
         {
           "file": "neon/lastLife_1.mp3",
-          "text": "Mode hardcore activé !",
-          "hash": "56469e49a1"
+          "text": "Hardcore mode on!",
+          "hash": "38231e4f29"
         },
         {
           "file": "neon/lastLife_2.mp3",
-          "text": "Un cœur, zéro erreur !",
-          "hash": "49caf356e6"
+          "text": "One heart, zero mistakes!",
+          "hash": "2560a13180"
         }
       ],
       "danger": [
         {
           "file": "neon/danger_0.mp3",
-          "text": "Il est collé à moi, help !",
-          "hash": "54dc4afd51"
+          "text": "It's right on me, help!",
+          "hash": "fc81db6b80"
         },
         {
           "file": "neon/danger_1.mp3",
-          "text": "Le curseur, le curseur !",
-          "hash": "60f02122b7"
+          "text": "The cursor, the cursor!",
+          "hash": "ce1b80cdf4"
         },
         {
           "file": "neon/danger_2.mp3",
-          "text": "Non, non, pas maintenant !",
-          "hash": "06ea74ff34"
+          "text": "No, no, not now!",
+          "hash": "0a3da25ccd"
         },
         {
           "file": "neon/danger_3.mp3",
-          "text": "Faut que j'accélère !",
-          "hash": "dcd3f97827"
+          "text": "I gotta go faster!",
+          "hash": "7f6520b758"
         }
       ],
       "escape": [
         {
           "file": "neon/escape_0.mp3",
-          "text": "Ouf, on l'a lâché !",
-          "hash": "473ed709ef"
+          "text": "Phew, we lost it!",
+          "hash": "e410741220"
         },
         {
           "file": "neon/escape_1.mp3",
-          "text": "Esquive de légende !",
-          "hash": "aa765e815d"
+          "text": "Legendary dodge!",
+          "hash": "7db304ad3f"
         },
         {
           "file": "neon/escape_2.mp3",
-          "text": "Bye bye, curseur !",
-          "hash": "7e041d6780"
+          "text": "Bye bye, cursor!",
+          "hash": "edb2135ea6"
         }
       ],
       "record": [
         {
           "file": "neon/record_0.mp3",
-          "text": "NOUVEAU RECORD, clip it !",
-          "hash": "c2ee9c57d4"
+          "text": "NEW RECORD, clip it!",
+          "hash": "fc8bd7176e"
         },
         {
           "file": "neon/record_1.mp3",
-          "text": "Record mondial… enfin, le mien !",
-          "hash": "6bc1771075"
+          "text": "World record… well, mine!",
+          "hash": "c361dd3e48"
         },
         {
           "file": "neon/record_2.mp3",
-          "text": "On a battu le record, chat !",
-          "hash": "dc658f9349"
+          "text": "We beat the record, chat!",
+          "hash": "2cb9b119fa"
         }
       ],
       "boss": [
         {
           "file": "neon/boss_0.mp3",
-          "text": "Boss fight, préparez-vous !",
-          "hash": "175c1963da"
+          "text": "Boss fight, get ready!",
+          "hash": "3e2741b3da"
         },
         {
           "file": "neon/boss_1.mp3",
-          "text": "Gros boss en vue, hype !",
-          "hash": "c6a72f0c07"
+          "text": "Huge boss incoming, hype!",
+          "hash": "694b4369c0"
         },
         {
           "file": "neon/boss_2.mp3",
-          "text": "Oh, il est énorme !",
-          "hash": "267a309bc0"
+          "text": "Oh, it's massive!",
+          "hash": "b0695a6305"
         }
       ],
       "bossDown": [
         {
           "file": "neon/bossDown_0.mp3",
-          "text": "Boss détruit, GG !",
-          "hash": "38e59107e3"
+          "text": "Boss destroyed, GG!",
+          "hash": "e70ad6d3c1"
         },
         {
           "file": "neon/bossDown_1.mp3",
-          "text": "K.O. en direct !",
-          "hash": "b8e874e551"
+          "text": "Live K.O.!",
+          "hash": "1263e726a6"
         },
         {
           "file": "neon/bossDown_2.mp3",
-          "text": "Trop facile, next boss !",
-          "hash": "ab80817993"
+          "text": "Too easy, next boss!",
+          "hash": "5d30d507d4"
         }
       ],
       "bossEscaped": [
         {
           "file": "neon/bossEscaped_0.mp3",
-          "text": "Il s'est enfui, nul !",
-          "hash": "c0aa24abc8"
+          "text": "It ran away, lame!",
+          "hash": "e3674c885f"
         },
         {
           "file": "neon/bossEscaped_1.mp3",
-          "text": "Rage quit du boss !",
-          "hash": "a64d335835"
+          "text": "Boss rage quit!",
+          "hash": "253fa44107"
         }
       ],
       "fall": [
         {
           "file": "neon/fall_0.mp3",
-          "text": "Noooon, je tombe !",
-          "hash": "a628a04547"
+          "text": "Noooo, I'm falling!",
+          "hash": "7d08d69eff"
         },
         {
           "file": "neon/fall_1.mp3",
-          "text": "Chute libre, au secours !",
-          "hash": "ffe7bc7f7a"
+          "text": "Free fall, help!",
+          "hash": "b0b709eea6"
         }
       ],
       "over": [
         {
           "file": "neon/over_0.mp3",
-          "text": "Allez, run suivant !",
-          "hash": "751b4dce1c"
+          "text": "Okay, next run!",
+          "hash": "e060461bdd"
         },
         {
           "file": "neon/over_1.mp3",
-          "text": "On relance, j'ai la dalle !",
-          "hash": "e458f7afce"
+          "text": "Run it back, I'm hungry!",
+          "hash": "db5b87d394"
         },
         {
           "file": "neon/over_2.mp3",
-          "text": "C'était si proche, encore une !",
-          "hash": "135b3d3da6"
+          "text": "That was so close, one more!",
+          "hash": "04516abd8b"
         },
         {
           "file": "neon/over_3.mp3",
-          "text": "Pas de pause, on y retourne !",
-          "hash": "c5968dc4d0"
+          "text": "No breaks, let's go again!",
+          "hash": "7e3bc0e210"
         }
       ],
       "overRecord": [
         {
           "file": "neon/overRecord_0.mp3",
-          "text": "Record ! Le chat en veut encore !",
-          "hash": "45f03241b1"
+          "text": "Record! Chat wants more!",
+          "hash": "b01ab0a661"
         },
         {
           "file": "neon/overRecord_1.mp3",
-          "text": "Nouveau record, on le repousse ?",
-          "hash": "2d6ea5be69"
+          "text": "New record, let's push it further?",
+          "hash": "46d53ea88f"
         }
       ]
     },
@@ -1010,332 +1010,332 @@
       "start": [
         {
           "file": "gold/start_0.mp3",
-          "text": "Place au dino le plus riche du web.",
-          "hash": "dc9961a1b9"
+          "text": "Make way for the richest dino on the web.",
+          "hash": "4fa098bf64"
         },
         {
           "file": "gold/start_1.mp3",
-          "text": "Courir ? Avec style, évidemment.",
-          "hash": "f85966aa76"
+          "text": "Running? With style, naturally.",
+          "hash": "3d7a91c3b0"
         },
         {
           "file": "gold/start_2.mp3",
-          "text": "Mesdames, messieurs, admirez.",
-          "hash": "5f3994d3be"
+          "text": "Ladies and gentlemen, behold.",
+          "hash": "c6a8e8ba29"
         },
         {
           "file": "gold/start_3.mp3",
-          "text": "L'or ne perd jamais.",
-          "hash": "ec5d985d00"
+          "text": "Gold never loses.",
+          "hash": "cb4048b6db"
         }
       ],
       "tempo": [
         {
           "file": "gold/tempo_0.mp3",
-          "text": "Plus vite ? Enfin un défi.",
-          "hash": "b89f0c7770"
+          "text": "Faster? Finally, a challenge.",
+          "hash": "5b5fcc34e4"
         },
         {
           "file": "gold/tempo_1.mp3",
-          "text": "Accélérons, le temps, c'est de l'argent.",
-          "hash": "5dfa2301fa"
+          "text": "Speed up, time is money.",
+          "hash": "4f640642be"
         },
         {
           "file": "gold/tempo_2.mp3",
-          "text": "Voilà une allure digne de moi.",
-          "hash": "0b9b52b460"
+          "text": "Now that is a pace worthy of me.",
+          "hash": "ac7c3982ab"
         },
         {
           "file": "gold/tempo_3.mp3",
-          "text": "Même à cette vitesse, je brille.",
-          "hash": "7a4c383e30"
+          "text": "Even at this speed, I shine.",
+          "hash": "b7a9356b3c"
         }
       ],
       "world": [
         {
           "file": "gold/world_0.mp3",
-          "text": "Un nouveau domaine. Je l'achète.",
-          "hash": "562f1696fa"
+          "text": "A new estate. I'll buy it.",
+          "hash": "47e95c49d4"
         },
         {
           "file": "gold/world_1.mp3",
-          "text": "Hmm, charmant. Un peu pauvre.",
-          "hash": "b528f0004b"
+          "text": "Hmm, charming. A bit cheap.",
+          "hash": "58bf2140ca"
         },
         {
           "file": "gold/world_2.mp3",
-          "text": "Un monde à ma mesure, enfin.",
-          "hash": "dd3b7f3a39"
+          "text": "A world worthy of me, at last.",
+          "hash": "a2a06be828"
         },
         {
           "file": "gold/world_3.mp3",
-          "text": "Le décor change, mon éclat reste.",
-          "hash": "3cdb521e6f"
+          "text": "The scenery changes, my shine remains.",
+          "hash": "ce57ab64b4"
         }
       ],
       "parry": [
         {
           "file": "gold/parry_0.mp3",
-          "text": "Pathétique.",
-          "hash": "beb9af34ba"
+          "text": "Pathetic.",
+          "hash": "8f46b73702"
         },
         {
           "file": "gold/parry_1.mp3",
-          "text": "Trop facile pour un dino en or.",
-          "hash": "3737df918c"
+          "text": "Too easy for a golden dino.",
+          "hash": "5ee8a10d57"
         },
         {
           "file": "gold/parry_2.mp3",
-          "text": "On ne touche pas à l'or.",
-          "hash": "f31d5401a1"
+          "text": "Nobody touches the gold.",
+          "hash": "52ce1a9b5e"
         },
         {
           "file": "gold/parry_3.mp3",
-          "text": "Renvoyé. Sans pourboire.",
-          "hash": "aa53cda77b"
+          "text": "Returned. No tip.",
+          "hash": "9b676da912"
         },
         {
           "file": "gold/parry_4.mp3",
-          "text": "Élégance absolue.",
-          "hash": "b159e56d0b"
+          "text": "Absolute elegance.",
+          "hash": "1f0c47ec53"
         }
       ],
       "boost": [
         {
           "file": "gold/boost_0.mp3",
-          "text": "Jet privé activé.",
-          "hash": "6cdfdc48ee"
+          "text": "Private jet engaged.",
+          "hash": "303690ae91"
         },
         {
           "file": "gold/boost_1.mp3",
-          "text": "Place, j'arrive.",
-          "hash": "6b0c519fdc"
+          "text": "Step aside, I'm coming through.",
+          "hash": "a041b65e7a"
         },
         {
           "file": "gold/boost_2.mp3",
-          "text": "La vitesse, le luxe ultime.",
-          "hash": "f45e627804"
+          "text": "Speed, the ultimate luxury.",
+          "hash": "ea472a1a48"
         }
       ],
       "coins": [
         {
           "file": "gold/coins_0.mp3",
-          "text": "Encore de l'or ? Évidemment.",
-          "hash": "3ed583b215"
+          "text": "More gold? Of course.",
+          "hash": "fdd203944b"
         },
         {
           "file": "gold/coins_1.mp3",
-          "text": "Mon compte en banque sourit.",
-          "hash": "d429bd644a"
+          "text": "My bank account is smiling.",
+          "hash": "776522fa9a"
         },
         {
           "file": "gold/coins_2.mp3",
-          "text": "Les pièces viennent à moi.",
-          "hash": "c4951701b1"
+          "text": "Coins come to me.",
+          "hash": "4bcdc7d523"
         }
       ],
       "fever": [
         {
           "file": "gold/fever_0.mp3",
-          "text": "FRÉNÉSIE ! Contemplez ma splendeur !",
-          "hash": "ca5ab5e479"
+          "text": "FRENZY! Behold my splendor!",
+          "hash": "457ca62159"
         },
         {
           "file": "gold/fever_1.mp3",
-          "text": "Voici le vrai luxe !",
-          "hash": "d4c661003e"
+          "text": "This is true luxury!",
+          "hash": "6bd422683c"
         },
         {
           "file": "gold/fever_2.mp3",
-          "text": "Brillez, mes enfants !",
-          "hash": "aa53770121"
+          "text": "Shine, my children!",
+          "hash": "2483e98bfc"
         }
       ],
       "hit": [
         {
           "file": "gold/hit_0.mp3",
-          "text": "Mon armure ! Rayée !",
-          "hash": "f7bf39aac7"
+          "text": "My armor! Scratched!",
+          "hash": "6713c19204"
         },
         {
           "file": "gold/hit_1.mp3",
-          "text": "Comment osez-vous ?",
-          "hash": "8a315369ca"
+          "text": "How dare you?",
+          "hash": "40a4ba9294"
         },
         {
           "file": "gold/hit_2.mp3",
-          "text": "Une simple égratignure.",
-          "hash": "d6575ba674"
+          "text": "A mere scratch.",
+          "hash": "2e909a28d5"
         },
         {
           "file": "gold/hit_3.mp3",
-          "text": "Aïe. Mon avocat en entendra parler.",
-          "hash": "55cc079c9e"
+          "text": "Ow. My lawyer will hear about this.",
+          "hash": "5ae921f966"
         }
       ],
       "lastLife": [
         {
           "file": "gold/lastLife_0.mp3",
-          "text": "Dernière vie. Ne me décevez pas.",
-          "hash": "dd0508a959"
+          "text": "Last life. Do not disappoint me.",
+          "hash": "063f748978"
         },
         {
           "file": "gold/lastLife_1.mp3",
-          "text": "L'or reste debout. Concentration.",
-          "hash": "71cae94dd5"
+          "text": "Gold stands tall. Focus.",
+          "hash": "ccc525064e"
         },
         {
           "file": "gold/lastLife_2.mp3",
-          "text": "Il est temps d'être sérieux.",
-          "hash": "54abd0a887"
+          "text": "Time to get serious.",
+          "hash": "1ffc6038e1"
         }
       ],
       "danger": [
         {
           "file": "gold/danger_0.mp3",
-          "text": "Ce curseur ose me suivre ?",
-          "hash": "cc496f5d41"
+          "text": "This cursor dares to follow me?",
+          "hash": "a253d9e601"
         },
         {
           "file": "gold/danger_1.mp3",
-          "text": "Écartez ce vulgaire pointeur !",
-          "hash": "a32bf87c82"
+          "text": "Get that vulgar pointer away!",
+          "hash": "33935140bf"
         },
         {
           "file": "gold/danger_2.mp3",
-          "text": "Vite, sauvez l'or !",
-          "hash": "85923abb63"
+          "text": "Quick, save the gold!",
+          "hash": "89f456634d"
         },
         {
           "file": "gold/danger_3.mp3",
-          "text": "Il s'approche de ma fortune !",
-          "hash": "42feb2b5a8"
+          "text": "It's approaching my fortune!",
+          "hash": "2b19f7e1da"
         }
       ],
       "escape": [
         {
           "file": "gold/escape_0.mp3",
-          "text": "Évidemment, il ne peut pas suivre.",
-          "hash": "e972fcdcf7"
+          "text": "Naturally, it can't keep up.",
+          "hash": "fafd6e5979"
         },
         {
           "file": "gold/escape_1.mp3",
-          "text": "Retourne dans ta barre des tâches.",
-          "hash": "2c26accda2"
+          "text": "Back to your taskbar.",
+          "hash": "3f08016285"
         },
         {
           "file": "gold/escape_2.mp3",
-          "text": "Adieu, roturier.",
-          "hash": "4f4305aca9"
+          "text": "Farewell, peasant.",
+          "hash": "b6123aaf63"
         }
       ],
       "record": [
         {
           "file": "gold/record_0.mp3",
-          "text": "NOUVEAU RECORD. Comme prévu.",
-          "hash": "cd76793243"
+          "text": "NEW RECORD. As expected.",
+          "hash": "4861291692"
         },
         {
           "file": "gold/record_1.mp3",
-          "text": "Un record en or massif.",
-          "hash": "0304462e0e"
+          "text": "A solid gold record.",
+          "hash": "2f79d35ca8"
         },
         {
           "file": "gold/record_2.mp3",
-          "text": "Le sommet m'appartient.",
-          "hash": "d90278ff78"
+          "text": "The summit belongs to me.",
+          "hash": "17a89d9c40"
         }
       ],
       "boss": [
         {
           "file": "gold/boss_0.mp3",
-          "text": "Un adversaire ? Voyons voir.",
-          "hash": "8740aa61d8"
+          "text": "An opponent? Let's see.",
+          "hash": "53be0bbfa5"
         },
         {
           "file": "gold/boss_1.mp3",
-          "text": "Enfin quelqu'un à ma hauteur ?",
-          "hash": "49a44163ec"
+          "text": "Finally someone at my level?",
+          "hash": "10ab037d41"
         },
         {
           "file": "gold/boss_2.mp3",
-          "text": "Un boss. Comme c'est mignon.",
-          "hash": "89fc8d8b6c"
+          "text": "A boss. How adorable.",
+          "hash": "8f39985946"
         }
       ],
       "bossDown": [
         {
           "file": "gold/bossDown_0.mp3",
-          "text": "Vaincu. Suivant.",
-          "hash": "ac9044a6db"
+          "text": "Defeated. Next.",
+          "hash": "76e8c5be97"
         },
         {
           "file": "gold/bossDown_1.mp3",
-          "text": "L'or triomphe toujours.",
-          "hash": "61107b322e"
+          "text": "Gold always triumphs.",
+          "hash": "09ca13b07a"
         },
         {
           "file": "gold/bossDown_2.mp3",
-          "text": "Rangez-le avec les autres trophées.",
-          "hash": "2e87fb597e"
+          "text": "Put it with the other trophies.",
+          "hash": "5b7e4ccb5c"
         }
       ],
       "bossEscaped": [
         {
           "file": "gold/bossEscaped_0.mp3",
-          "text": "Il fuit ma splendeur.",
-          "hash": "9ab578cb07"
+          "text": "It flees my splendor.",
+          "hash": "f17c00b2cb"
         },
         {
           "file": "gold/bossEscaped_1.mp3",
-          "text": "Il a eu peur. Normal.",
-          "hash": "97dc041128"
+          "text": "It got scared. Understandable.",
+          "hash": "af49995265"
         }
       ],
       "fall": [
         {
           "file": "gold/fall_0.mp3",
-          "text": "Non ! Pas dans le vide !",
-          "hash": "48a396ce20"
+          "text": "No! Not into the void!",
+          "hash": "0146439fbd"
         },
         {
           "file": "gold/fall_1.mp3",
-          "text": "Rattrapez-moi, je suis précieux !",
-          "hash": "6d1b075c18"
+          "text": "Catch me, I'm precious!",
+          "hash": "2a00180123"
         }
       ],
       "over": [
         {
           "file": "gold/over_0.mp3",
-          "text": "Encore. Je l'exige.",
-          "hash": "fd15c57f4e"
+          "text": "Again. I insist.",
+          "hash": "1eb9472e7e"
         },
         {
           "file": "gold/over_1.mp3",
-          "text": "Une légende ne s'arrête pas là.",
-          "hash": "5523478cd0"
+          "text": "A legend doesn't stop here.",
+          "hash": "86717e592c"
         },
         {
           "file": "gold/over_2.mp3",
-          "text": "Relancez. Immédiatement.",
-          "hash": "a50a38e7df"
+          "text": "Restart. Immediately.",
+          "hash": "8f7b9087ed"
         },
         {
           "file": "gold/over_3.mp3",
-          "text": "Simple échauffement. On recommence.",
-          "hash": "544ce9369d"
+          "text": "Just a warm-up. Once more.",
+          "hash": "cca929fb52"
         }
       ],
       "overRecord": [
         {
           "file": "gold/overRecord_0.mp3",
-          "text": "Un record en or. Vous en voulez un autre ?",
-          "hash": "1e32d0f93f"
+          "text": "A golden record. Care for another?",
+          "hash": "a78d7b00a5"
         },
         {
           "file": "gold/overRecord_1.mp3",
-          "text": "Magnifique. Faisons encore mieux.",
-          "hash": "7f149e4b74"
+          "text": "Magnificent. Let's do even better.",
+          "hash": "648bf21389"
         }
       ]
     },
@@ -1343,79 +1343,79 @@
       "taunt": [
         {
           "file": "cursor/taunt_0.mp3",
-          "text": "Je vais fermer ton onglet…",
-          "hash": "fd9a8d42fa"
+          "text": "I'm going to close your tab…",
+          "hash": "6ffd829842"
         },
         {
           "file": "cursor/taunt_1.mp3",
-          "text": "Cours, petit dino. Cours.",
-          "hash": "01632e1fd5"
+          "text": "Run, little dino. Run.",
+          "hash": "9ba8d014c2"
         },
         {
           "file": "cursor/taunt_2.mp3",
-          "text": "Clic… clic… je te vois.",
-          "hash": "048c9bc4ce"
+          "text": "Click… click… I see you.",
+          "hash": "26dbcebf4d"
         },
         {
           "file": "cursor/taunt_3.mp3",
-          "text": "Tu ne peux pas m'échapper.",
-          "hash": "566d3dac5a"
+          "text": "You can't escape me.",
+          "hash": "fb352eac03"
         }
       ],
       "danger": [
         {
           "file": "cursor/danger_0.mp3",
-          "text": "Presque… presque…",
-          "hash": "8ff19dd3d9"
+          "text": "Almost… almost…",
+          "hash": "c4962787d4"
         },
         {
           "file": "cursor/danger_1.mp3",
-          "text": "Ta croix rouge t'attend.",
-          "hash": "cb4f8bc459"
+          "text": "Your red X awaits.",
+          "hash": "17838069f7"
         },
         {
           "file": "cursor/danger_2.mp3",
-          "text": "Plus que quelques pixels…",
-          "hash": "d6ac6e8c95"
+          "text": "Just a few more pixels…",
+          "hash": "109d1c94eb"
         },
         {
           "file": "cursor/danger_3.mp3",
-          "text": "Je sens ta peur.",
-          "hash": "6c0fb6382d"
+          "text": "I can smell your fear.",
+          "hash": "2d467e464b"
         }
       ],
       "caught": [
         {
           "file": "cursor/caught_0.mp3",
-          "text": "Clic. Onglet fermé.",
-          "hash": "b749177f6e"
+          "text": "Click. Tab closed.",
+          "hash": "1dab16142d"
         },
         {
           "file": "cursor/caught_1.mp3",
-          "text": "Fin de session.",
-          "hash": "95b062dfae"
+          "text": "Session ended.",
+          "hash": "ee53ef1ab2"
         },
         {
           "file": "cursor/caught_2.mp3",
-          "text": "Fermé. Comme les autres.",
-          "hash": "3e8ef6a922"
+          "text": "Closed. Like all the others.",
+          "hash": "065f594f72"
         },
         {
           "file": "cursor/caught_3.mp3",
-          "text": "Hahaha… au suivant.",
-          "hash": "1ea9741231"
+          "text": "Hahaha… next.",
+          "hash": "05eef1b61f"
         }
       ],
       "escape": [
         {
           "file": "cursor/escape_0.mp3",
-          "text": "Grr… tu ne perds rien pour attendre.",
-          "hash": "606c2bb883"
+          "text": "Grr… you can't run forever.",
+          "hash": "3b52a82d8c"
         },
         {
           "file": "cursor/escape_1.mp3",
-          "text": "Profite, ça ne durera pas.",
-          "hash": "7059cfd83a"
+          "text": "Enjoy it while it lasts.",
+          "hash": "0ac47f9d0e"
         }
       ]
     }

@@ -71,3 +71,41 @@ test('record battu en pleine course, curseur qui ricane quand il attrape', () =>
   voices.update(2);
   assert.match(played.at(-1), /^classic\/overRecord_/);
 });
+
+test('première partie : fin sur un record, et le record différé est retenté', () => {
+  const { game, voices, played } = setup();
+  game.start({ skin: 'neon' });
+  game.emit('game:over', { reason: 'hit', score: 120 });
+  voices.update(0.5);
+  assert.match(played.at(-1), /^neon\/overRecord_/);
+
+  const b = setup({ getBest: () => 10 });
+  b.game.start({ skin: 'gold' });
+  b.voices.update(3);
+  b.voices.say('fall', { force: true });
+  b.game.coins = 50;
+  b.voices.update(0.1);
+  assert.match(b.played.at(-1), /^gold\/fall_/);
+  b.voices.update(1.5);
+  assert.match(b.played.at(-1), /^gold\/record_/);
+});
+
+test('une relance annule les répliques différées de la partie précédente', () => {
+  const { game, voices, played } = setup();
+  game.start({ skin: 'classic' });
+  game.emit('game:over', { reason: 'caught', score: 0 });
+  game.start({ skin: 'classic' });
+  const n = played.length;
+  voices.update(2);
+  assert.ok(played.slice(n).every((f) => !/over/.test(f)));
+});
+
+test('manifest arrivé après le départ : la réplique de départ est quand même jouée', () => {
+  const game = new Game({ seed: 7 });
+  const played = [];
+  const voices = new VoiceDirector(game, { player: { play: (f) => { played.push(f); return 1; }, stop() {} }, random: () => 0.99 });
+  game.start({ skin: 'reggae' });
+  voices.update(0.3);
+  voices.setManifest(manifest);
+  assert.match(played[0], /^reggae\/start_/);
+});

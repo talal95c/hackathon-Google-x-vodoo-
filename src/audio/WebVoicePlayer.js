@@ -6,6 +6,7 @@ export class WebVoicePlayer {
     this.buffers = new Map();
     this.pending = new Map();
     this.volume = 1;
+    this.seq = 0;
   }
 
   async loadManifest() {
@@ -21,6 +22,8 @@ export class WebVoicePlayer {
     this.out.gain.value = this.volume;
     this.out.connect(ctx.destination);
     this.preload(this.character);
+    if (this.queued && performance.now() - this.queued.at < 1500) this.play(this.queued.file);
+    this.queued = null;
   }
 
   // Décode en avance toutes les répliques d'un perso (+ curseur) pour zéro latence en course
@@ -33,7 +36,8 @@ export class WebVoicePlayer {
   }
 
   #load(file) {
-    if (this.buffers.has(file) || this.pending.has(file)) return;
+    if (this.buffers.has(file)) return Promise.resolve();
+    if (this.pending.has(file)) return this.pending.get(file);
     const p = fetch(this.base + file)
       .then((r) => r.arrayBuffer())
       .then((b) => this.ctx.decodeAudioData(b))
@@ -41,11 +45,25 @@ export class WebVoicePlayer {
       .catch(() => {})
       .finally(() => this.pending.delete(file));
     this.pending.set(file, p);
+    return p;
   }
 
+  // Réplique pas encore décodée (ou contexte audio pas encore créé) : jouée dès qu'elle est prête,
+  // sauf si une autre réplique l'a remplacée entre-temps ou si elle arrive trop tard.
   play(file) {
+    const token = ++this.seq;
+    if (!this.ctx) { this.queued = { file, at: performance.now() }; return 0; }
     const buf = this.buffers.get(file);
-    if (!this.ctx || !buf) { if (this.ctx) this.#load(file); return 0; }
+    if (buf) return this.#start(buf);
+    const at = performance.now();
+    this.#load(file).then(() => {
+      const ready = this.buffers.get(file);
+      if (ready && token === this.seq && performance.now() - at < 1500) this.#start(ready);
+    });
+    return 0;
+  }
+
+  #start(buf) {
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
     src.connect(this.out);
@@ -56,6 +74,8 @@ export class WebVoicePlayer {
   }
 
   stop() {
+    this.seq++;
+    this.queued = null;
     try { this.source?.stop(); } catch { /* déjà terminée */ }
     this.source = null;
   }

@@ -53,9 +53,17 @@ export class VoiceDirector {
   }
 
   // manifest : { lines: { [perso]: { [event]: [{ file, text }] } } }
-  setManifest(manifest) { this.lines = manifest?.lines ?? null; }
+  setManifest(manifest) {
+    const late = !this.lines && this.game.state === 'playing' && this.time < 2;
+    this.lines = manifest?.lines ?? null;
+    this.setSkin(this.skin);
+    if (late) this.say('start');
+  }
 
-  setSkin(skin) { this.character = this.lines?.[skin] ? skin : 'classic'; }
+  setSkin(skin) {
+    this.skin = skin;
+    this.character = this.lines?.[skin] ? skin : 'classic';
+  }
 
   #reset() {
     this.time = 0;
@@ -69,6 +77,7 @@ export class VoiceDirector {
     this.best = 0;
     this.chain = 0;
     this.lastCoin = -Infinity;
+    this.timers = [];
   }
 
   #bind() {
@@ -100,7 +109,7 @@ export class VoiceDirector {
     on('boss:escaped', () => this.say('bossEscaped'));
     on('runner:fall', () => this.say('fall', { force: true }));
     on('game:over', ({ reason, score }) => {
-      const record = this.best > 0 && score > this.best;
+      const record = score > 0 && score > this.best;
       if (reason === 'caught') {
         this.say('caught', { character: 'cursor', force: true, priority: 7 });
         this.#after(1.6, () => this.say(record ? 'overRecord' : 'over', { force: true }));
@@ -122,10 +131,8 @@ export class VoiceDirector {
       this.danger = false;
       this.say('escape');
     }
-    if (!this.recordDone && this.best > 0 && g.score > this.best) {
-      this.recordDone = true;
-      this.say('record');
-    }
+    // Pas d'annonce en cours de première partie : chaque mètre serait un « record »
+    if (!this.recordDone && this.best > 0 && g.score > this.best) this.recordDone = !!this.say('record');
   }
 
   // Joue une réplique de l'événement si les règles le permettent. Renvoie la réplique jouée ou null.
@@ -158,10 +165,10 @@ export class VoiceDirector {
     return line;
   }
 
-  #after(delay, fn) { (this.timers ??= []).push({ at: this.time + delay, fn }); }
+  #after(delay, fn) { this.timers.push({ at: this.time + delay, fn }); }
 
   #runTimers() {
-    if (!this.timers?.length) return;
+    if (!this.timers.length) return;
     const due = this.timers.filter((t) => t.at <= this.time);
     this.timers = this.timers.filter((t) => t.at > this.time);
     due.forEach((t) => t.fn());

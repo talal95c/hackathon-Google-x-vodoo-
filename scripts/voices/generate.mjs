@@ -8,7 +8,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CHARACTERS } from './characters.js';
+import { CHARACTERS, LANGUAGE } from './characters.js';
 
 const API = 'https://api.gradium.ai/api';
 const KEY = process.env.GRADIUM_API_KEY;
@@ -43,7 +43,7 @@ async function api(path, { method = 'GET', body } = {}) {
 // Voice Design : décrit le personnage, prend le premier candidat et le convertit en voix permanente
 async function designVoice(id, char) {
   const { embeddings } = await (await api('/voice-generator/generate', {
-    method: 'POST', body: { prompt: char.prompt, language: 'fr', n_samples: 1 },
+    method: 'POST', body: { prompt: char.prompt, language: LANGUAGE, n_samples: 1 },
   })).json();
   const embeddingId = embeddings[0].embedding_id;
   for (let i = 0; i < 60; i++) {

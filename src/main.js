@@ -65,6 +65,7 @@ const voicePlayer = new WebVoicePlayer({ onSpeak: (seconds) => music.duck(second
 const voices = new VoiceDirector(game, { player: voicePlayer, getBest: () => profile.data.best });
 voicePlayer.loadManifest().then((m) => { voices.setManifest(m); voices.setSkin(profile.data.skin); voicePlayer.preload(voices.character); }).catch(() => {});
 game.on('skin:preview', ({ skin }) => { voices.setSkin(skin); voicePlayer.preload(voices.character); });
+game.on('game:start', () => voicePlayer.preload(voices.character));
 sfx.onInit = (audioCtx) => { music.setAudioContext(audioCtx); voicePlayer.setAudioContext(audioCtx); };
 // Connexion Lyria dès le chargement (le WebSocket n'a pas besoin d'un clic) : musique live prête au 1er départ
 if (lyria.hasKey()) lyria.connect();
