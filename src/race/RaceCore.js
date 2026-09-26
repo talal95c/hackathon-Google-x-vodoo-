@@ -17,8 +17,8 @@ export const FLAGS = { drift: 1, shield: 2, boost: 4, fall: 8, rage: 16, stumble
 const MAX_SPEED = 95; // m/s, au-delà un instantané est jugé impossible
 
 export class RaceCore {
-  constructor({ now = () => Date.now(), send = () => {}, onEnd = null, endTime = ROYALE.endTime, interval = ROYALE.interval } = {}) {
-    Object.assign(this, { now, send, onEnd, endTime, interval });
+  constructor({ now = () => Date.now(), send = () => {}, onEnd = null, endTime = ROYALE.endTime, interval = ROYALE.interval, firstMin = Math.min(ROYALE.firstMin, endTime / 2) } = {}) {
+    Object.assign(this, { now, send, onEnd, endTime, interval, firstMin });
     this.players = new Map();
     this.phase = 'lobby';     // lobby → countdown → racing → done
     this.rng = new Random(1);
@@ -61,7 +61,7 @@ export class RaceCore {
     this.seed = seed;
     this.rng.seed(`items-${seed}`);
     this.startAt = this.now() + countdown * 1000;
-    this.schedule = eliminationSchedule(this.players.size, { endTime: this.endTime, interval: this.interval });
+    this.schedule = eliminationSchedule(this.players.size, { endTime: this.endTime, interval: this.interval, firstMin: this.firstMin });
     this.phase = 'countdown';
     this.send(null, { t: 'race:start', seed, startAt: this.startAt, schedule: this.schedule, players: this.list() });
   }

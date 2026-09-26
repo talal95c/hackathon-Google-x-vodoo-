@@ -8,11 +8,14 @@
     "build": "vite build",
     "preview": "vite preview",
     "zip": "vite build && cd dist && rm -f ../dino-escape-itch.zip && zip -r ../dino-escape-itch.zip .",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "server": "node server/index.js",
+    "dev:all": "node server/index.js & vite --host"
   },
   "dependencies": {
     "@google/genai": "^2.24.0",
-    "three": "^0.186.1"
+    "three": "^0.186.1",
+    "ws": "8.21.3"
   },
   "devDependencies": {
     "vite": "^8.3.1"

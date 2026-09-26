@@ -5,7 +5,7 @@ import { ROYALE } from '../kernel/config.js';
 // Instants (s depuis le départ) des éliminations pour n joueurs : la dernière tombe à endTime.
 export function eliminationSchedule(n, { endTime = ROYALE.endTime, interval = ROYALE.interval, firstMin = ROYALE.firstMin } = {}) {
   const count = Math.max(0, n - 1), out = [];
-  for (let k = 0; k < count; k++) out.push(Math.max(firstMin + k * 5, endTime - (count - 1 - k) * interval));
+  for (let k = 0; k < count; k++) out.push(Math.max(firstMin + k * Math.min(5, interval), endTime - (count - 1 - k) * interval));
   return out;
 }
 
