@@ -1,4 +1,4 @@
-# Architecture de Dino Escape
+# Architecture de Dino Race Fight Club
 
 Le jeu est découpé en **couches**. Le principe clé : le **kernel** contient toute la logique
 et ne connaît ni Three.js ni le DOM. Les **vues** lisent son état et écoutent ses événements

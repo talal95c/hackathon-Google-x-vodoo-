@@ -18,7 +18,7 @@ export class Lobby {
       if (a === 'open') this.open();
       else if (a === 'create') { await mp.create(); this.#setUrl(); this.render(); }
       else if (a === 'join') { const code = $('mpCode').value; if (code.trim()) { await mp.join(code); this.#setUrl(); this.render(); } }
-      else if (a === 'copy') { try { await navigator.clipboard.writeText(this.link()); this.status('Lien copié ! Envoie-le à tes amis.'); } catch { this.status(this.link()); } }
+      else if (a === 'copy') { try { await navigator.clipboard.writeText(this.link()); this.status('Link copied! Send it to your friends.'); } catch { this.status(this.link()); } }
       else if (a === 'launch') { this.menus.closePanels(); this.onLaunch(); }
       else if (a === 'leave') { mp.leave(); this.#setUrl(); this.render(); }
     });
@@ -26,8 +26,8 @@ export class Lobby {
     mp.on('lobby', () => { this.render(); this.board(); });
     mp.on('status', (t) => this.status(t));
     mp.on('results', () => this.board());
-    mp.on('shoved', ({ from }) => hud.banner(`💥 ${from || 'Un rival'} t'a bousculé !`, 0.9));
-    mp.on('shove', ({ hit }) => { if (!hit) hud.banner('Raté ! Personne à portée', 0.7); });
+    mp.on('shoved', ({ from }) => hud.banner(`💥 ${from || 'A rival'} shoved you!`, 0.9));
+    mp.on('shove', ({ hit }) => { if (!hit) hud.banner('Missed! Nobody in range', 0.7); });
 
     // Lien partagé : ?partie=CODE → rejoint directement
     const code = new URLSearchParams(location.search).get('partie');
@@ -46,16 +46,16 @@ export class Lobby {
     if (!inRoom) return;
     $('mpCodeShow').textContent = mp.code;
     const rows = [mp.me, ...mp.peers.values()];
-    $('mpPlayers').innerHTML = rows.map((p) => `<li><span class="dot" style="background:${p.color}"></span>${esc(p.name)}${p.me ? ' (toi)' : ''}${(p.me ? mp.isHost : p.host) ? ' 👑' : ''}</li>`).join('');
+    $('mpPlayers').innerHTML = rows.map((p) => `<li><span class="dot" style="background:${p.color}"></span>${esc(p.name)}${p.me ? ' (you)' : ''}${(p.me ? mp.isHost : p.host) ? ' 👑' : ''}</li>`).join('');
     $('mpLaunch').classList.toggle('hidden', !mp.isHost);
     $('mpWait').classList.toggle('hidden', mp.isHost);
-    $('mpLaunch').textContent = mp.peers.size ? `⚔ Lancer la course (${rows.length} joueurs)` : '⚔ Lancer (seul pour tester)';
+    $('mpLaunch').textContent = mp.peers.size ? `⚔ Start the race (${rows.length} players)` : '⚔ Start (solo, to test)';
   }
 
   // Compte à rebours avant le départ
   countdown(delay, go) {
     [3, 2, 1].forEach((n) => setTimeout(() => this.hud.banner(`${n}`, 0.9), Math.max(0, delay - n * 1000)));
-    setTimeout(() => { this.hud.banner('GO ! ⚔', 0.8); go(); }, delay);
+    setTimeout(() => { this.hud.banner('GO! ⚔', 0.8); go(); }, delay);
   }
 
   // Course en cours : multijoueur, ou solo avec PNJ
@@ -80,6 +80,6 @@ export class Lobby {
   resultsHtml() {
     const race = this.race;
     if (!race) return '';
-    return `<ol class="mp-results">${race.ranking().map((p) => `<li><span class="dot" style="background:${p.color}"></span>${esc(p.name)} — ${p.alive ? `en course (${p.dist} m)` : `${p.dist} m`}</li>`).join('')}</ol>`;
+    return `<ol class="mp-results">${race.ranking().map((p) => `<li><span class="dot" style="background:${p.color}"></span>${esc(p.name)} — ${p.alive ? `still racing (${p.dist} m)` : `${p.dist} m`}</li>`).join('')}</ol>`;
   }
 }

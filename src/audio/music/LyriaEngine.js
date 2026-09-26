@@ -83,9 +83,9 @@ export class LyriaEngine {
   }
 
   async connect() {
-    if (!this.hasKey()) { this.#set('off', 'Clé API Gemini requise'); return false; }
+    if (!this.hasKey()) { this.#set('off', 'Gemini API key required'); return false; }
     if (this.ready) return true;
-    this.#set('connecting', 'Connexion à Lyria RealTime…');
+    this.#set('connecting', 'Connecting to Lyria RealTime…');
     try {
       const { GoogleGenAI } = await import('@google/genai'); // chargé seulement si besoin
       const ai = new GoogleGenAI({ apiKey: this.apiKey, apiVersion: API_VERSION });
@@ -94,10 +94,10 @@ export class LyriaEngine {
         callbacks: {
           onmessage: (msg) => this.#onMessage(msg),
           onerror: (e) => { console.warn('[Lyria]', e); this.#set('error', 'Erreur du flux Lyria'); },
-          onclose: () => { this.#session = null; if (this.status !== 'error') this.#set('off', 'Lyria déconnecté'); },
+          onclose: () => { this.#session = null; if (this.status !== 'error') this.#set('off', 'Lyria disconnected'); },
         },
       });
-      this.#set('ready', 'Lyria prêt 🎶');
+      this.#set('ready', 'Lyria ready 🎶');
       return true;
     } catch (e) {
       console.warn('[Lyria] connexion impossible', e);
@@ -136,7 +136,7 @@ export class LyriaEngine {
     for (const s of this.#sources) { try { s.stop(); } catch { /* */ } }
     this.#sources.clear();
     if (this.#session) { try { this.#session.stop(); } catch { /* */ } }
-    if (this.status === 'playing') this.#set('ready', 'Lyria prêt 🎶');
+    if (this.status === 'playing') this.#set('ready', 'Lyria ready 🎶');
   }
 
   // Nouveau palier de vitesse du jeu → transition DJ vers le tempo correspondant

@@ -1,4 +1,4 @@
-# Dino Escape
+# Dino Race Fight Club
 
 Runner 3D : le dino de la page « Pas de connexion » s'enfuit du navigateur en courant, poursuivi
 en affrontant ses rivaux (PNJ en solo, amis en multijoueur). Route procédurale (virages serrés, dénivelé), armes,
@@ -42,7 +42,7 @@ Les aperçus 3D montrent les vrais modèles. Les costumes sont cosmétiques et f
 - Mobile : moitié gauche/droite de l'écran, glisser vers le haut = saut, deux doigts = glissade
 
 ## Publier sur itch.io
-    npm run zip        # crée dino-escape-itch.zip
+    npm run zip        # crée dino-race-fight-club-itch.zip
 Sur itch.io : Kind of project = HTML, uploader le zip, cocher « This file will be played in the browser »,
 viewport 1280×720, activer « Fullscreen button » et « Mobile friendly ».
 
