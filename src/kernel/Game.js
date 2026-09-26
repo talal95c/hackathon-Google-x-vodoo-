@@ -141,14 +141,15 @@ export class Game {
   }
 
   // --- Boucle (pas fixe → physique identique quel que soit le FPS)
-  update(dt, intent) {
+  // wallDt : temps réel écoulé (non plafonné), pour la durée des ralentis
+  update(dt, intent, wallDt = dt) {
     this.beat.update(Math.min(dt, 0.25)); // l'horloge musicale tourne en temps réel, même au menu
     if (intent.jump) this.pendingJump = true;
     if (intent.attack && this.state === 'playing') this.pendingAttack = true;
     if (this.state !== 'playing' && this.state !== 'falling') return;
     const real = Math.min(dt, 0.25);
     const scale = this.timeWarp.left > 0 ? this.timeWarp.scale : 1;
-    this.timeWarp.left = Math.max(0, this.timeWarp.left - real);
+    this.timeWarp.left = Math.max(0, this.timeWarp.left - wallDt);
     this.acc += real * scale;
     let n = 0;
     while (this.acc >= GAME.fixedDt && n < GAME.maxSubSteps) {

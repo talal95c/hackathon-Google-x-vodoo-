@@ -96,6 +96,8 @@ test('frôler un obstacle sans le toucher déclenche un ralenti et remplit la Fr
   const s = g.runner.z;
   g.update(0.1, idle);
   assert.ok(g.runner.z - s < g.runner.speed * 0.1 * 0.6, 'la simulation avance au ralenti');
+  g.update(1 / 20, idle, 1);
+  assert.equal(g.timeWarp.left, 0, 'le ralenti suit le temps réel même si dt est plafonné');
   run(g, 1);
   assert.equal(events.length, 1, 'un seul frôlement par obstacle ; l’obstacle lointain ne compte pas');
   assert.equal(far.nearMissDone, true);

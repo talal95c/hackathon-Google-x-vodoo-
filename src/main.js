@@ -106,11 +106,12 @@ let last = performance.now(), time = 0;
 hud.setTitle('Dino Escape');
 
 function frame(now) {
-  const dt = Math.min(1 / 20, (now - last) / 1000);
+  const wallDt = (now - last) / 1000;
+  const dt = Math.min(1 / 20, wallDt);
   last = now;
   time += dt;
   input.enabled = !menus.panelOpen;
-  game.update(dt, input.read(dt));
+  game.update(dt, input.read(dt), wallDt);
   for (const v of views) v.update(dt, time);
   music.update(dt);
   hud.update(dt);
