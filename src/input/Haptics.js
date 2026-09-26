@@ -62,7 +62,9 @@ export function bindHaptics(game, haptics) {
   on('runner:hit', () => haptics.pulse('hit'));
   on('runner:fall', () => haptics.pulse('fall'));
   on('runner:boost', ({ big }) => { if (big) haptics.pulse('boost'); });
+  on('pad:used', () => haptics.pulse('boost'));
   on('combat:impact', ({ local }) => { if (local) haptics.pulse('shove', { light: true }); });
+  on('world:soon', () => haptics.pulse('tap'));
   on('world:land', () => haptics.pulse('world'));
   on('boss:start', () => haptics.pulse('boss'));
   on('boss:defeated', () => haptics.pulse('bossDefeated'));

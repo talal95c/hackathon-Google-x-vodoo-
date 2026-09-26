@@ -1,100 +1,86 @@
 # Dino Race Fight Club
 
-Runner 3D : le dino de la page « Pas de connexion » s'enfuit du navigateur en courant, poursuivi
-en affrontant ses rivaux (PNJ en solo, amis en multijoueur). Route procédurale (virages serrés, dénivelé), armes,
-boss, boutique (skins, musiques, améliorations) et musique générée en direct par Google DeepMind Lyria.
+The offline dinosaur is escaping the browser — and taking the fight with it.
 
-## Aperçu sur ordinateur
+A colorful 3D racing game for desktop and mobile. Dodge obstacles, drift around corners, slap nearby rivals and battle in quick Fight Club duels, with a soundtrack generated live by AI.
 
-Captures du rendu du jeu en **1440 × 900**. Les courses traversent cinq mondes avant de rejoindre les rings.
+![Racing through the desert and its glowing tunnels](docs/screenshots/race-desert-desktop.png)
 
-![Course dans le désert : tunnel lumineux et cookies obstacles](docs/screenshots/race-desert-desktop.png)
+## How to play
 
-![Course dans le navigateur : fenêtres géantes, décor pastel et rivaux](docs/screenshots/race-browser-desktop.png)
+- Select **Play** to race against three bots, or **Multiplayer** to race with friends. Create a game, share its room code and start the race once everyone has joined.
+- Escape through five worlds: **Offline Desert → Browser → Windows → Hardware → Cloud**.
+- Stay on the road, dodge cactus and cookie obstacles, and collect coins to spend in the shop. Pick your favorite dino skin and music style.
+- You start with **three lives**. Outlast your rivals and see how far you can go!
 
-![Course dans le hardware : circuits, processeurs et tunnel néon](docs/screenshots/race-hardware-desktop.png)
+## Multiplayer powered by MQTT
 
-Dans le Fight Club, les vrais skins remplissent les gradins et le combo se termine par un salto et une explosion cartoon.
+Race with friends directly in the browser. One player selects **Multiplayer → Create a game**, shares the room code, and starts the race once everyone has joined. No account or multiplayer API key is needed.
 
-![Salto du dino reggae dans le Fight Club, devant les dinos spectateurs](docs/screenshots/fight-club-salto-desktop.png)
+The game uses **MQTT over secure WebSockets (WSS)**. MQTT brokers relay messages between players in the same room, keeping their positions, slaps and Fight Club events in sync. Everyone races on the same generated track.
 
-![Coup final : explosion, particules et effets de vitesse dans le ring](docs/screenshots/fight-club-impact-desktop.png)
+This hackathon version uses public brokers from **HiveMQ, Mosquitto and EMQX**, so there is no separate game server to set up. An internet connection is required.
 
-## Dino reggae et rendu
+## Controls
 
-- **Riddim**, le dino reggae low poly, est disponible dès le départ. Le bouton « Dino reggae »
-  l'équipe aussi sur les anciennes sauvegardes, sans effacer la progression.
-- Son thème Reggae est inclus tant qu'il est équipé ; les autres thèmes et achats restent disponibles.
-- Cinq mondes : désert hors ligne, navigateur, Windows, hardware, cloud. Cactus et mesas,
-  onglets et pop-ups, dossiers du bureau, circuits et ventilateurs, serveurs sur les nuages.
-- Tous les 720 m, un saut guidé franchit un portail vers le monde suivant. Le contrôle revient
-  à l'atterrissage ; les zones de départ et d'arrivée sont dégagées. Le cloud se poursuit à l'infini.
-- Néons réactifs au rythme, décors fusionnés par matériau et libérés derrière le joueur.
-- Rendu de maquette low poly : volumes biseautés, matières mates, sol raccordé à la route,
-  massifs de végétation animée, arbres, bancs, pavés, lanternes et composants miniatures dans le hardware.
-- Tunnels facettés de 92 m, arceaux et rails lumineux : ils suivent les courbes,
-  avec une transition douce vers un éclairage intérieur. Ils restent hors des portails et des épingles.
-- Variantes de couleurs et de décors par monde. Post-traitement : ombres de contact GTAO sur ordinateur, bloom HDR,
-  contraste coloré, grain fin, vignette et décomposition chromatique pendant les sprints et portails, tone mapping ACES
-  et anticrénelage MSAA. La résolution est plafonnée pour limiter le coût sur mobile.
-- Le jury saisit sa propre clé Gemini dans le menu Musique. Aucun relais serveur n'est nécessaire.
+| Action | Desktop |
+| --- | --- |
+| Run | Hold ↑ or W |
+| Steer | ← / → or A / D |
+| Jump | Space |
+| Drift | Hold Shift while steering; release to boost |
+| Brake | ↓ or S |
+| Slap a nearby rival | E / F or the hand button |
+| Fight Club | Repeatedly press Space / E / F, or click the tap button |
 
-## Costumes inclus
+**On mobile:** hold the left or right half of the screen to run and steer, swipe up to jump, use two fingers to drift and tap the hand button to slap. In Fight Club, tap the big button as fast as you can.
 
-Dark Vador (casque, cape animée et sabre), Drift · Fortnite (masque kitsune et pioche),
-Mario (casquette, moustache et salopette) et Alligator rejoignent la collection gratuitement,
-y compris sur les anciennes sauvegardes. Choisir **Collection & boutique → Skins → Équiper**.
-Les aperçus 3D montrent les vrais modèles. Les costumes sont cosmétiques et fonctionnent aussi pour les rivaux en multijoueur.
+## Fight Club: three seconds to win
 
-## Lancer
-    npm install
-    npm run dev        # http://localhost:5173 (accessible sur le réseau local pour tester sur mobile)
+Every **450 meters**, an animated warning announces the next arena. The race pauses for everyone while the duel takes place, including the bots in solo mode.
 
-## Contrôles
-- ← / → (ou A/Q, D) : se décaler
-- ESPACE / ↑ : sauter
-- SHIFT (en tournant) : glissade ; relâcher = sprint (bleu, puis orange si chargé)
-- ↓ : freiner
-- Mobile : moitié gauche/droite de l'écran, glisser vers le haut = saut, deux doigts = glissade
+- **Tap for three seconds.** The player with the most taps wins, with slaps, kicks, flips, explosions and a crowd of cheering dinos bringing the fight to life.
+- **The winner steals coins:** half the loser's current-race coins, up to 20.
+- **The loser loses one life**, is held still for one second, then runs at 65% speed for five seconds. Losing the last life ends their run after the finishing move.
+- **A draw has no penalty.**
 
-## Publier sur itch.io
-    npm run zip        # crée dino-race-fight-club-itch.zip
-Sur itch.io : Kind of project = HTML, uploader le zip, cocher « This file will be played in the browser »,
-viewport 1280×720, activer « Fullscreen button » et « Mobile friendly ».
+In solo, you fight a bot. In multiplayer, the host duels the nearest active rival while the other racers watch.
 
-## Tests
-    npm test           # tests du kernel et de dégagement/streaming des tunnels (sans navigateur)
+## A live AI soundtrack
 
-## Architecture
-Voir **[ARCHITECTURE.md](ARCHITECTURE.md)** : kernel / vues / contenu, liste des événements, et comment
-ajouter un ennemi, un boss, une arme, un skin (y compris un .glb), une musique ou une amélioration.
+**Google DeepMind Lyria RealTime** generates music as you play. Your selected music style, the pace of the race and the action influence the soundtrack, while lights and visual effects pulse to the beat.
 
-## Où régler quoi
-- `src/kernel/config.js` : physique du dino (`RUNNER`), règles (`GAME`), route (`TRACK`), rythme (`DIRECTOR`)
-- `src/content/` : zones, ennemis, armes, boss, skins, musiques, boutique
-- `src/view/models/` : apparence de chaque entité et du dino
+To try it, open **Music**, paste your **Gemini API key with access to Lyria RealTime**, then select **Connect**. Turn your sound on!
 
-## Musique Lyria
-Menu 🎵 MUSIQUE → saisir une clé API Gemini (https://aistudio.google.com/apikey). Sans clé, un synthé
-procédural prend le relais. En dev, on peut aussi mettre `VITE_GEMINI_API_KEY=...` dans `.env.local`
-(jamais dans un build publié).
+You can also play without a key using the built-in synthesized soundtrack.
 
-### Claques et feedback de combat
+## Skin voices
 
-`E` / `F` ou le bouton ✋ donne une claque au rival le plus proche à portée. Un cadre doré repère la cible et la jauge indique les deux secondes de recharge. Une main low poly accompagne le geste ; le joueur touché recule brièvement, avec un éclat « SLAP! », des étoiles et un claquement WebAudio synthétisé (aucun service ni clé requis).
+Every skin has **its own voice**: when a dino slaps, it shouts a one-to-three-word line from its own inventory (a deep menacing Vader, a cheerful Mario plumber, a chill reggae Riddim, an offline Classic robot...). The clips are **generated ahead of time** with Gemini TTS (`npm run voices:gen`, key in `.env`) into `public/voices/` and shipped with the game, so players need no key and no API call. Turn them off with the **Skin voices** checkbox in the Music panel.
 
-Les animations passent par un pivot visuel séparé des positions réseau : les claques ne font plus accumuler de rotation aux dinos. Les effets et le son d'un coup multijoueur sont confirmés par la victime via le canal cosmétique `fx`, puis affichés au point touché chez les autres joueurs. Le solo avec PNJ utilise les mêmes effets. Tous les joueurs doivent recharger la nouvelle version.
+## Run the game locally
 
-### Fight Club mobile
+```sh
+npm install
+npm run dev
+```
 
-Un portique annonce le premier duel à **1 000 m**, puis tous les **1 000 m**. À 180 m du ring, une annonce animée affiche la distance restante avec des mains qui se rapprochent et un signal sonore. À 60 m, elle passe à « GET READY TO TAP! » ; le portique pulse en néon. La course se suspend pendant le combat et reprend au même endroit. En solo, le rival est un bot ; en multijoueur, l'hôte affronte le joueur vivant le plus proche et les autres joueurs en course regardent le duel.
+Open **http://localhost:5173** in your browser, then select **Play**. To test on a phone on the same Wi-Fi network, use the network address printed in the terminal.
 
-Après le compte à rebours, tapoter le gros bouton pendant **3 secondes** (ou appuyer sur E / F / espace). Chaque tap validé donne une claque, avec main 3D, son, combo, éclats et réaction du rival. Le gagnant place un coup final et prend **la moitié des pièces de course du perdant, arrondie au-dessus, au maximum 20**. Les pièces déjà en banque ne sont pas engagées. Le perdant perd **une vie** à la fin de la cinématique, reste **immobile pendant 1 seconde** à la reprise, puis sa vitesse passe à **65 % pendant 5 secondes**. À zéro vie, la partie se termine après le coup final. Les bots ont également trois vies pour les duels. Tous les PNJ sont gelés pendant le duel, classement compris ; ils repartent ensemble à la sortie du ring, avec cette pénalité pour le seul perdant. Égalité : aucune pièce volée, aucun ralentissement.
+## More screenshots
 
-L'arène utilise le même renderer et les mêmes passes de post-processing que la course. Les animations sont faites directement sur les modèles low poly ; aucun appel d'API ni téléchargement ne bloque un duel. L'entrée dans le ring vide les commandes tactiles/clavier pour éviter de repartir en sautant ou en tournant après les taps.
+**Inside the browser**
 
-Le canal multijoueur `fc` gère l'entrée, la disponibilité des participants, des comptes cumulatifs et un résultat décidé par l'hôte. Les résultats répétés ne créditent pas le butin deux fois ; une déconnexion ou un score final manquant avant le résultat annule le duel sans pénalité. Tests automatiques avec latence, trois clients, rejeu de messages et déconnexion. Recharger la même version chez tous les joueurs.
+![Browser-world race with giant windows and cookie obstacles](docs/screenshots/race-browser-desktop.png)
 
-Les cookies roulants apparaissent désormais dans les cinq mondes, plus souvent dans le navigateur et le cloud. Le navigateur reçoit aussi des bandeaux cookies. Ce sont des obstacles à esquiver, pas des objets à ramasser ; les exclusions des virages serrés et des transitions de monde restent appliquées à leur génération.
+**Through the hardware**
 
-Le ring utilise les vrais skins pour ses 56 dinos spectateurs (géométries regroupées pour limiter les appels de rendu). Les combos alternent claques, uppercuts, coups de pied et saltos ; la finale comprend un salto offensif puis une roulade du perdant, qui se relève. Les rotations sont calculées depuis une pose de référence, sans accumulation. Particules instanciées, fumée, ondes, flashs et traînées accompagnent les impacts. Claquement, souffle de salto, explosion et acclamations sont synthétisés en WebAudio, sans clé ni service externe.
+![Hardware-world race through circuits and neon tunnels](docs/screenshots/race-hardware-desktop.png)
+
+**Fight Club flips**
+
+![A dino flipping through the Fight Club arena in front of the crowd](docs/screenshots/fight-club-salto-desktop.png)
+
+**The finishing blow**
+
+![Fight Club finishing move with an explosion and impact effects](docs/screenshots/fight-club-impact-desktop.png)
