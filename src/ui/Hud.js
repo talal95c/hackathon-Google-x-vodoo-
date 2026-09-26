@@ -89,11 +89,12 @@ export class Hud {
       : r.slideGauge < r.stats.get('slideMin') ? 'RECHARGING…' : 'SLIDE (SHIFT)');
 
     // arme + bonus actifs avec leur minuteur
+    // (barre centrée en haut : le remplissage rétrécit par les deux côtés, le libellé au-dessus)
     const buffs = [];
-    if (r.weapon) buffs.push({ name: Weapons.get(r.weapon.type).name, p: r.weapon.progress, color: '#ff1744' });
-    for (const fx of r.effects.values()) buffs.push({ name: Effects.get(fx.type).name, p: fx.progress, color: '#aa00ff' });
+    if (r.weapon) { const d = Weapons.get(r.weapon.type); buffs.push({ name: d.hud || d.name, p: r.weapon.progress, color: '#ff1744' }); }
+    for (const fx of r.effects.values()) { const d = Effects.get(fx.type); buffs.push({ name: d.hud || d.name, p: fx.progress, color: '#aa00ff' }); }
     this.#set('buffsKey', (v) => {
-      el.buffs.innerHTML = buffs.map((b) => `<div class="buff" style="color:${b.color}">${b.name}<div class="bar"><div class="fill"></div></div></div>`).join('');
+      el.buffs.innerHTML = buffs.map((b) => `<div class="buff" style="color:${b.color}"><span class="buff-label">${b.name}</span><div class="bar"><div class="fill"></div></div></div>`).join('');
     }, buffs.map((b) => b.name).join('|'));
     el.buffs.querySelectorAll('.fill').forEach((f, i) => { f.style.width = `${(buffs[i]?.p ?? 0) * 100}%`; });
 

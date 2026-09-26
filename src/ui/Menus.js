@@ -13,8 +13,8 @@ const LEAVE_MS = 520; // durée de la sortie animée du menu au lancement d'une 
 export class Menus {
   tab = 'skin';
 
-  constructor({ game, profile, shop, lyria, music, onPlay, onBack }) {
-    Object.assign(this, { game, profile, shop, lyria, music, onPlay, onBack });
+  constructor({ game, profile, shop, lyria, music, voices, onPlay, onBack }) {
+    Object.assign(this, { game, profile, shop, lyria, music, voices, onPlay, onBack });
     this.screens = { start: $('start'), over: $('over') };
     this.panels = { shop: $('shop'), music: $('musicPanel') };
 
@@ -38,6 +38,8 @@ export class Menus {
     const voc = $('vocals');
     voc.checked = lyria.vocals;
     voc.addEventListener('change', () => lyria.setVocals(voc.checked)); // pris en compte à la prochaine partie / au prochain palier
+    const sv = $('skinVoices');
+    if (sv && voices) { sv.checked = voices.enabled; sv.addEventListener('change', () => voices.setEnabled(sv.checked)); }
     const off = $('audioOffset');
     off.value = music.offsetMs;
     $('audioOffsetVal').textContent = `${music.offsetMs} ms`;

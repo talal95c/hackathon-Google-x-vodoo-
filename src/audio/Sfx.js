@@ -99,6 +99,17 @@ export class Sfx {
     this.tone(620, .16, 'triangle', .055, 180);
     setTimeout(() => this.tone(880, .18, 'triangle', .045, 130), 100);
   }
+  // Réplique vocale (AudioBuffer déjà décodé) : position stéréo et volume, renvoie la source
+  voice(buffer, { pan = 0, volume = 1, rate = 1 } = {}) {
+    if (!this.ctx || !buffer) return null;
+    const src = this.ctx.createBufferSource(); src.buffer = buffer; src.playbackRate.value = rate;
+    const gain = this.ctx.createGain(); gain.gain.value = 1.4 * volume;
+    const panner = this.ctx.createStereoPanner(); panner.pan.value = Math.max(-.6, Math.min(.6, pan));
+    src.connect(gain).connect(panner).connect(this.master);
+    src.onended = () => { src.disconnect(); gain.disconnect(); panner.disconnect(); };
+    src.start();
+    return src;
+  }
 
   coin() { this.tone(988, 0.08, 'square', 0.1); setTimeout(() => this.tone(1319, 0.12, 'square', 0.1), 60); }
   pickup() { [784, 988, 1319].forEach((f, i) => setTimeout(() => this.tone(f, 0.12, 'triangle', 0.1, f * 0.05), i * 55)); }
