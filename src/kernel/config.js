@@ -55,8 +55,8 @@ export const GAME = {
   fixedDt: 1 / 120,      // pas de simulation fixe (physique déterministe)
   maxSubSteps: 8,
   difficultyDistance: 5000,
-  fallDuration: 1.3,     // durée de la chute (solo : game over ; multi : perd une vie puis réapparaît)
-  respawnInvul: 2,       // invulnérabilité après une réapparition (multijoueur)
+  fallDuration: 1.3,     // durée de la chute avant de perdre une vie et de réapparaître
+  respawnInvul: 2,       // invulnérabilité après une réapparition
   coinValue: 25,
   startS: 5,
 };

@@ -24,12 +24,13 @@ export class RunnerView extends View {
     );
     this.blob.rotation.order = 'YXZ';
     this.scene.add(this.blob);
-    this.setSkin(ctx.skin ?? 'classic');
     this.fx = new FightFx(this.root);
+    this.setSkin(ctx.skin ?? 'classic');
     this.listen('mp:shove', ({ dir }) => this.fx.shove(dir ?? 1));
     this.listen('runner:knocked', ({ lateral, source }) => { if (source !== 'bump' || Math.abs(lateral) > 12) this.fx.hit(lateral); });
 
-    this.listen('game:start', ({ loadout }) => { if (loadout.skin) this.setSkin(loadout.skin); this.#clearWeapon(); });
+    this.listen('runner:respawn', () => this.fx.reset());
+    this.listen('game:start', ({ loadout }) => { this.fx.reset(); this.yaw = 0; if (loadout.skin) this.setSkin(loadout.skin); this.#clearWeapon(); });
     this.listen('skin:preview', ({ skin }) => this.setSkin(skin));
     this.listen('weapon:equip', ({ weapon }) => this.#setWeapon(weapon));
     this.listen('weapon:expire', () => this.#clearWeapon());
@@ -37,10 +38,10 @@ export class RunnerView extends View {
   }
 
   setSkin(id) {
-    if (this.model) { this.root.remove(this.model.object); this.model.dispose?.(); }
+    if (this.model) { this.fx.detachModel(); this.model.dispose?.(); }
     this.skin = Skins.get(id);
     this.model = Models.create(this.skin.view.model, this.skin.view);
-    this.root.add(this.model.object);
+    this.fx.attachModel(this.model.object);
   }
 
   #setWeapon(weapon) {
@@ -79,7 +80,7 @@ export class RunnerView extends View {
     } else {
       // regarde là où il va vraiment ; glissade = de travers ; choc = tremblote
       const move = Math.atan2(r.latV + r.push, Math.max(8, r.speed));
-      const wobble = r.stumble > 0 ? Math.sin(r.stumble * 45) * 0.5 : 0;
+      const wobble = r.stumble > 0 ? Math.sin(r.stumble * 45) * 0.09 : 0;
       this.yaw += ((r.drifting ? r.driftDir * 0.6 : move * 0.9) + wobble - this.yaw) * Math.min(1, dt * 12);
       this.root.position.set(f.x + f.lx * r.x, r.Y, f.z + f.lz * r.x);
       this.root.rotation.y = f.th + this.yaw;
@@ -94,7 +95,7 @@ export class RunnerView extends View {
     this.root.visible = !!g.worldJump || r.invul <= 0 || g.state !== 'playing' || Math.floor(r.invul * 16) % 2 === 0;
 
     this.model.update?.(this.pose(), dt, time);
-    if (g.state === 'playing') this.fx.apply(dt, r.stumble > 0, time);
+    this.fx.apply(dt, g.state === 'playing' && r.stumble > 0, time);
     if (this.weaponModel && this.weapon) this.weaponModel.update?.(this.weapon, dt, time);
     this.focus.copy(this.root.position);
   }

@@ -1,3 +1,4 @@
+import { intersectsWorldSafe } from '../kernel/WorldJourney.js';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { View } from './View.js';
@@ -9,8 +10,9 @@ const COLORS = [0xffba67, 0xaa8bff, 0x55cfff, 0x46efb6, 0x75e4df];
 // already generated before a visible chunk is built; no gameplay RNG is used.
 export function tunnelSpan(track, chunk) {
   if (ZONES[chunk.zone]?.site) return null;
-  if (![1, 3].includes(chunk.index % 6)) return null;
+  if (![1, 3].includes((chunk.index + (track.salt || 0)) % 6)) return null; // position des tunnels : change à chaque partie
   const start = chunk.s0 + 18, end = chunk.s1 - 10;
+  if (intersectsWorldSafe(start - 24, end + 24)) return null; // jamais sur un saut entre deux mondes
   if (track.hardTurns.some(turn => turn.s < end + 24 && turn.end > start - 24)) return null;
   return { start, end, zone: chunk.zone };
 }
