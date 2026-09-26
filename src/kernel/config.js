@@ -2,17 +2,19 @@
 
 // Physique du dino (le "game feel")
 export const RUNNER = {
-  baseSpeed: 26,         // vitesse de course au départ (m/s)
-  maxBaseSpeed: 42,      // vitesse max atteinte à GAME.difficultyDistance
-  startSpeed: 20,        // départ lancé
+  baseSpeed: 34,         // vitesse de course au palier de tempo 0 (m/s), × GAME.tempoLevels[i].ratio ensuite
+  startSpeed: 26,        // départ lancé
   accel: 3,              // réactivité vers la vitesse cible
   latSpeed: 13,          // vitesse latérale max (+ 12 % de la vitesse)
   latResponse: 16,       // nervosité du latéral (plus haut = plus sec)
   airControl: 0.55,      // contrôle latéral en l'air
-  centrifugal: 0.2,      // poussée vers l'extérieur des virages (∝ v² × courbure)
+  centrifugal: 0.12,     // poussée vers l'extérieur des virages (∝ v² × courbure)
   driftCentrifugal: 0.4, // fraction de poussée conservée en glissade
   boostSpeed: 18,        // vitesse ajoutée pendant le sprint
   driftChargeRate: 0.9,  // charge du sprint par seconde de glissade
+  slideDrain: 0.85,      // jauge de glissade vidée par seconde (pleine ≈ 1,2 s de glissade)
+  slideRegen: 0.3,       // jauge rechargée par seconde hors glissade (≈ 3,3 s pour la remplir)
+  slideMin: 0.15,        // jauge minimale pour commencer une glissade
   jumpVel: 13.5,         // impulsion de saut
   gravity: 38,
   fallGravity: 1.7,      // multiplicateur en redescente (saut plus sec)
@@ -33,6 +35,18 @@ export const RUNNER = {
 
 // Règles de la partie
 export const GAME = {
+  // Paliers de tempo : vitesse du dino ET tempo de la musique multipliés par ratio.
+  // À chaque palier la musique change d'énergie (événement 'tempo').
+  tempoLevels: [
+    { at: 0, ratio: 1 },
+    { at: 450, ratio: 1.1 },
+    { at: 1100, ratio: 1.2 },
+    { at: 1900, ratio: 1.3 },
+    { at: 2900, ratio: 1.4 },
+  ],
+  // Le palier est d'abord DEMANDÉ ('tempo:request') ; la musique le confirme au moment du
+  // drop (game.commitTempo()). Sans confirmation au bout de ce délai, il s'applique seul.
+  tempoCommitTimeout: 8,
   fixedDt: 1 / 120,      // pas de simulation fixe (physique déterministe)
   maxSubSteps: 8,
   difficultyDistance: 5000,

@@ -1,4 +1,4 @@
-import { range } from './engines.js';
+
 
 // Musique de secours (sans clé API) : petit séquenceur WebAudio qui suit le tempo
 // et ajoute des couches avec l'intensité (kick → hats → basse → arpèges).
@@ -21,10 +21,11 @@ export class SynthEngine {
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
   }
 
-  start(theme) {
+  start(theme, tempo = { ratio: 1 }) {
     if (!this.ctx) return;
     this.stop();
     this.theme = theme;
+    this.ratio = tempo.ratio;
     this.step = 0;
     this.nextTime = this.ctx.currentTime + 0.05;
     this.playing = true;
@@ -33,14 +34,31 @@ export class SynthEngine {
 
   stop() { this.playing = false; clearInterval(this.timer); }
 
-  setIntensity(x) { this.x = x; }
+  setIntensity(x) { this.x = x; } // nombre de couches (kick → hats → basse → arpèges)
 
-  get bpm() { return this.theme ? range(this.theme.bpm, this.x) : 120; }
+  // Nouveau palier : bascule au début de la prochaine mesure (dans le séquenceur) puis onDrop
+  setTempo(tempo) {
+    if (!this.playing) { this.ratio = tempo.ratio; return false; }
+    this.pendingRatio = tempo.ratio;
+    return true;
+  }
+
+  get bpm() { return this.theme ? this.theme.bpm * (this.ratio ?? 1) : 120; }
+  get clockBpm() { return this.bpm; }
 
   #schedule() {
-    const bpm = this.bpm;
-    const dt16 = 60 / bpm / 4;
     while (this.nextTime < this.ctx.currentTime + 0.12) {
+      if (this.pendingRatio && this.step % 16 === 0) { // début de mesure : accélération sur 1 mesure
+        this.glide = { from: this.ratio, to: this.pendingRatio, step: 0 };
+        this.pendingRatio = null;
+        this.onDrop?.(this.nextTime);
+      }
+      if (this.glide) {
+        const g = this.glide, k = ++g.step / 16;
+        this.ratio = g.from + (g.to - g.from) * Math.min(1, k);
+        if (k >= 1) this.glide = null;
+      }
+      const dt16 = 60 / this.bpm / 4;
       this.#play(this.step, this.nextTime, dt16);
       this.nextTime += dt16;
       this.step = (this.step + 1) % 64;

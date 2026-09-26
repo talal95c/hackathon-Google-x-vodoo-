@@ -14,7 +14,7 @@ canvas { display: block; }
 #lives.hit { animation: pulse .5s; }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.5); } }
 .bar { height: 8px; background: rgba(0,0,0,.15); border-radius: 4px; overflow: hidden; margin-top: 4px; }
-.fill { height: 100%; width: 0%; transition: width .1s; }
+.fill { height: 100%; width: 0%; transition: width .1s, background .15s; }
 #danger { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: min(300px, 40vw); text-align: center; font-size: 12px; font-weight: bold; }
 #danger .fill { background: #e53935; }
 #boss { position: absolute; top: 52px; left: 50%; transform: translateX(-50%); width: min(420px, 70vw); text-align: center; font-size: 14px; font-weight: bold; letter-spacing: 2px; }

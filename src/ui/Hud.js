@@ -17,6 +17,7 @@ export class Hud {
 
     const on = (t, fn) => game.on(t, fn);
     on('game:start', () => { this.#lives(false); this.el.boss.classList.add('hidden'); });
+    on('tempo', ({ level }) => { if (level > 0) this.banner(`VITESSE ×${game.tempo.ratio.toFixed(1)}`, 1.4); });
     on('zone', ({ number, zone }) => { this.banner(`ZONE ${number + 1} — ${zone.name}`); this.el.hud.style.color = zone.palette.text; this.el.banner.style.color = zone.palette.text; });
     on('life:lost', () => this.#lives(true));
     on('runner:hit', () => this.flash(0.6));
@@ -66,10 +67,12 @@ export class Hud {
     el.dangerFill.style.width = `${danger * 100}%`;
     el.vignette.style.boxShadow = `inset 0 0 160px 40px rgba(229,57,53,${Math.max(0, danger - 0.45) * 1.4})`;
 
-    const charge = Math.min(1, r.driftCharge / 1.5);
-    el.driftFill.style.width = `${r.boost > 0 ? 100 : charge * 100}%`;
-    el.driftFill.style.background = r.boost > 0 ? '#34a853' : r.driftCharge > 1 ? '#ff9800' : '#1a73e8';
-    this.#set('drift', (v) => { el.driftLabel.textContent = v; }, r.boost > 0 ? 'SPRINT !' : r.drifting ? (r.driftCharge > 1 ? 'GLISSADE MAX' : 'GLISSADE…') : 'GLISSADE (SHIFT)');
+    // jauge de glissade (se vide en glissant, se recharge sinon) ; couleur = charge du sprint
+    el.driftFill.style.width = `${r.slideGauge * 100}%`;
+    el.driftFill.style.background = r.boost > 0 ? '#34a853' : r.drifting ? (r.driftCharge > 1 ? '#ff9800' : r.driftCharge > 0.35 ? '#42a5f5' : '#90caf9')
+      : r.slideGauge < r.stats.get('slideMin') ? '#bdbdbd' : '#1a73e8';
+    this.#set('drift', (v) => { el.driftLabel.textContent = v; }, r.boost > 0 ? 'SPRINT !' : r.drifting ? (r.driftCharge > 1 ? 'GLISSADE MAX' : 'GLISSADE…')
+      : r.slideGauge < r.stats.get('slideMin') ? 'RECHARGE…' : 'GLISSADE (SHIFT)');
 
     // arme + bonus actifs avec leur minuteur
     const buffs = [];
