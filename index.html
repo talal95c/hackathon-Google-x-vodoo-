@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Sans connexion Internet</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦖</text></svg>">
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Real Google Chrome Offline Page wrapper -->
+    <div id="chrome-page-container">
+      <div id="chrome-main">
+        <!-- 2D Dino Canvas (Native Chrome position) -->
+        <div id="canvas-2d-wrapper">
+          <canvas id="canvas-2d" width="900" height="300"></canvas>
+        </div>
+
+        <!-- Offline error details -->
+        <div id="chrome-offline-text">
+          <h1 class="chrome-heading">Aucune connexion Internet</h1>
+          <p class="chrome-subtext">Voici quelques conseils :</p>
+          <ul class="chrome-list">
+            <li>Vérifiez les câbles réseau, le modem et les routeurs.</li>
+            <li>Reconnectez-vous au réseau Wi-Fi.</li>
+          </ul>
+          <p class="chrome-error-code">ERR_INTERNET_DISCONNECTED</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3D WebGL Three.js Canvas (Hidden until shatter) -->
+    <canvas id="canvas-3d"></canvas>
+
+    <!-- White Flash Overlay for Shatter Impact -->
+    <div id="flash-overlay"></div>
+
+    <!-- 3D Phase HUD (Appears ONLY after dimension shatter) -->
+    <header id="ui-3d-hud" class="hidden">
+      <div class="hud-top">
+        <div id="hud-badge" class="badge badge-3d">DIMENSION 3D : RUN DU DINO</div>
+        <div id="score-display">SCORE : 0</div>
+      </div>
+      <div id="instructions">
+        [← / →] : Changer de couloir &nbsp;|&nbsp; [ESPACE / ↑] : Sauter &nbsp;|&nbsp; [↓] : Glisser
+      </div>
+    </header>
+
+    <!-- 3D Touch Controls (Appears only on 3D phase) -->
+    <div id="touch-controls" class="hidden">
+      <div class="ctrl-group">
+        <button id="btn-left" class="touch-btn" aria-label="Gauche">◀ GAUCHE</button>
+        <button id="btn-jump" class="touch-btn btn-primary" aria-label="Sauter">▲ SAUT</button>
+        <button id="btn-duck" class="touch-btn" aria-label="Baisser">▼ GLISSE</button>
+        <button id="btn-right" class="touch-btn" aria-label="Droite">DROITE ▶</button>
+      </div>
+    </div>
+
+    <!-- Game Over Modal (After dying in 3D) -->
+    <div id="modal-gameover" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <h2 class="gameover-title">GAME OVER</h2>
+        <p class="gameover-subtitle">La boucle multidimensionnelle s'arrête ici !</p>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-label">SCORE 2D CHROME</span>
+            <span id="stat-score-2d" class="stat-val">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">SCORE 3D VU DE DOS</span>
+            <span id="stat-score-3d" class="stat-val">0</span>
+          </div>
+          <div class="stat-box highlight">
+            <span class="stat-label">TOTAL SCORE</span>
+            <span id="stat-total-score" class="stat-val">0</span>
+          </div>
+          <div class="stat-box best">
+            <span class="stat-label">RECORD PERSONNEL</span>
+            <span id="stat-high-score" class="stat-val">0</span>
+          </div>
+        </div>
+
+        <button id="btn-restart" class="btn-action">RETOURNER AU CHROME DINO [ESPACE]</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
