@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "zip": "vite build && cd dist && rm -f ../dino-escape-itch.zip && zip -r ../dino-escape-itch.zip .",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "voices": "node scripts/voices/generate.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.24.0",

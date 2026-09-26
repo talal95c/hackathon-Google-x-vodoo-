@@ -26,6 +26,8 @@ import { CameraRig } from './view/CameraRig.js';
 import { BeatFx } from './view/BeatFx.js';
 import { Input } from './input/Input.js';
 import { Sfx, bindSfx } from './audio/Sfx.js';
+import { VoiceDirector } from './audio/VoiceDirector.js';
+import { WebVoicePlayer } from './audio/WebVoicePlayer.js';
 import { LyriaEngine } from './audio/music/LyriaEngine.js';
 import { SynthEngine } from './audio/music/SynthEngine.js';
 import { MusicDirector } from './audio/music/MusicDirector.js';
@@ -59,7 +61,11 @@ const sfx = new Sfx();
 bindSfx(game, sfx);
 const lyria = new LyriaEngine();
 const music = new MusicDirector(game, { lyria, synth: new SynthEngine() });
-sfx.onInit = (audioCtx) => music.setAudioContext(audioCtx);
+const voicePlayer = new WebVoicePlayer({ onSpeak: (seconds) => music.duck(seconds) });
+const voices = new VoiceDirector(game, { player: voicePlayer, getBest: () => profile.data.best });
+voicePlayer.loadManifest().then((m) => { voices.setManifest(m); voices.setSkin(profile.data.skin); voicePlayer.preload(voices.character); }).catch(() => {});
+game.on('skin:preview', ({ skin }) => { voices.setSkin(skin); voicePlayer.preload(voices.character); });
+sfx.onInit = (audioCtx) => { music.setAudioContext(audioCtx); voicePlayer.setAudioContext(audioCtx); };
 // Connexion Lyria dès le chargement (le WebSocket n'a pas besoin d'un clic) : musique live prête au 1er départ
 if (lyria.hasKey()) lyria.connect();
 
@@ -102,6 +108,7 @@ function frame(now) {
   game.update(dt, input.read(dt));
   for (const v of views) v.update(dt, time);
   music.update(dt);
+  voices.update(dt);
   hud.update(dt);
   world.update(dt, ctx.focus);
   world.render(ctx.fx?.pulse ?? 0, game.worldJump ? Math.sin(game.worldJump.progress * Math.PI) : game.feverTime > 0 ? 1 : game.runner.boost > 0 ? .8 : 0);
@@ -110,4 +117,4 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // Debug depuis la console : __dino.game.runner, __dino.profile.earn(1000)…
-window.__dino = { game, profile, shop, lyria, music };
+window.__dino = { game, profile, shop, lyria, music, voices };

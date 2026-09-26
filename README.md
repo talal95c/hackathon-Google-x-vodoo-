@@ -58,3 +58,13 @@ ajouter un ennemi, un boss, une arme, un skin (y compris un .glb), une musique o
 Menu 🎵 MUSIQUE → saisir une clé API Gemini (https://aistudio.google.com/apikey). Sans clé, un synthé
 procédural prend le relais. En dev, on peut aussi mettre `VITE_GEMINI_API_KEY=...` dans `.env.local`
 (jamais dans un build publié).
+
+## Voix des personnages (Gradium)
+Chaque skin a sa voix (Riddim, Classique, Néon, Doré) plus le Curseur qui nargue. Les répliques sont
+pré-générées : le jeu lit `public/voices/**.mp3`, aucune clé ni appel réseau en course.
+
+    GRADIUM_API_KEY=... npm run voices                     # génère les répliques manquantes ou modifiées
+    GRADIUM_API_KEY=... npm run voices -- --redesign gold  # nouvelle voix pour un perso
+
+- Répliques et descriptions de voix : `scripts/voices/characters.js`
+- Déclencheurs, priorités, cooldowns : `src/audio/VoiceDirector.js` (`VOICE_EVENTS`, `VOICE`)

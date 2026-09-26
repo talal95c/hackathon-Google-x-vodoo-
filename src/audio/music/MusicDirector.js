@@ -43,6 +43,18 @@ export class MusicDirector {
     this.ctx = ctx;
     this.lyria.setAudioContext(ctx);
     this.synth.setAudioContext(ctx);
+    this.outs = [this.lyria.out, this.synth.out].filter(Boolean).map((out) => ({ out, base: out.gain.value }));
+  }
+
+  // Baisse la musique le temps d'une réplique vocale
+  duck(seconds, amount = 0.45) {
+    if (!this.ctx || !this.outs) return;
+    const t = this.ctx.currentTime;
+    for (const { out, base } of this.outs) {
+      out.gain.cancelScheduledValues(t);
+      out.gain.setTargetAtTime(base * amount, t, 0.04);
+      out.gain.setTargetAtTime(base, t + seconds, 0.25);
+    }
   }
 
   // Heure audio du prochain multiple de `beats` temps (4 = début de mesure) après t
