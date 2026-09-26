@@ -26,6 +26,8 @@ import { RunnerView } from './view/RunnerView.js';
 import { Particles } from './view/Particles.js';
 import { CameraRig } from './view/CameraRig.js';
 import { BeatFx } from './view/BeatFx.js';
+import { TransitionFx } from './view/TransitionFx.js';
+import { PortalView } from './view/PortalView.js';
 import { Input } from './input/Input.js';
 import { Sfx, bindSfx } from './audio/Sfx.js';
 import { LyriaEngine } from './audio/music/LyriaEngine.js';
@@ -55,6 +57,7 @@ const views = [
   new BeatFx(ctx),      // en premier : fournit ctx.fx et ctx.beatMaterials
   new TrackView(ctx),
   new WorldDecorView(ctx),
+  new PortalView(ctx),   // vortex dans la porte de chaque monde
   new DioramaView(ctx),
   new TunnelView(ctx),
   new SideLightShow(ctx),
@@ -62,6 +65,7 @@ const views = [
   // (RivalView ajoutée plus bas, une fois le multijoueur créé)
   new RunnerView(ctx),
   new Particles(ctx),
+  new TransitionFx(ctx), // lignes de vitesse, flou, flash : fournit ctx.transition
   new CameraRig(ctx),
 ];
 
@@ -77,7 +81,7 @@ if (lyria.hasKey()) lyria.connect();
 // --- Interface
 const hud = new Hud(game, profile);
 const input = new Input();
-const menus = new Menus({ game, profile, shop, lyria, music, onPlay: play });
+const menus = new Menus({ game, profile, shop, lyria, music, onPlay: play, onBack: back });
 let overAt = 0;
 
 // --- Multijoueur (WebRTC pair-à-pair, sans serveur)
@@ -99,9 +103,15 @@ function play() {
 
 const lobby = new Lobby({ mp, bots, menus, hud, onLaunch: () => play() });
 views.push(new CombatView(ctx, [mp, bots]), new CombatHud(ctx, () => lobby.race));
+
+// Retour depuis l'écran de fin : le menu en solo, le salon en multijoueur
+function back() {
+  menus.show('start');
+  if (mp.inRoom) lobby.open();
+}
 music.setRaceSource(() => lobby.race); // la musique réagit au match (rivaux proches, coups…)
-game.on('bot:out', ({ bot }) => hud.banner(`💥 ${bot} est tombé !`, 1));
-game.on('runner:respawn', ({ lives }) => hud.banner(`Retour en piste ! ${'♥'.repeat(lives)}`, 1.2));
+game.on('bot:out', ({ bot }) => hud.banner(`💥 ${bot} is out!`, 1));
+game.on('runner:respawn', ({ lives }) => hud.banner(`Back on track! ${'♥'.repeat(lives)}`, 1.2));
 mp.on('start', ({ seed, delay, lane }) => {
   sfx.init();
   menus.show(null);
@@ -113,7 +123,8 @@ document.getElementById('shoveBtn').addEventListener('pointerdown', (e) => { e.p
 
 input.onAction((a) => {
   if (a !== 'confirm' || menus.panelOpen) return;
-  if (game.state === 'menu' || (game.state === 'over' && performance.now() - overAt > 900)) play();
+  if (game.state === 'menu') play();
+  else if (game.state === 'over' && performance.now() - overAt > 900) { if (menus.screens.start.classList.contains('hidden')) back(); else play(); } // ESPACE : quitter l'écran de fin, puis relancer
 });
 
 game.on('game:start', ({ loadout }) => hud.setMusicLabel(`🎵 ${MusicThemes.get(loadout.theme).name}${lyria.ready ? ' · Lyria' : ''}`));
@@ -124,14 +135,14 @@ game.on('game:over', (result) => {
   hud.setBest(record.best);
   mp.finish(result);
   setTimeout(() => {
-    menus.showGameOver(result, record);
-    if (mp.inRace || bots.list.length) document.getElementById('overDetails').insertAdjacentHTML('beforeend', lobby.resultsHtml() + (mp.inRace && !mp.isHost ? '<p class="small">L\'hôte peut relancer une revanche.</p>' : ''));
+    menus.showGameOver(result, record, { multiplayer: mp.inRoom });
+    if (mp.inRace || bots.list.length) document.getElementById('overRace').innerHTML = lobby.resultsHtml() + (mp.inRace && !mp.isHost ? '<p class="small">The host can start a rematch.</p>' : '');
   }, 700);
 });
 
 // --- Boucle
 let last = performance.now(), time = 0;
-hud.setTitle('Dino Escape');
+hud.setTitle('Dino Race Fight Club');
 
 function frame(now) {
   const dt = Math.min(1 / 20, (now - last) / 1000);
@@ -147,10 +158,10 @@ function frame(now) {
   music.update(dt);
   hud.update(dt);
   world.update(dt, ctx.focus);
-  world.render(ctx.fx?.pulse ?? 0, game.worldJump ? Math.sin(game.worldJump.progress * Math.PI) : game.runner.boost > 0 ? .8 : 0);
+  world.render(ctx.fx?.pulse ?? 0, ctx.transition);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 
 // Debug depuis la console : __dino.game.runner, __dino.profile.earn(1000)…
-window.__dino = { game, profile, shop, lyria, music, mp };
+window.__dino = { game, profile, shop, lyria, music, mp, menus, lobby, bots };

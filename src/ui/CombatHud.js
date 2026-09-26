@@ -15,7 +15,7 @@ export class CombatHud extends View {
     this.listen('combat:impact', e => {
       if (e.kind !== 'shove' || !e.local) return;
       const received = e.local === 'received';
-      this.show(received ? 'OUCH !' : 'BIEN CLAQUÉ !', received ? 'Reprends ta trajectoire' : 'Continue à le pousser !', received ? 'received' : 'dealt', e.dir);
+      this.show(received ? 'OUCH!' : 'NICE SLAP!', received ? 'Get back on your line' : 'Keep pushing!', received ? 'received' : 'dealt', e.dir);
     });
     this.listen('mp:shove', ({ hit }) => { if (!hit) this.show('DANS LE VENT', 'Rapproche-toi d’un rival', 'miss'); });
     this.listen('game:start', () => this.reset()); this.listen('runner:respawn', () => this.reset());
@@ -35,8 +35,8 @@ export class CombatHud extends View {
     const ready = cd <= .02;
     this.box.classList.toggle('combat-ready', ready && !!target);
     this.box.classList.toggle('combat-cooling', !ready);
-    this.button.textContent = ready ? '✋ E / F · CLAQUE' : `✋ ${cd.toFixed(1)} s`;
-    this.hint.textContent = !ready ? 'RECHARGE' : target ? `${target.name} · À PORTÉE` : 'RAPPROCHE-TOI D’UN RIVAL';
+    this.button.textContent = ready ? '✋ E / F · SLAP' : `✋ ${cd.toFixed(1)} s`;
+    this.hint.textContent = !ready ? 'RECHARGING' : target ? `${target.name} · IN RANGE` : 'GET CLOSER TO A RIVAL';
   }
   dispose() { this.overlay.remove(); this.hint.remove(); super.dispose(); }
 }
