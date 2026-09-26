@@ -138,10 +138,43 @@ body:not(.in-game) #hud { opacity: 0; }
 .mp-code b { font-size: 32px; letter-spacing: 6px; }
 .mp-players { list-style: none; display: flex; flex-direction: column; gap: 6px; }
 .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
-#mpBoard { position: absolute; top: 110px; right: 16px; list-style: none; display: flex; flex-direction: column; gap: 4px; background: rgba(255,255,255,.85); border-radius: 12px; padding: 8px 12px; font-size: 13px; font-weight: bold; min-width: 170px; }
-#mpBoard li { display: flex; align-items: center; gap: 4px; }
-#mpBoard li b { width: 16px; } #mpBoard li em { margin-left: auto; font-style: normal; opacity: .7; }
-#mpBoard li.out { opacity: .45; }
+#mpBoard { position: absolute; top: 110px; right: 16px; list-style: none; width: 230px; margin: 0; padding: 6px; border-radius: 16px; font-size: 13px; font-weight: 800; color: #fff;
+  background: linear-gradient(160deg, #1b1f3bdd, #3a1c5cdd 55%, #5c1f4add); border: 1px solid #ffffff30; box-shadow: 0 10px 30px #1b1f3b55, inset 0 1px 0 #ffffff25;
+  backdrop-filter: blur(6px); transition: height .3s ease; overflow: hidden; }
+#mpBoard::before { content: 'LIVE'; position: absolute; top: -1px; right: 12px; padding: 2px 7px; border-radius: 0 0 7px 7px; font-size: 9px; letter-spacing: 2px; background: #ff3d6e; animation: mpLive 1.2s ease-in-out infinite; }
+#mpBoard li { position: absolute; left: 6px; right: 6px; top: 6px; height: 30px; display: flex; align-items: center; gap: 7px; padding: 0 8px 0 6px; border-radius: 10px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--c) 35%, transparent), #ffffff0d 70%); border-left: 3px solid var(--c);
+  transform: translateY(var(--y, 0)); transition: transform .45s cubic-bezier(.34, 1.56, .64, 1), opacity .3s, background .3s; will-change: transform; }
+#mpBoard li .rk, .mp-results li b { width: 20px; height: 20px; flex: none; display: grid; place-items: center; border-radius: 6px; font-size: 11px; background: #ffffff1f; color: #ffffffc0; }
+.mp-results li b { width: 24px; height: 24px; background: #0000000f; color: #757575; }
+#mpBoard li.p1 .rk, .mp-results li.p1 b { background: linear-gradient(135deg, #fff176, #ffb300); color: #5d4000; box-shadow: 0 0 10px #ffca28aa; }
+#mpBoard li.p2 .rk, .mp-results li.p2 b { background: linear-gradient(135deg, #f5f5f5, #90a4ae); color: #37474f; }
+#mpBoard li.p3 .rk, .mp-results li.p3 b { background: linear-gradient(135deg, #ffccbc, #e64a19); color: #fff; }
+#mpBoard li .av { width: 20px; height: 20px; flex: none; display: grid; place-items: center; border-radius: 50%; font-size: 11px; color: #fff; background: var(--c); box-shadow: 0 0 0 2px #ffffff40, 0 0 10px var(--c); }
+#mpBoard li .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#mpBoard li em { font-style: normal; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 3px; }
+#mpBoard li em small { font-size: 9px; opacity: .65; } #mpBoard li em .rtt { margin-left: 3px; }
+#mpBoard .hearts { color: #ff4f6d; letter-spacing: 1px; font-size: 10px; margin-right: 3px; text-shadow: 0 0 6px #ff4f6d99; }
+#mpBoard li .bar { position: absolute; left: 8px; right: 8px; bottom: 2px; height: 2px; border-radius: 2px; background: #ffffff18; overflow: hidden; }
+#mpBoard li .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--c), #fff); transform-origin: left; transition: transform .4s ease-out; }
+#mpBoard li .delta { position: absolute; right: -2px; top: -6px; padding: 1px 5px; border-radius: 6px; font-size: 9px; opacity: 0; pointer-events: none; }
+#mpBoard li.up .delta { opacity: 1; background: #00c853; animation: mpDelta 1.1s ease-out forwards; }
+#mpBoard li.down .delta { opacity: 1; background: #ff1744; animation: mpDelta 1.1s ease-out forwards; }
+#mpBoard li.up { animation: mpUp .6s ease-out; } #mpBoard li.down { animation: mpDown .6s ease-out; }
+#mpBoard li.p1 { background: linear-gradient(90deg, #ffd54f66, #ff8f0022 70%); border-left-color: #ffd54f; }
+#mpBoard li.p1 .rk { animation: mpCrown 1.6s ease-in-out infinite; }
+#mpBoard li.p2 { background: linear-gradient(90deg, #cfd8dc55, #ffffff10 70%); border-left-color: #cfd8dc; }
+#mpBoard li.p3 { background: linear-gradient(90deg, #ff8a6555, #ffffff10 70%); border-left-color: #ff8a65; }
+#mpBoard li.me { box-shadow: 0 0 0 1.5px #ffffffcc, 0 0 14px #4fc3f7aa; }
+#mpBoard li.me .nm::after { content: ' ★'; color: #4fc3f7; }
+#mpBoard li.out { opacity: .4; filter: grayscale(1); }
+#mpBoard li.enter { animation: mpEnter .5s ease-out backwards; }
+@keyframes mpEnter { from { opacity: 0; translate: 40px 0; } }
+@keyframes mpUp { 30% { background-color: #00e67655; scale: 1.05; } }
+@keyframes mpDown { 30% { background-color: #ff174455; scale: .97; } }
+@keyframes mpDelta { 0% { translate: 0 6px; opacity: 0; } 20% { translate: 0 0; opacity: 1; } 80% { opacity: 1; } 100% { translate: 0 -8px; opacity: 0; } }
+@keyframes mpCrown { 50% { scale: 1.25; rotate: -8deg; } }
+@keyframes mpLive { 50% { opacity: .45; } }
 #shoveBox { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); width: 240px; text-align: center; pointer-events: auto; }
 #shoveBtn { font-size: 13px; padding: 6px 12px; width: 100%; }
 #shoveFill { background: #ff4f8b; }
@@ -151,13 +184,16 @@ body:not(.in-game) #hud { opacity: 0; }
 .over-stats .stat span { display: block; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #757575; margin-top: 2px; }
 .over-stats .stat.best { background: #fff3cd; border-color: #f9a825; }
 .mp-results { list-style: none; width: min(360px, 90vw); margin: 4px auto 0; padding: 6px; border-radius: 16px; background: #ffffffd9; border: 1px solid #ffffff; box-shadow: 0 5px 20px #174b4010; text-align: left; }
-.mp-results li { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; font-size: 14px; }
-.mp-results li.me { background: #edf4ff; font-weight: 700; }
-.mp-results li b { width: 18px; text-align: right; color: #757575; font-size: 12px; }
-.mp-results li .dot { margin: 0; }
+.mp-results li { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; font-size: 14px; border-left: 3px solid var(--c, transparent); margin: 2px 0;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--c, #fff) 16%, transparent), transparent 70%); animation: mpResult .45s cubic-bezier(.34, 1.56, .64, 1) backwards; animation-delay: calc(var(--i, 0) * 90ms + 150ms); }
+.mp-results li.p1 { background: linear-gradient(90deg, #ffd54f88, #fff3cd33); border-left-color: #f9a825; font-size: 16px; }
+.mp-results li.p2 { background: linear-gradient(90deg, #cfd8dc99, #eceff133); border-left-color: #90a4ae; }
+.mp-results li.p3 { background: linear-gradient(90deg, #ffab9166, #fbe9e733); border-left-color: #ff7043; }
+.mp-results li .av { width: 24px; height: 24px; flex: none; display: grid; place-items: center; border-radius: 50%; font-size: 12px; font-weight: 800; color: #fff; background: var(--c, #999); box-shadow: 0 2px 6px color-mix(in srgb, var(--c, #999) 60%, transparent); }
+@keyframes mpResult { from { opacity: 0; translate: -24px 0; scale: .95; } }
+.mp-results li.me { font-weight: 800; box-shadow: inset 0 0 0 2px #1a73e8; }
 .mp-results li .who { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mp-results li em { font-style: normal; font-size: 13px; color: #555; font-variant-numeric: tabular-nums; }
 #overRace .small { margin-top: 6px; }
 .mp-input { display: flex; gap: 8px; margin-top: 8px; }
 .mp-input input { flex: 1; }
-#mpBoard .hearts { color: #e53935; letter-spacing: 1px; }
