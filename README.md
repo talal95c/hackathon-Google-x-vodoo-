@@ -29,7 +29,25 @@ boss, boutique (skins, musiques, améliorations) et musique générée en direct
 - ESPACE / ↑ : sauter
 - SHIFT (en tournant) : glissade ; relâcher = sprint (bleu, puis orange si chargé)
 - ↓ : freiner
-- Mobile : moitié gauche/droite de l'écran, glisser vers le haut = saut, deux doigts = glissade
+- Mobile (pouce) : le pouce reste posé et glisse ; gauche/droite = direction analogique, coup vers le haut = saut,
+  glisser vers le bas = glissade, coup sec sur le côté = pousser, tap ou 2e doigt = objet
+- Course Royale : E/F = objet, X = pousser, 1-4 = emotes
+
+## Course Royale (multijoueur 2-5 joueurs)
+    npm run server     # serveur WebSocket sur ws://localhost:2567 (salons, bots, trophées, Elo)
+    npm run dev        # puis menu « Course Royale »
+- Toutes les ~20 s le dernier est éliminé ; le dernier survivant gagne (~2 min 15). La route se resserre.
+- Combo : dépassements, poussées, éjections, touches d'objet, drifts et figures le font monter →
+  turbo à chaque palier, poussées plus fortes, objet bonus au ×3, RAGE au ×5. Il retombe après 4 s sans action.
+- Boîtes « ? » : 9 objets, les plus forts vont aux derniers.
+- Modes : entraînement (bots, hors ligne), salon entre amis (code à 4 caractères ou lien `?room=CODE`),
+  partie rapide (trophées) et classée (Elo, rangs Bronze → Root). Parties rapides complétées par des bots après 10 s.
+- Le serveur est l'autorité : départ synchronisé, classement, éliminations, objets, poussées, récompenses
+  (vitesse bornée côté serveur contre la triche). Profils : en mémoire, ou fichier JSON avec `DATA_FILE=./data/progress.json`.
+- Autre serveur : `?server=wss://…` dans l'URL ou `VITE_RACE_SERVER=wss://…` au build.
+- Déploiement : `Dockerfile` + `fly.toml` (le serveur sert aussi le jeu, un seul domaine) :
+  `fly launch --no-deploy --copy-config && fly volumes create data --size 1 --region cdg && fly deploy`.
+- iOS / Android : même build web emballé avec Capacitor (`npx cap add ios|android`), serveur via `VITE_RACE_SERVER`.
 
 ## Publier sur itch.io
     npm run zip        # crée dino-escape-itch.zip
@@ -37,7 +55,7 @@ Sur itch.io : Kind of project = HTML, uploader le zip, cocher « This file will 
 viewport 1280×720, activer « Fullscreen button » et « Mobile friendly ».
 
 ## Tests
-    npm test           # tests du kernel (sans navigateur)
+    npm test           # tests du kernel, de la Course Royale et du serveur (sans navigateur)
 
 ## Architecture
 Voir **[ARCHITECTURE.md](ARCHITECTURE.md)** : kernel / vues / contenu, liste des événements, et comment

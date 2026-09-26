@@ -1,0 +1,28 @@
+# fly launch --no-deploy --copy-config ; fly volumes create data --size 1 --region cdg ; fly deploy
+app = "dino-course-royale"
+primary_region = "cdg"
+
+[build]
+
+[env]
+  PORT = "8080"
+  STATIC_DIR = "/app/dist"
+  DATA_FILE = "/data/progress.json"
+
+[mounts]
+  source = "data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "5s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    timeout = "3s"

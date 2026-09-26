@@ -18,5 +18,7 @@ export function defaultServerUrl(loc = globalThis.location) {
   const env = import.meta.env?.VITE_RACE_SERVER;
   if (env) return env;
   if (!loc) return 'ws://localhost:2567';
-  return `${loc.protocol === 'https:' ? 'wss' : 'ws'}://${loc.hostname}:2567`;
+  const proto = loc.protocol === 'https:' ? 'wss' : 'ws';
+  // vite dev / preview : serveur à part sur 2567 ; sinon le serveur sert aussi le jeu (Docker/Fly)
+  return ['5173', '4173'].includes(loc.port) ? `${proto}://${loc.hostname}:2567` : `${proto}://${loc.host}`;
 }
