@@ -13,6 +13,14 @@ A colorful 3D racing game for desktop and mobile. Dodge obstacles, drift around 
 - Stay on the road, dodge cactus and cookie obstacles, and collect coins to spend in the shop. Pick your favorite dino skin and music style.
 - You start with **three lives**. Outlast your rivals and see how far you can go!
 
+## Multiplayer powered by MQTT
+
+Race with friends directly in the browser. One player selects **Multiplayer → Create a game**, shares the room code, and starts the race once everyone has joined. No account or multiplayer API key is needed.
+
+The game uses **MQTT over secure WebSockets (WSS)**. MQTT brokers relay messages between players in the same room, keeping their positions, slaps and Fight Club events in sync. Everyone races on the same generated track.
+
+This hackathon version uses public brokers from **HiveMQ, Mosquitto and EMQX**, so there is no separate game server to set up. An internet connection is required.
+
 ## Controls
 
 | Action | Desktop |
