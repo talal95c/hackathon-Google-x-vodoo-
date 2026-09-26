@@ -15,13 +15,15 @@ const THEMES = [
     dinoEmissive: new THREE.Color(0x000000),
     dinoEmissiveInt: 0,
     eye: new THREE.Color(0xffffff),
-    cactus: new THREE.Color(0x535353),
-    cactusCore: new THREE.Color(0x535353),
-    cactusCoreOpacity: 0,
-    ptero: new THREE.Color(0x535353),
+    cactus: new THREE.Color(0x383838),
+    cactusEmissive: new THREE.Color(0x000000),
+    cactusEmissiveInt: 0,
+    cactusEdge: new THREE.Color(0x555555),
+    ptero: new THREE.Color(0x404040),
     pteroEmissive: new THREE.Color(0x000000),
+    pteroEmissiveInt: 0,
   },
-  { // Phase 1: Neon Emergence (Soft twilight, crisp cyan & magenta accents)
+  { // Phase 1: Neon Emergence (Vibrant emerald glow cactus that POP on dark track)
     sky: new THREE.Color(0x231a38),
     fogDensity: 0.013,
     track: new THREE.Color(0x1e1930),
@@ -33,13 +35,15 @@ const THEMES = [
     dinoEmissive: new THREE.Color(0x00f0ff),
     dinoEmissiveInt: 0.4,
     eye: new THREE.Color(0x00f0ff),
-    cactus: new THREE.Color(0x1a2430),
-    cactusCore: new THREE.Color(0x00f0ff),
-    cactusCoreOpacity: 0.45,
-    ptero: new THREE.Color(0x281830),
+    cactus: new THREE.Color(0x0b3d28),
+    cactusEmissive: new THREE.Color(0x00ff88),
+    cactusEmissiveInt: 0.8,
+    cactusEdge: new THREE.Color(0x00ff88),
+    ptero: new THREE.Color(0x381830),
     pteroEmissive: new THREE.Color(0xff007f),
+    pteroEmissiveInt: 0.8,
   },
-  { // Phase 2: Synthwave Overdrive (Rich deep purple & hot neon)
+  { // Phase 2: Synthwave Overdrive (Luminous glowing emerald & neon pink pillars)
     sky: new THREE.Color(0x140a28),
     fogDensity: 0.014,
     track: new THREE.Color(0x120824),
@@ -51,13 +55,15 @@ const THEMES = [
     dinoEmissive: new THREE.Color(0xff007f),
     dinoEmissiveInt: 0.75,
     eye: new THREE.Color(0x00ffff),
-    cactus: new THREE.Color(0x101a24),
-    cactusCore: new THREE.Color(0x00ffaa),
-    cactusCoreOpacity: 0.7,
-    ptero: new THREE.Color(0x200a20),
+    cactus: new THREE.Color(0x005a3c),
+    cactusEmissive: new THREE.Color(0x00ffaa),
+    cactusEmissiveInt: 1.1,
+    cactusEdge: new THREE.Color(0x00ffcc),
+    ptero: new THREE.Color(0x300a28),
     pteroEmissive: new THREE.Color(0xff0055),
+    pteroEmissiveInt: 1.1,
   },
-  { // Phase 3: Hyper-Chromatic Drift (Deep midnight & electric ultraviolet)
+  { // Phase 3: Hyper-Chromatic Drift (Blazing cyan-lime laser crystals)
     sky: new THREE.Color(0x0b041a),
     fogDensity: 0.015,
     track: new THREE.Color(0x0e0520),
@@ -69,13 +75,15 @@ const THEMES = [
     dinoEmissive: new THREE.Color(0x00ffff),
     dinoEmissiveInt: 1.0,
     eye: new THREE.Color(0xff00a0),
-    cactus: new THREE.Color(0x0b1820),
-    cactusCore: new THREE.Color(0x00f0ff),
-    cactusCoreOpacity: 0.85,
-    ptero: new THREE.Color(0x1a0520),
+    cactus: new THREE.Color(0x004d44),
+    cactusEmissive: new THREE.Color(0x00f0ff),
+    cactusEmissiveInt: 1.3,
+    cactusEdge: new THREE.Color(0x00ffff),
+    ptero: new THREE.Color(0x280520),
     pteroEmissive: new THREE.Color(0xff007f),
+    pteroEmissiveInt: 1.3,
   },
-  { // Phase 4: Maximum Overdrive (Deep cosmic void, luminous cyber runway)
+  { // Phase 4: Maximum Overdrive (Electric neon gold/green high-voltage beacons)
     sky: new THREE.Color(0x070212),
     fogDensity: 0.016,
     track: new THREE.Color(0x090318),
@@ -87,11 +95,13 @@ const THEMES = [
     dinoEmissive: new THREE.Color(0xff00bb),
     dinoEmissiveInt: 1.3,
     eye: new THREE.Color(0x00ffff),
-    cactus: new THREE.Color(0x081520),
-    cactusCore: new THREE.Color(0x00ffcc),
-    cactusCoreOpacity: 0.95,
-    ptero: new THREE.Color(0x160318),
+    cactus: new THREE.Color(0x104d20),
+    cactusEmissive: new THREE.Color(0x00ff88),
+    cactusEmissiveInt: 1.5,
+    cactusEdge: new THREE.Color(0x00ff88),
+    ptero: new THREE.Color(0x200318),
     pteroEmissive: new THREE.Color(0xff0066),
+    pteroEmissiveInt: 1.5,
   },
 ];
 
@@ -594,45 +604,64 @@ export class Dino3DGame {
   createCactusMesh() {
     const group = new THREE.Group();
     const cactusMat = new THREE.MeshStandardMaterial({
-      color: 0x535353,
-      roughness: 0.35,
-      metalness: 0.2,
+      color: 0x383838,
+      roughness: 0.3,
+      metalness: 0.25,
       emissive: 0x000000,
       emissiveIntensity: 0,
     });
     group.cactusMat = cactusMat;
+
+    // Glowing Neon Edge Wireframe for razor-sharp visibility
+    const edgeMat = new THREE.LineBasicMaterial({
+      color: 0x555555,
+      linewidth: 2,
+    });
+    group.edgeMat = edgeMat;
 
     const height = 2.6 + Math.random() * 0.8;
     const stemGeom = new THREE.BoxGeometry(0.8, height, 0.8);
     const stem = new THREE.Mesh(stemGeom, cactusMat);
     stem.position.y = height / 2;
     stem.castShadow = true;
+    stem.add(new THREE.LineSegments(new THREE.EdgesGeometry(stemGeom), edgeMat));
     group.add(stem);
 
-    // Glowing core crystal (sleek, un-cluttered)
-    const coreGeom = new THREE.BoxGeometry(0.25, height * 0.75, 0.25);
-    const coreMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0 });
-    const core = new THREE.Mesh(coreGeom, coreMat);
-    core.position.y = height / 2;
-    group.add(core);
-    group.coreMat = coreMat;
-
+    // Arms
     const armGeomH = new THREE.BoxGeometry(0.8, 0.5, 0.5);
     const armGeomV = new THREE.BoxGeometry(0.5, 0.9, 0.5);
 
     const leftArmH = new THREE.Mesh(armGeomH, cactusMat);
     leftArmH.position.set(-0.6, height * 0.45, 0);
+    leftArmH.add(new THREE.LineSegments(new THREE.EdgesGeometry(armGeomH), edgeMat));
     const leftArmV = new THREE.Mesh(armGeomV, cactusMat);
     leftArmV.position.set(-0.9, height * 0.45 + 0.45, 0);
+    leftArmV.add(new THREE.LineSegments(new THREE.EdgesGeometry(armGeomV), edgeMat));
     group.add(leftArmH);
     group.add(leftArmV);
 
     const rightArmH = new THREE.Mesh(armGeomH, cactusMat);
     rightArmH.position.set(0.6, height * 0.55, 0);
+    rightArmH.add(new THREE.LineSegments(new THREE.EdgesGeometry(armGeomH), edgeMat));
     const rightArmV = new THREE.Mesh(armGeomV, cactusMat);
     rightArmV.position.set(0.9, height * 0.55 + 0.45, 0);
+    rightArmV.add(new THREE.LineSegments(new THREE.EdgesGeometry(armGeomV), edgeMat));
     group.add(rightArmH);
     group.add(rightArmV);
+
+    // Ground Warning Ring under cactus
+    const ringGeom = new THREE.RingGeometry(0.65, 0.95, 16);
+    const baseRingMat = new THREE.MeshBasicMaterial({
+      color: 0x00ff88,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide,
+    });
+    group.baseRingMat = baseRingMat;
+    const baseRing = new THREE.Mesh(ringGeom, baseRingMat);
+    baseRing.rotation.x = -Math.PI / 2;
+    baseRing.position.y = 0.02;
+    group.add(baseRing);
 
     return group;
   }
@@ -640,7 +669,7 @@ export class Dino3DGame {
   createPteroMesh() {
     const group = new THREE.Group();
     const pteroMat = new THREE.MeshStandardMaterial({
-      color: 0x535353,
+      color: 0x404040,
       roughness: 0.35,
       metalness: 0.3,
       emissive: 0x000000,
@@ -648,8 +677,16 @@ export class Dino3DGame {
     });
     group.pteroMat = pteroMat;
 
+    const wingEdgeMat = new THREE.LineBasicMaterial({
+      color: 0xff007f,
+      linewidth: 2,
+    });
+    group.wingEdgeMat = wingEdgeMat;
+
+    // Body
     const bodyGeom = new THREE.BoxGeometry(0.6, 0.6, 1.6);
     const body = new THREE.Mesh(bodyGeom, pteroMat);
+    body.add(new THREE.LineSegments(new THREE.EdgesGeometry(bodyGeom), wingEdgeMat));
     group.add(body);
 
     const headGeom = new THREE.BoxGeometry(0.5, 0.5, 1.2);
@@ -657,7 +694,7 @@ export class Dino3DGame {
     head.position.set(0, 0.2, 1.1);
     group.add(head);
 
-    const eyeGeom = new THREE.BoxGeometry(0.12, 0.12, 0.25);
+    const eyeGeom = new THREE.BoxGeometry(0.14, 0.14, 0.25);
     const pteroEyeMat = new THREE.MeshBasicMaterial({ color: 0xff0055 });
     const pEyeL = new THREE.Mesh(eyeGeom, pteroEyeMat);
     pEyeL.position.set(-0.26, 0.35, 1.2);
@@ -670,11 +707,13 @@ export class Dino3DGame {
     const wingGeom = new THREE.BoxGeometry(2.0, 0.15, 0.9);
     const leftWing = new THREE.Mesh(wingGeom, pteroMat);
     leftWing.position.set(-1.1, 0.2, 0);
+    leftWing.add(new THREE.LineSegments(new THREE.EdgesGeometry(wingGeom), wingEdgeMat));
     group.add(leftWing);
     group.leftWing = leftWing;
 
     const rightWing = new THREE.Mesh(wingGeom, pteroMat);
     rightWing.position.set(1.1, 0.2, 0);
+    rightWing.add(new THREE.LineSegments(new THREE.EdgesGeometry(wingGeom), wingEdgeMat));
     group.add(rightWing);
     group.rightWing = rightWing;
 
@@ -776,20 +815,32 @@ export class Dino3DGame {
 
     // Lerp Obstacles
     const cactusCol = t0.cactus.clone().lerp(t1.cactus, t);
-    const cactusCoreCol = t0.cactusCore.clone().lerp(t1.cactusCore, t);
-    const cactusCoreOp = t0.cactusCoreOpacity + (t1.cactusCoreOpacity - t0.cactusCoreOpacity) * t;
+    const cactusEmissive = t0.cactusEmissive.clone().lerp(t1.cactusEmissive, t);
+    const cactusEmissiveInt = t0.cactusEmissiveInt + (t1.cactusEmissiveInt - t0.cactusEmissiveInt) * t;
+    const cactusEdgeCol = t0.cactusEdge.clone().lerp(t1.cactusEdge, t);
+    const pteroCol = t0.ptero.clone().lerp(t1.ptero, t);
     const pteroEmissive = t0.pteroEmissive.clone().lerp(t1.pteroEmissive, t);
+    const pteroEmissiveInt = t0.pteroEmissiveInt + (t1.pteroEmissiveInt - t0.pteroEmissiveInt) * t;
 
     for (const obs of this.obstacles) {
       if (obs.type === 'cactus' && obs.mesh.cactusMat) {
         obs.mesh.cactusMat.color.copy(cactusCol);
-        if (obs.mesh.coreMat) {
-          obs.mesh.coreMat.opacity = cactusCoreOp;
-          obs.mesh.coreMat.color.copy(cactusCoreCol);
+        obs.mesh.cactusMat.emissive.copy(cactusEmissive);
+        obs.mesh.cactusMat.emissiveIntensity = cactusEmissiveInt;
+        if (obs.mesh.edgeMat) {
+          obs.mesh.edgeMat.color.copy(cactusEdgeCol);
+        }
+        if (obs.mesh.baseRingMat) {
+          obs.mesh.baseRingMat.color.copy(cactusEdgeCol);
+          obs.mesh.baseRingMat.opacity = Math.min(0.75, cactusEmissiveInt * 0.65);
         }
       } else if (obs.type === 'ptero' && obs.mesh.pteroMat) {
+        obs.mesh.pteroMat.color.copy(pteroCol);
         obs.mesh.pteroMat.emissive.copy(pteroEmissive);
-        obs.mesh.pteroMat.emissiveIntensity = dinoEmissiveInt * 0.7;
+        obs.mesh.pteroMat.emissiveIntensity = pteroEmissiveInt;
+        if (obs.mesh.wingEdgeMat) {
+          obs.mesh.wingEdgeMat.color.copy(pteroEmissive);
+        }
       }
     }
   }
