@@ -92,15 +92,15 @@ test('réseau : paquet étranger ignoré ; déconnexion avant résultat annule s
  assert.equal(a.club.active,false);assert.equal(a.g.coins,money);assert.equal(a.g.runner.effects.has('fightSlow'),false);assert.equal(a.g.state,'playing');
  assert.equal(c.club.active,false);
 });
-test('duel à 2,5 km puis tous les 2,5 km, hors des portails ; nouvelle course à zéro',()=>{
- const {g,club,clock}=solo();g.sMax=2499;club.update();assert.equal(club.active,false);
- g.sMax=2500;g.worldJump={};club.update();assert.equal(club.active,false);
+test('duel à 1 km puis tous les kilomètres, hors des portails ; nouvelle course à zéro',()=>{
+ const {g,club,clock}=solo();g.sMax=999;club.update();assert.equal(club.active,false);
+ g.sMax=1000;g.worldJump={};club.update();assert.equal(club.active,false);
  g.worldJump=null;club.update();assert.equal(club.active,true);
- club.close();assert.equal(club.nextAt,5000);
- g.sMax=4999;club.update();assert.equal(club.active,false);
- g.sMax=5000;club.update();assert.equal(club.active,true);
- club.close();assert.equal(club.nextAt,7500);
- clock(20);g.start({seed:12});assert.equal(club.active,false);assert.equal(club.nextAt,2500);assert.equal(g.state,'playing');
+ club.close();assert.equal(club.nextAt,2000);
+ g.sMax=1999;club.update();assert.equal(club.active,false);
+ g.sMax=2000;club.update();assert.equal(club.active,true);
+ club.close();assert.equal(club.nextAt,3000);
+ clock(20);g.start({seed:12});assert.equal(club.active,false);assert.equal(club.nextAt,1000);assert.equal(g.state,'playing');
 });
 test('cookies : davantage de vrais obstacles dans chaque monde, aucune confusion avec les pièces',()=>{
  for(const z of ZONES){const cookie=z.spawns.find(s=>s.type==='rollingCookie');assert.ok(cookie&&cookie.weight>=1.5,z.id);}
@@ -129,14 +129,14 @@ test('mobile/clavier : la saisie de course est vidée pendant le duel, aucun sau
 
 test('annonce à 180 m du ring, une fois par passage, réarmée pour une nouvelle course',()=>{
  const {g,club}=solo();let warnings=0;g.on('club:approach',()=>warnings++);
- g.sMax=2319;club.update();assert.equal(club.approachDistance,null);assert.equal(warnings,0);
- g.sMax=2320;club.update();assert.equal(club.approachDistance,180);assert.equal(warnings,1);
+ g.sMax=819;club.update();assert.equal(club.approachDistance,null);assert.equal(warnings,0);
+ g.sMax=820;club.update();assert.equal(club.approachDistance,180);assert.equal(warnings,1);
  for(let i=0;i<50;i++)club.update();assert.equal(warnings,1);
  g.worldJump={};assert.equal(club.approachDistance,null);g.worldJump=null;
- g.sMax=2440;club.update();assert.equal(club.approachDistance,60);assert.equal(warnings,1);
- g.sMax=2500;club.update();assert.equal(club.active,true);assert.equal(club.approachDistance,null);
- club.close();g.sMax=4820;club.update();assert.equal(warnings,2);
- g.start({seed:12});g.sMax=2320;club.update();assert.equal(warnings,3);
+ g.sMax=940;club.update();assert.equal(club.approachDistance,60);assert.equal(warnings,1);
+ g.sMax=1000;club.update();assert.equal(club.active,true);assert.equal(club.approachDistance,null);
+ club.close();g.sMax=1820;club.update();assert.equal(warnings,2);
+ g.start({seed:12});g.sMax=820;club.update();assert.equal(warnings,3);
 });
 
 
