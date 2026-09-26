@@ -223,7 +223,10 @@ body:not(.in-game) #hud { opacity: 0; }
     top: calc(max(12px, env(safe-area-inset-top)) + 210px);
     left: 12px; width: min(142px, 37vw); padding: 7px 10px; transform: none; font-size: 10px;
   }
-  #challengeHud { top: calc(max(12px, env(safe-area-inset-top)) + 260px); left: auto; right: 12px; width: 42vw; padding: 7px; transform: none; font-size: 10px; }
+  #challengeHud {
+    top: calc(max(12px, env(safe-area-inset-top)) + 260px);
+    left: 12px; width: min(142px, 37vw); padding: 7px; transform: none; font-size: 10px;
+  }
   #boss { top: calc(max(12px, env(safe-area-inset-top)) + 335px); }
   #buffs { top: calc(max(12px, env(safe-area-inset-top)) + 335px); left: 12px; }
   #boss:not(.hidden) ~ #buffs { top: calc(max(12px, env(safe-area-inset-top)) + 390px); }
@@ -291,10 +294,10 @@ body:not(.in-game) #hud { opacity: 0; }
   #start h1 { font-size: 46px; }
   .menu-footer { flex-direction: row; }
   .menu-footer .buttons { width: 100%; }
-  #danger { top: calc(max(12px, env(safe-area-inset-top)) + 75px); }
-  #journey, #banner { top: calc(max(12px, env(safe-area-inset-top)) + 125px); }
+  #danger { top: calc(max(12px, env(safe-area-inset-top)) + 75px); width: min(250px, 44vw); }
+  #journey, #banner { top: calc(max(12px, env(safe-area-inset-top)) + 125px); width: min(250px, 44vw); }
   #feverGauge { top: calc(max(12px, env(safe-area-inset-top)) + 85px); width: 120px; }
-  #challengeHud { top: calc(max(12px, env(safe-area-inset-top)) + 85px); width: 140px; }
+  #challengeHud { top: calc(max(12px, env(safe-area-inset-top)) + 85px); left: auto; right: 12px; width: 140px; }
   #boss { top: calc(max(12px, env(safe-area-inset-top)) + 180px); }
   #buffs { top: calc(max(12px, env(safe-area-inset-top)) + 180px); }
   #boss:not(.hidden) ~ #buffs { top: calc(max(12px, env(safe-area-inset-top)) + 235px); }
