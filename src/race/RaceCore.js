@@ -85,6 +85,7 @@ export class RaceCore {
       if (target?.alive) this.send(target.id, { t: 'hit', from: h.from, kind: h.kind, dodgeable: h.kind === 'laser' || h.kind === 'popup', slow: h.kind === 'lag' ? 0.55 : 1 });
     }
 
+    for (const [id, tr] of this.traps) if (t - tr.t > 60) this.traps.delete(id);
     for (const p of this.alive) {
       if (p.combo.level > 0 && t > p.combo.until) this.#breakCombo(p, 'timeout');
     }
@@ -162,9 +163,9 @@ export class RaceCore {
         return;
       }
       case 'trapHit': {
-        const trap = [...this.traps].find(([, tr]) => tr.owner === msg.owner && p.snap && Math.abs(tr.s - p.snap.z) < 20);
+        const trap = [...this.traps.values()].find((tr) => tr.owner === msg.owner && !tr.hit.has(p.id) && p.snap && Math.abs(tr.s - p.snap.z) < 20);
         if (!trap) return;
-        this.traps.delete(trap[0]);
+        trap.hit.add(p.id);
         const owner = this.players.get(msg.owner);
         this.#breakCombo(p, 'hit');
         if (owner && owner !== p) {
@@ -264,7 +265,7 @@ export class RaceCore {
     };
     switch (def.target) {
       case 'behind':
-        this.traps.set(++this.trapId, { owner: p.id, s: me.z - 3 });
+        this.traps.set(++this.trapId, { owner: p.id, s: me.z - 3, t, hit: new Set() });
         return this.send(null, { t: 'trap', id: this.trapId, owner: p.id, s: me.z - 3, d: me.x });
       case 'ahead': {
         const q = others.filter((q) => q.snap.z > me.z && q.snap.z - me.z < def.range && Math.abs(q.snap.x - me.x) < 2.5).sort((a, b) => a.snap.z - b.snap.z)[0];
