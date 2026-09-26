@@ -30,6 +30,7 @@ import { AtmosphereFx } from './view/AtmosphereFx.js';
 import { TransitionFx } from './view/TransitionFx.js';
 import { PortalView } from './view/PortalView.js';
 import { Input } from './input/Input.js';
+import { Haptics, bindHaptics } from './input/Haptics.js';
 import { Sfx, bindSfx } from './audio/Sfx.js';
 import { LyriaEngine } from './audio/music/LyriaEngine.js';
 import { SynthEngine } from './audio/music/SynthEngine.js';
@@ -77,6 +78,8 @@ const views = [
 // --- Son et musique
 const sfx = new Sfx();
 bindSfx(game, sfx);
+const haptics = new Haptics();
+bindHaptics(game, haptics);
 const lyria = new LyriaEngine();
 const music = new MusicDirector(game, { lyria, synth: new SynthEngine() });
 sfx.onInit = (audioCtx) => music.setAudioContext(audioCtx);
@@ -87,6 +90,11 @@ if (lyria.hasKey()) lyria.connect();
 const hud = new Hud(game, profile);
 const input = new Input();
 const menus = new Menus({ game, profile, shop, lyria, music, onPlay: play, onBack: back });
+const hapticsToggle = document.getElementById('haptics');
+hapticsToggle.checked = haptics.enabled;
+document.getElementById('hapticsRow').classList.toggle('hidden', !haptics.supported);
+hapticsToggle.addEventListener('change', () => { haptics.setEnabled(hapticsToggle.checked); haptics.pulse('tap'); });
+document.addEventListener('click', (e) => { if (e.target.closest('button')) haptics.pulse('tap', { light: true }); });
 let overAt = 0;
 
 // --- Multijoueur (WebRTC pair-à-pair, sans serveur)
@@ -155,13 +163,14 @@ let last = performance.now(), time = 0;
 hud.setTitle('Dino Race Fight Club');
 
 function frame(now) {
-  const dt = Math.min(1 / 20, (now - last) / 1000);
+  const wallDt = (now - last) / 1000;
+  const dt = Math.min(1 / 20, wallDt);
   last = now;
   time += dt;
   club.update();
   input.enabled = !menus.panelOpen && !club.active;
   const intent = input.read(dt);
-  game.update(dt, intent);
+  game.update(dt, intent, wallDt);
   mp.update(dt, intent);
   bots.update(dt, intent);
   lobby.update();
