@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { View } from './View.js';
+import { ZONES } from '../content/zones.js';
 
 // Particules (pool de petits cubes) déclenchées par les événements du jeu.
 export class Particles extends View {
@@ -7,7 +8,7 @@ export class Particles extends View {
   next = 0;
   #p = {};
 
-  constructor(ctx, size = 160) {
+  constructor(ctx, size = 260) {
     super(ctx);
     this.focus = ctx.focus;
     const geo = new THREE.BoxGeometry(1, 1, 1);
@@ -19,8 +20,8 @@ export class Particles extends View {
     const edge = () => this.game.zone.palette.edge;
     const at = (e, h = 1) => this.track.point(e.s, e.d, e.y + h, this.#p);
     const P = this.focus;
-    this.listen('world:jump', () => this.emit(P.x, P.y + 1, P.z, 0x55ccff, 30, 14, 12, .3, 1));
-    this.listen('world:land', () => this.emit(P.x, P.y + .3, P.z, edge(), 28, 15, 9, .28, .9));
+    this.listen('world:jump', ({ to }) => { this.emit(P.x, P.y + 1, P.z, 0xffffff, 30, 16, 14, .3, 1); this.emit(P.x, P.y + 1, P.z, to.palette.edge, 30, 14, 12, .35, 1.1); });
+    this.listen('world:land', () => { this.emit(P.x, P.y + .3, P.z, edge(), 40, 20, 10, .3, 1); this.emit(P.x, P.y + .3, P.z, 0xffffff, 20, 26, 6, .22, .7); });
     this.listen('runner:land', () => this.emit(P.x, P.y + 0.2, P.z, edge(), 6, 6, 3, 0.25, 0.4));
     this.listen('runner:hit', () => this.emit(P.x, P.y + 1, P.z, edge(), 12, 12, 9, 0.22, 0.7));
     this.listen('weapon:fire', () => this.emit(P.x, P.y + 2.6, P.z, 0xff1744, 2, 3, 2, 0.15, 0.2));
@@ -51,6 +52,11 @@ export class Particles extends View {
         for (const s of [-1, 1]) this.emit(P.x - fx * 0.5 + fz * s * 0.4, P.y + 0.2, P.z - fz * 0.5 - fx * s * 0.4, col, 1, 2, 2, 0.35, 0.4);
       }
       if (r.boost > 0) this.emit(P.x - fx * 1.5, P.y + 1 + Math.random() * 2.5, P.z - fz * 1.5, 0xffffff, 1, 1, 0, 0.18, 0.25);
+      // Saut entre deux mondes : traînée de comète aux couleurs du monde d'arrivée
+      if (g.worldJump) {
+        const to = ZONES[g.worldJump.to].palette.edge;
+        this.emit(P.x - fx * 1.2, P.y + 1.2 + Math.random() * 1.5, P.z - fz * 1.2, Math.random() < .5 ? 0xffffff : to, 2, 3, 2, 0.3, 0.5);
+      }
     }
     for (const p of this.pool) {
       if (p.life <= 0) continue;

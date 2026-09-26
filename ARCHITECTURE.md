@@ -1,4 +1,4 @@
-# Architecture de Dino Escape
+# Architecture de Dino Race Fight Club
 
 Le jeu est découpé en **couches**. Le principe clé : le **kernel** contient toute la logique
 et ne connaît ni Three.js ni le DOM. Les **vues** lisent son état et écoutent ses événements
@@ -27,7 +27,7 @@ les animations ou la musique **sans jamais toucher au gameplay**, et inversement
 | `weapons/` | `Weapon` → `LaserWeapon`, `ShieldWeapon` ; `StatusEffect` (bonus temporaires) | non |
 | `meta/` | `Profile` (sauvegarde), `Shop` (achats + loadout), `Storage` | non |
 | `content/` | les définitions de contenu (un fichier par famille) + `index.js` | non |
-| `view/` | `World`, `CameraRig`, `TrackView`, `EntityViews`, `RunnerView`, `Particles`, `ModelRegistry`, `models/` | oui |
+| `view/` | `World`, `CameraRig`, `TrackView`, `EntityViews`, `RunnerView`, `Particles`, `PortalView`, `TransitionFx`, `PostProcessing`, `ModelRegistry`, `models/` | oui |
 | `audio/` | `Sfx` + `bindSfx`, `music/` (`LyriaEngine`, `SynthEngine`, `MusicDirector`) | non |
 | `ui/` | `Hud`, `Menus`, `style.css` | non (DOM) |
 | `input/` | `Input` (clavier AZERTY/QWERTY + tactile → intent) | non |
@@ -172,6 +172,19 @@ ShopItems.define('upgrade:jump', {
 ### Une zone
 Ajoute une entrée dans `content/zones.js` : `palette`, `decor` (clé `decor:<nom>` du registre de modèles),
 `spawns` (table pondérée, avec `minDistance` optionnel) et `boss`.
+
+## Passage d'un monde à l'autre
+Tous les `TRACK.zoneLength` (720 m), la route s'interrompt (`WORLD_JUMP.gap`) et le kernel fait faire au dino un saut
+guidé (`Game.#stepWorldJump`, `kernel/WorldJourney.js`) : commandes coupées, invulnérable, arc de `WORLD_JUMP.height` m,
+événements `world:jump` → `zone` (pile au passage de la porte) → `world:land`. Rien ne spawne à moins de `WORLD_JUMP.safe` m.
+Côté vues :
+- `WorldDecorView` bâtit la porte (cadre néon + panneau) et les rampes ; `PortalView` y place un **vortex** animé aux
+  couleurs du monde suivant, qui s'intensifie à l'approche (`near`) et pulse au rythme.
+- `TransitionFx` calcule les effets plein écran lus par `PostProcessing` (`ctx.transition`) : **lignes de vitesse**
+  toujours présentes en jeu, de plus en plus denses avec la vitesse (0 à 30 m/s, 1 à 62 m/s), tempête pendant le saut ;
+  flou radial et aberration chromatique (sprint, saut) ; **flash** coloré au passage de la porte et à l'atterrissage.
+- `Particles` : explosion au décollage, traînée de comète pendant le vol, gerbe à l'atterrissage.
+- `CameraRig` : recul + grand angle au sommet de l'arc, secousses au décollage et à l'atterrissage.
 
 ## Rythme et musique
 - **Le gameplay ne dépend jamais de la musique** : aucune latence audio ne peut gêner le joueur.

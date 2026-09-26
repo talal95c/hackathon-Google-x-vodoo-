@@ -13,7 +13,7 @@ export class World {
     r.toneMapping = THREE.ACESFilmicToneMapping;
     r.toneMappingExposure = .96;
     r.outputColorSpace = THREE.SRGBColorSpace;
-    r.domElement.setAttribute('aria-label', 'Dino Escape — scène 3D');
+    r.domElement.setAttribute('aria-label', 'Dino Race Fight Club — 3D scene');
     r.setSize(window.innerWidth, window.innerHeight);
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFShadowMap;
@@ -127,7 +127,8 @@ export class World {
     this.sun.target.position.copy(focus);
   }
 
-  render(pulse = 0, rush = 0) { this.post.render(pulse, rush); }
+  // fx : effets de vitesse calculés par view/TransitionFx.js
+  render(pulse = 0, fx) { this.post.render(pulse, fx); }
 }
 
 const tmp = new THREE.Color();
