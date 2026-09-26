@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import '../src/content/index.js';
 import { Game } from '../src/kernel/Game.js';
+import { GAME } from '../src/kernel/config.js';
 import { Shop } from '../src/meta/Shop.js';
 import { Profile } from '../src/meta/Profile.js';
 import { MemoryStorage } from '../src/meta/Storage.js';
@@ -112,7 +113,8 @@ test('paliers de vitesse : appliqués dès la distance atteinte (sans attendre l
   g.start({ seed: 4 });
   const tempos = [];
   g.on('tempo', (t) => tempos.push(t));
-  g.runner.z = 460; g.sMax = 460;
+  const at = GAME.tempoLevels[1].at + 10;
+  g.runner.z = at; g.sMax = at;
   run(g, 0.2, pilot);
   assert.equal(tempos.at(-1)?.level, 1);
   assert.ok(Math.abs(g.runner.cruise - 34 * 1.1) < 1e-9, `cruise ${g.runner.cruise}`);

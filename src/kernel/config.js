@@ -47,10 +47,11 @@ export const GAME = {
   // La musique suit (tempo × ratio) avec une transition DJ, en décalé : le jeu ne l'attend jamais.
   tempoLevels: [
     { at: 0, ratio: 1 },
-    { at: 450, ratio: 1.1 },
-    { at: 1100, ratio: 1.2 },
-    { at: 1900, ratio: 1.3 },
-    { at: 2900, ratio: 1.4 },
+    // un palier ~5 s après l'arrivée dans chaque nouveau monde (zoneLength × n + 200)
+    { at: 1880, ratio: 1.1 },
+    { at: 3560, ratio: 1.2 },
+    { at: 5240, ratio: 1.3 },
+    { at: 6920, ratio: 1.4 },
   ],
   fixedDt: 1 / 120,      // pas de simulation fixe (physique déterministe)
   maxSubSteps: 8,
@@ -58,7 +59,7 @@ export const GAME = {
   nearMissMargin: 0.9,   // écart max (m) pour compter un frôlement
   nearMissSlowMo: 0.35,  // durée réelle du ralenti de frôlement (s)
   nearMissTimeScale: 0.4,
-  difficultyDistance: 5000,
+  difficultyDistance: 6720, // difficulté max à l'entrée du dernier monde
   fallDuration: 1.3,     // durée de la chute avant de perdre une vie et de réapparaître
   respawnInvul: 2,       // invulnérabilité après une réapparition
   coinValue: 25,
