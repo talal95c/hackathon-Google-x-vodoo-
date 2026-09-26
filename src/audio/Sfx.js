@@ -135,6 +135,7 @@ export function bindSfx(game, sfx) {
   on('runner:manual', ({ on: m }) => { if (m) sfx.tone(880, 0.12, 'square', 0.1, -300); });
   on('coins', ({ amount }) => { if (amount <= 2) sfx.coin(); });
   on('zone', () => sfx.zone());
+  on('world:soon', ({ seconds }) => sfx.tone(seconds === 1 ? 880 : 660, 0.12, 'triangle', 0.1));
   on('weapon:equip', () => sfx.tone(440, 0.3, 'sawtooth', 0.12, 440));
   on('weapon:fire', () => sfx.tone(1400, 0.05, 'square', 0.04, -900));
   on('weapon:expire', () => sfx.tone(500, 0.25, 'triangle', 0.1, -300));

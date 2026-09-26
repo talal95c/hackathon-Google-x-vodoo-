@@ -126,7 +126,8 @@ export class World {
     this.scene.add(this.ambient);
     const sun = this.sun = new THREE.DirectionalLight(this.colors.sun, 2.65);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
+    const size = window.matchMedia('(pointer: coarse)').matches ? 1024 : 2048;
+    sun.shadow.mapSize.set(size, size);
     sun.shadow.bias = -0.0003;
     sun.shadow.normalBias = .045;
     sun.shadow.radius = 3;
@@ -170,6 +171,23 @@ export class World {
 
   // fx : effets de vitesse calculés par view/TransitionFx.js
   render(pulse = 0, fx) { this.post.render(pulse, fx); }
+
+  // Qualité adaptative : si l'image tombe sous ~48 i/s pendant 1,5 s, on baisse la résolution, puis les ombres.
+  adapt(dt) {
+    if (!(dt > 0) || dt > 0.5) return;
+    this.frameAvg = (this.frameAvg ?? 1 / 60) * 0.95 + dt * 0.05;
+    this.slowFor = this.frameAvg > 1 / 48 ? (this.slowFor ?? 0) + dt : 0;
+    if (this.slowFor < 1.5) return;
+    this.slowFor = 0;
+    this.frameAvg = 1 / 60;
+    if (this.pixelRatio > 0.75) {
+      this.pixelRatio = Math.max(0.75, this.pixelRatio - 0.25);
+      this.renderer.setPixelRatio(this.pixelRatio);
+      this.post.resize(window.innerWidth, window.innerHeight, this.pixelRatio);
+    } else if (this.sun.castShadow) {
+      this.sun.castShadow = false;
+    }
+  }
 }
 
 const tmp = new THREE.Color();
