@@ -4,15 +4,15 @@ import { skinPortraits } from './SkinPortraits.js';
 import './skins.css';
 
 // Écrans (titre, fin de partie) et panneaux (boutique, musique Lyria).
-// Ne connaît le jeu qu'à travers des callbacks : onPlay().
+// Ne connaît le jeu qu'à travers des callbacks : onPlay(), onBack() (retour depuis l'écran de fin).
 const $ = (id) => document.getElementById(id);
 const hex = (n) => `#${n.toString(16).padStart(6, '0')}`;
 
 export class Menus {
   tab = 'skin';
 
-  constructor({ game, profile, shop, lyria, music, onPlay }) {
-    Object.assign(this, { game, profile, shop, lyria, music, onPlay });
+  constructor({ game, profile, shop, lyria, music, onPlay, onBack }) {
+    Object.assign(this, { game, profile, shop, lyria, music, onPlay, onBack });
     this.screens = { start: $('start'), over: $('over') };
     this.panels = { shop: $('shop'), music: $('musicPanel') };
 
@@ -21,6 +21,7 @@ export class Menus {
       if (!b) return;
       const a = b.dataset.action;
       if (a === 'play') this.onPlay();
+      else if (a === 'back') this.onBack?.();
       else if (a === 'shop') this.open('shop');
       else if (a === 'music') this.open('music');
       else if (a === 'close') this.closePanels();
@@ -54,7 +55,9 @@ export class Menus {
   open(name) { this.closePanels(); this.panels[name].classList.remove('hidden'); this.refresh(); }
   closePanels() { for (const p of Object.values(this.panels)) p.classList.add('hidden'); }
 
-  showGameOver(result, { isBest, best }) {
+  // multi : le bouton de retour ramène au salon plutôt qu'au menu
+  showGameOver(result, { isBest, best }, { multiplayer = false } = {}) {
+    $('overBack').textContent = multiplayer ? '⚔ BACK TO LOBBY' : '↩ BACK TO MENU';
     const TXT = {
       fall: ['ERR_404 — the dino fell off the page', 'Page not found.'],
       dead: ['ERR_TOO_MANY_HITS — out of lives', 'The dino crashed.'],
