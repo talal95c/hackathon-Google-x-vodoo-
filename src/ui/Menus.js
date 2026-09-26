@@ -23,7 +23,8 @@ export class Menus {
       if (a === 'play') this.onPlay();
       else if (a === 'back') this.onBack?.();
       else if (a === 'shop') this.open('shop');
-      else if (a === 'music') this.open('music');
+      else if (a === 'music') { this.#nudge(false); this.open('music'); if (!lyria.hasKey()) $('apiKey').focus(); }
+      else if (a === 'nudge-later') this.#nudge(false, true);
       else if (a === 'close') this.closePanels();
       else if (a === 'connect') this.#connect();
       else if (a === 'forget') { lyria.setApiKey(''); $('apiKey').value = ''; this.#renderMusic(); }
@@ -43,6 +44,18 @@ export class Menus {
     $('audioOffsetVal').textContent = `${music.offsetMs} ms`;
     off.addEventListener('input', () => { music.setOffset(+off.value); $('audioOffsetVal').textContent = `${off.value} ms`; });
     this.refresh();
+    // Pas de clé : petite carte « full experience » qui s'ouvre sur l'accueil (une fois par session)
+    let dismissed = false;
+    try { dismissed = !!sessionStorage.getItem('dino-nudge'); } catch { /* */ }
+    if (!lyria.hasKey() && !dismissed) setTimeout(() => this.#nudge(true), 1200);
+  }
+
+  #nudge(show, remember = false) {
+    const n = $('keyNudge');
+    if (!n) return;
+    if (show && this.lyria.hasKey()) return;
+    n.hidden = !show;
+    if (remember) { try { sessionStorage.setItem('dino-nudge', '1'); } catch { /* */ } }
   }
 
   get panelOpen() { return Object.values(this.panels).some((p) => !p.classList.contains('hidden')); }
@@ -117,7 +130,15 @@ export class Menus {
     const l = this.lyria, p = this.profile;
     const input = $('apiKey');
     if (document.activeElement !== input) input.value = l.apiKey ? '••••••••••••' : '';
-    $('lyriaStatus').textContent = l.message || (l.hasKey() ? 'Key saved' : 'No key: synthesized music');
+    const state = l.hasKey() ? l.status : 'nokey';
+    $('lyriaCard').dataset.state = state;
+    $('lyriaStatus').textContent = {
+      nokey: 'Synth track · no key yet', off: l.message || 'Key saved · not connected', connecting: 'Connecting to Lyria…',
+      ready: 'Lyria live · ready', playing: 'Lyria live · playing', error: l.message || 'Connection failed',
+    }[state];
+    $('lyriaConnect').textContent = state === 'error' || state === 'off' ? 'Reconnect' : 'Connect';
+    $('lyriaConnect').disabled = state === 'connecting';
+    if (l.hasKey()) this.#nudge(false);
     $('themeGrid').innerHTML = MusicThemes.all().map((t) => {
       const count = p.musicCount(t.id), sel = p.data.theme === t.id;
       const label = count === Infinity ? (t.consumable ? 'Included with your dino' : 'Free') : `${count} run(s)`;

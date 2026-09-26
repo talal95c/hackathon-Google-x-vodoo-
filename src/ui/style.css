@@ -205,7 +205,7 @@ button.mp-choice.primary > span { opacity: .9; }
 .mp-rules .key { font-size: 11px; padding: 0 6px; border-width: 1px; border-bottom-width: 2px; margin: 0; }
 
 /* Salon */
-.mp-ticket { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 18px 22px; border-radius: 20px; color: #fff; background: linear-gradient(135deg, #2b2b2b, #4a4a4a); box-shadow: 0 12px 30px #0000002a; position: relative; overflow: hidden; }
+.mp-ticket { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 18px 22px; border-radius: 20px; color: #fff; background: linear-gradient(135deg, #2b2b2b, #4a4a4a); box-shadow: 0 12px 30px #0000002a; position: relative; overflow: hidden; }
 .mp-ticket::after { content: ''; position: absolute; right: -40px; top: -60px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, #ff4f8b55, transparent 65%); pointer-events: none; }
 .mp-ticket-label { font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; opacity: .7; }
 .mp-ticket-code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: clamp(34px, 6vw, 46px); font-weight: 900; letter-spacing: 8px; line-height: 1.1; margin-top: 2px; }
@@ -250,3 +250,56 @@ button.ghost:hover { background: #f4f4f4; transform: none; box-shadow: none; }
   .mp-players { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { .mp-wait i, .mp-player { animation: none; } }
+
+/* ---------- Musique (panneau Lyria) et carte « full experience » */
+.music-panel { inset: auto; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 32px); gap: 16px; }
+.music-panel .panel-head { align-items: flex-start; } .music-panel .panel-head > div { flex: 1; }
+.music-panel .panel-head h2 { margin-bottom: 2px; }
+.section-title { font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #757575; margin-top: 4px; }
+.lyria-card { flex: none; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; border-radius: 20px; color: #fff; background: linear-gradient(135deg, #1b2a4a, #3b2f6e 60%, #6b2c6e); box-shadow: 0 12px 30px #0000002a; }
+.lyria-card::after { content: ''; position: absolute; right: -60px; top: -80px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, #ff4f8b55, transparent 65%); pointer-events: none; }
+.lyria-card > * { position: relative; }
+.lyria-card h3 { font-size: 20px; letter-spacing: -.4px; }
+.lyria-card p { margin: 0; font-size: 14px; opacity: .85; max-width: 560px; }
+.lyria-card a { color: #fff; font-weight: 700; }
+.lyria-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.lyria-pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: #ffffff1f; font-size: 12px; font-weight: 800; letter-spacing: .5px; }
+.lyria-pill i { width: 9px; height: 9px; border-radius: 50%; background: #bbb; }
+.lyria-card[data-state="connecting"] .lyria-pill i { background: #ffb300; animation: mp-pulse 1s ease-in-out infinite; }
+.lyria-card[data-state="ready"] .lyria-pill i, .lyria-card[data-state="playing"] .lyria-pill i { background: #34e39a; box-shadow: 0 0 10px #34e39a; }
+.lyria-card[data-state="playing"] .lyria-pill i { animation: mp-pulse 1.2s ease-in-out infinite; }
+.lyria-card[data-state="error"] .lyria-pill i { background: #ff5252; }
+.lyria-card .only-key { display: none; } .lyria-card:not([data-state="nokey"]) .only-key { display: block; } .lyria-card:not([data-state="nokey"]) .only-nokey { display: none; }
+.lyria-card .lyria-head .only-key { display: none; } .lyria-card:not([data-state="nokey"]) .lyria-head .only-key { display: inline-block; }
+.lyria-card button.ghost { color: #ffffffb0; font-size: 12px; padding: 6px 10px; } .lyria-card button.ghost:hover { background: #ffffff1a; color: #fff; }
+.steps { list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.steps li { display: flex; align-items: center; gap: 10px; }
+.steps li span { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #ffffff22; font-size: 12px; font-weight: 800; flex: none; }
+.key-row { display: flex; gap: 8px; margin-top: 4px; }
+.key-row input { flex: 1; min-width: 0; background: #ffffff14; border-color: #ffffff33; color: #fff; font-size: 14px; padding: 12px 14px; }
+.key-row input::placeholder { color: #ffffff77; }
+.key-row .primary { background: #fff; color: var(--ink); border-color: #fff; white-space: nowrap; } .key-row .primary:hover { background: #ffe9f0; }
+.opt-list { display: flex; flex-direction: column; gap: 6px; }
+.opt { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 14px; border-radius: 14px; background: #f4f4f4; cursor: pointer; font-size: 14px; }
+.opt > span { display: flex; flex-direction: column; gap: 2px; } .opt small { font-size: 12px; color: #757575; } .opt b em { font-style: normal; color: #1a73e8; margin-left: 6px; }
+.opt input[type=checkbox] { position: absolute; opacity: 0; width: 0; height: 0; }
+.switch { flex: none; width: 42px; height: 24px; border-radius: 999px; background: #d0d4d9; position: relative; transition: background .2s; }
+.switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px #0003; transition: transform .2s; }
+.opt input:checked + .switch { background: #1a73e8; } .opt input:checked + .switch::after { transform: translateX(18px); }
+.opt input:focus-visible + .switch { outline: 3px solid #e78759; outline-offset: 3px; }
+.opt-range { flex-direction: column; align-items: stretch; cursor: default; } .opt-range input[type=range] { width: 100%; accent-color: #1a73e8; }
+.nudge { position: absolute; right: 4.5vw; bottom: 96px; z-index: 5; display: flex; gap: 12px; align-items: flex-start; width: min(340px, 86vw); padding: 16px 16px 16px 14px; border-radius: 20px; background: #fffffff2; border: 1px solid #fff; box-shadow: 0 20px 50px #133d3d33; backdrop-filter: blur(12px); animation: nudge-in .45s cubic-bezier(.2,.9,.3,1.2); }
+.nudge[hidden] { display: none; }
+.nudge-icon { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 12px; font-size: 20px; background: linear-gradient(135deg, #ff4f8b, #ff9100); box-shadow: 0 6px 16px #ff4f8b40; }
+.nudge-body { display: flex; flex-direction: column; gap: 6px; } .nudge-body b { font-size: 15px; letter-spacing: -.2px; } .nudge-body p { margin: 0; font-size: 13px; color: #666; line-height: 1.4; }
+.nudge-body .buttons { justify-content: flex-start; gap: 6px; margin-top: 4px; } .nudge-body .buttons button { font-size: 12px; padding: 8px 14px; border-radius: 10px; }
+.nudge-close { position: absolute; top: 8px; right: 8px; padding: 4px 8px; font-size: 12px; border: 0; background: transparent; color: #999; box-shadow: none; } .nudge-close:hover { background: #f4f4f4; transform: none; box-shadow: none; }
+@keyframes nudge-in { from { transform: translateY(20px) scale(.95); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (max-width: 759px) {
+  .music-panel { inset: 14px; left: 14px; top: 14px; transform: none; width: auto; max-height: none; padding: 18px; }
+  .lyria-card { padding: 16px; } .lyria-card h3 { font-size: 18px; }
+  .key-row { flex-direction: column; }
+  .nudge { right: 7vw; left: 7vw; bottom: auto; top: 70px; width: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .nudge, .lyria-pill i { animation: none; } }
+.lyria-card[data-state="ready"] #lyriaConnect, .lyria-card[data-state="playing"] #lyriaConnect { display: none; } /* déjà connecté */
