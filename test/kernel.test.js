@@ -32,7 +32,7 @@ test('sans piloter, le dino tombe dans un virage → game over immédiat', () =>
   g.start({ seed: 3 });
   let over = null;
   g.on('game:over', (r) => { over = r; });
-  run(g, 60);
+  run(g, 90, (gg) => { gg.runner.invul = 1e9; return idle; }); // invincible : on ne teste que la chute
   assert.equal(over?.reason, 'fall');
   assert.equal(g.lives, 3, 'aucune vie consommée : la chute termine la partie');
 });

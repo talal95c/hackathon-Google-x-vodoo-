@@ -24,11 +24,8 @@ export class ChaserView extends View {
 
   update(dt, time) {
     const game = this.game, P = this.focus, o = this.object;
-    if (game.state === 'menu') {
-      o.position.set(P.x + 5, P.y + 7 + Math.sin(time * 2) * 0.6, P.z - 4);
-      o.rotation.set(0, time * 0.5, 0);
-      return;
-    }
+    o.visible = game.state !== 'menu';
+    if (!o.visible) return;
     const gap = game.chaser.gap(game.sMax);
     const f = this.track.frame(Math.max(0, game.chaser.s + 18), this.#f);
     o.position.set(f.x, f.y + 3 + gap * 0.25 + Math.sin(time * 3) * 0.4, f.z);

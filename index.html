@@ -32,16 +32,23 @@
 
   <!-- Écrans (pilotés par src/ui/Menus.js) -->
   <div class="screen" id="start">
-    <p class="err">ERR_INTERNET_DISCONNECTED</p>
-    <h1>DINO ESCAPE</h1>
-    <p>Le dino en a marre d'attendre la connexion. Il s'enfuit en courant.<br />Échappe au <b>curseur</b> qui veut fermer l'onglet.</p>
-    <p><span class="key">←</span><span class="key">→</span> tourner · <span class="key">ESPACE</span> sauter · <span class="key">SHIFT</span> glissade (relâche = sprint) · <span class="key">↓</span> freiner</p>
-    <div class="buttons">
-      <button class="primary" data-action="play">▶ JOUER</button>
-      <button data-action="shop">🛒 BOUTIQUE</button>
-      <button data-action="music">🎵 MUSIQUE</button>
+    <div class="menu-brand"><span class="brand-icon">d.</span><span>DINO ESCAPE</span><span class="edition">ERR_INTERNET_DISCONNECTED</span></div>
+    <div class="hero-copy">
+      <p class="eyebrow"><span class="live-dot"></span> NO CONNECTION. JUST GOOD VIBES.</p>
+      <h1>DINO<br /><span>ESCAPE.</span></h1>
+      <p class="hero-description">Suis le rythme.<br /> Sème le curseur.</p>
+      <p class="hero-detail">Le dino s’échappe du navigateur.<br />Le curseur veut fermer l’onglet. À toi de le semer.</p>
+      <div class="buttons hero-actions">
+        <button class="primary" data-action="play"><span>▶</span> Lancer la session <span>↗</span></button>
+        <button class="reggae-button" data-action="reggae" aria-label="Équiper le dino reggae"><span class="reggae-stripes"></span> Dino reggae</button>
+      </div>
+      <p class="small" id="wallet"></p>
     </div>
-    <p class="small" id="wallet"></p>
+    <div class="hero-tag"><span class="tag-dot"></span><div><b id="heroName">RIDDIM</b><span id="heroTheme">REGGAE DINO · VOL. 01</span></div><span class="equalizer"><i></i><i></i><i></i><i></i></span></div>
+    <div class="menu-footer">
+      <div class="controls"><span><b>← →</b> tourner</span><span><b>ESPACE</b> sauter</span><span><b>SHIFT</b> glisser</span></div>
+      <div class="buttons"><button data-action="shop">Collection & boutique</button><button data-action="music">♫ Musique</button></div>
+    </div>
   </div>
 
   <div class="screen hidden" id="over">

@@ -4,6 +4,16 @@ Runner 3D : le dino de la page « Pas de connexion » s'enfuit du navigateur en 
 par un curseur géant qui veut fermer l'onglet. Route procédurale (virages serrés, dénivelé), armes,
 boss, boutique (skins, musiques, améliorations) et musique générée en direct par Google DeepMind Lyria.
 
+## Dino reggae et rendu
+
+- **Riddim**, le dino reggae low poly, est disponible dès le départ. Le bouton « Dino reggae »
+  l'équipe aussi sur les anciennes sauvegardes, sans effacer la progression.
+- Son thème Reggae est inclus tant qu'il est équipé ; les autres thèmes et achats restent disponibles.
+- Décor original du navigateur : zone Hors ligne grise, onglets, cookies et publicités.
+- Post-traitement HDR : bloom léger réactif au rythme, couleurs originales, vignette, tone mapping ACES
+  et anticrénelage MSAA. La résolution est plafonnée pour limiter le coût sur mobile.
+- Le jury saisit sa propre clé Gemini dans le menu Musique. Aucun relais serveur n'est nécessaire.
+
 ## Lancer
     npm install
     npm run dev        # http://localhost:5173 (accessible sur le réseau local pour tester sur mobile)

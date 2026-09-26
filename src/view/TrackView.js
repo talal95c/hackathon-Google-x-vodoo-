@@ -37,6 +37,7 @@ export class TrackView extends View {
       g.computeVertexNormals();
       const m = new THREE.Mesh(g, mat);
       m.receiveShadow = receive;
+      m.userData.trackSurface = true;
       group.add(m);
     };
     add(top, new THREE.MeshLambertMaterial({ color: pal.road, side: THREE.DoubleSide }), true);
@@ -71,7 +72,10 @@ export class TrackView extends View {
     if (!g) return;
     this.scene.remove(g);
     this.ctx.beatMaterials?.delete(g.userData.edgeMat);
-    g.traverse((o) => { if (o.geometry && o.parent === g) o.geometry.dispose(); });
+    for (const child of g.children) {
+      if (!child.userData.trackSurface) continue;
+      child.geometry.dispose(); child.material.dispose();
+    }
     this.meshes.delete(chunk.index);
   }
 }

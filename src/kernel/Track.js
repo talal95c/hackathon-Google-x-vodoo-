@@ -76,7 +76,7 @@ export class Track {
       this.X.push(this.X[i - 1] + Math.sin(g.th) * TRACK.step);
       this.Z.push(this.Z[i - 1] + Math.cos(g.th) * TRACK.step);
       this.Y.push(this.Y[i - 1] + g.slope * TRACK.step);
-      this.W.push(Math.max(TRACK.widthMin, TRACK.width - dist / 900) + Math.min(4, Math.abs(g.k) * TRACK.curveWidening));
+      this.W.push(Math.max(TRACK.widthMin, TRACK.width - dist / 900) + Math.min(5, Math.abs(g.k) * TRACK.curveWidening));
     }
   }
 
