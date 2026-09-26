@@ -19,7 +19,8 @@ export class Hud {
 
     const on = (t, fn) => game.on(t, fn);
     on('game:start', () => { this.#lives(false); this.el.boss.classList.add('hidden'); });
-    on('tempo', ({ level }) => { if (level > 0) this.banner(`SPEED ×${game.tempo.ratio.toFixed(1)}`, 1.4); });
+    on('tempo', ({ level }) => { if (level > 0) { this.banner(`SPEED ×${game.tempo.ratio.toFixed(1)}`, 1.4); this.#pop(this.el.speed); } });
+    on('runner:boost', () => this.#pop(this.el.speed));
     on('zone', ({ number, zone }) => { this.banner(`WORLD ${Math.min(number + 1, 5)} — ${zone.name}`); this.el.hud.style.color = zone.palette.text; this.el.banner.style.color = zone.palette.text; });
     on('world:jump', ({ to }) => this.banner(`ESCAPE → ${to.name}`, 1.8));
     on('world:land', ({ zone }) => this.banner(zone.subtitle, 2.2));
@@ -54,6 +55,8 @@ export class Hud {
     this.#bannerTimer = seconds;
   }
 
+  #pop(el) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+
   #lives(hit) {
     const g = this.game, max = g.runner.stats.get('maxLives');
     this.el.lives.innerHTML = Array.from({ length: max }, (_, i) => `<span class="${i < g.lives ? '' : 'lost'}">♥</span>`).join('');
@@ -68,6 +71,10 @@ export class Hud {
     this.#set('score', (v) => { el.score.textContent = v; }, `${g.distance} m`);
     this.#set('coins', (v) => { el.coins.textContent = v; }, `★ ${g.coins}`);
     this.#set('speed', (v) => { el.speed.innerHTML = `${v} <small>km/h</small>`; }, Math.round(Math.max(0, r.speed) * 3.6));
+    // 0 à 30 m/s → 1 à 62 m/s, même échelle que les lignes de vitesse
+    const spd = Math.max(0, Math.min(1, (Math.max(0, r.speed) - 30) / 32));
+    this.#set('spd', (v) => { el.speed.style.setProperty('--spd', v); }, spd.toFixed(2));
+    this.#set('spdTier', (v) => { el.speed.dataset.tier = v; }, r.boost > 0 ? 'boost' : spd > 0.66 ? 'fast' : spd > 0.33 ? 'quick' : 'cruise');
 
     this.#set('worldName', v => { el.worldName.textContent = v; }, `${String(g.zoneIndex + 1).padStart(2, '0')} / 05 · ${g.zone.name}`);
     el.worldProgress.style.width = `${g.zoneIndex === ZONES.length - 1 ? 100 : (g.distance % TRACK.zoneLength) / TRACK.zoneLength * 100}%`;

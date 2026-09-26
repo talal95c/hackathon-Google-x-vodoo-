@@ -58,12 +58,18 @@ export class Particles extends View {
   }
 
   update(dt) {
+    const edge = () => this.game.zone.palette.edge;
     const g = this.game, r = g.runner, P = this.focus;
     if (g.state === 'playing') {
       const f = this.track.frame(r.z, this.#p), h = f.th, fx = Math.sin(h), fz = Math.cos(h);
       if (r.drifting) {
         const col = r.driftCharge > 1 ? 0xff9800 : r.driftCharge > 0.35 ? 0x42a5f5 : 0xbbbbbb;
         for (const s of [-1, 1]) this.emit(P.x - fx * 0.5 + fz * s * 0.4, P.y + 0.2, P.z - fz * 0.5 - fx * s * 0.4, col, 1, 2, 2, 0.35, 0.4);
+      }
+      // poussière aux pieds : plus dense et plus haute avec la vitesse
+      const spd = Math.max(0, Math.min(1, (r.speed - 20) / 42));
+      if (r.grounded && !r.drifting && Math.random() < spd * dt * 40) {
+        this.emit(P.x - fx * 0.7, P.y + 0.15, P.z - fz * 0.7, edge(), 1, 1.5 + spd * 3, 1 + spd * 2, 0.16 + spd * 0.14, 0.3 + spd * 0.2);
       }
       if (r.boost > 0) this.emit(P.x - fx * 1.5, P.y + 1 + Math.random() * 2.5, P.z - fz * 1.5, 0xffffff, 1, 1, 0, 0.18, 0.25);
       // Saut entre deux mondes : traînée de comète aux couleurs du monde d'arrivée
