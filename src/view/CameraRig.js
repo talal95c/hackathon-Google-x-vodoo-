@@ -29,6 +29,8 @@ export class CameraRig extends View {
     this.listen('world:jump', () => this.addShake(0.45));
     this.listen('world:land', () => this.addShake(0.8));
     this.listen('boss:damage', () => this.addShake(0.08));
+    this.listen('effect:add', () => this.addShake(0.12));
+    this.listen('weapon:equip', () => this.addShake(0.12));
   }
 
   addShake(v) { this.shake = Math.max(this.shake, v); }
