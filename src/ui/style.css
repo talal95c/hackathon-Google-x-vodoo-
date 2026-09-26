@@ -127,13 +127,13 @@ body:not(.in-game) #hud { opacity: 0; }
 @media (max-width: 759px) {
   .menu-brand { top: 18px; left: 20px; right: 20px; font-size: 10px; }.edition { font-size: 7px; letter-spacing: 1px; }
   #start { display: flex; flex-direction: column; gap: 18px; padding: 70px 7vw 18px; overflow-y: auto; touch-action: pan-y; background: linear-gradient(0deg, #f4f4f4f5 0%, #f4f4f4df 33%, transparent 66%); }
-  .hero-copy { position: static; transform: none; width: 100%; margin-top: auto; }
+  .hero-copy { position: static; transform: none; width: 100%; margin-top: auto; flex-shrink: 0; }
   #start h1 { font-size: clamp(42px, 13vw, 68px); line-height: .9; } #start h1 br { display: none; }
   #start .eyebrow { font-size: 8px; letter-spacing: 1.2px; margin-bottom: 12px; }
   #start .hero-description { font-size: 17px; margin: 13px 0 0; } #start .hero-description br { display: none; }
   #start .hero-detail, .hero-tag, #start #wallet { display: none; }
   .hero-actions { margin-top: 16px; gap: 8px; }.hero-actions .primary { min-height: 45px; gap: 15px; } .hero-actions button { font-size: 12px; padding: 11px 14px; }
-  .menu-footer { position: static; width: 100%; flex-direction: column-reverse; align-items: flex-start; gap: 12px; }.controls { gap: 10px; font-size: 8px; }.controls b { font-size: 7px; padding: 3px 4px; }
+  .menu-footer { position: static; width: 100%; flex-shrink: 0; flex-direction: column-reverse; align-items: flex-start; gap: 12px; }.controls { gap: 10px; font-size: 8px; }.controls b { font-size: 7px; padding: 3px 4px; }
   #top { left: 12px; right: 12px; top: 14px; } #top > div { min-width: 65px; padding: 9px 11px; } #score { font-size: 21px; }
   #danger { top: 14px; padding: 10px; font-size: 8px; width: 32vw; }
   #bottom { left: 12px; right: 12px; bottom: 16px; } #speed { font-size: 24px; } #music { right: 12px; bottom: 90px; font-size: 9px; }
