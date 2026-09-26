@@ -313,7 +313,12 @@ body:not(.in-game) #hud { opacity: 0; }
     transform: none;
   }
   #worldName { display: block; font-size: 9px; line-height: 11px; letter-spacing: 0; }
-  #buffs { top: calc(max(12px, env(safe-area-inset-top)) + 205px); }
+  #buffs {
+    top: calc(max(12px, env(safe-area-inset-top)) + 205px);
+    right: 12px;
+    grid-template-columns: repeat(2, 120px);
+    justify-content: space-between;
+  }
   .buff { width: 120px; padding: 6px 8px; font-size: 10px; }
   #banner {
     top: calc(max(12px, env(safe-area-inset-top)) + 140px);
