@@ -86,7 +86,7 @@ export class Hud {
     el.driftFill.style.background = r.boost > 0 ? '#34a853' : r.drifting ? (r.driftCharge > 1 ? '#ff9800' : r.driftCharge > 0.35 ? '#42a5f5' : '#90caf9')
       : r.slideGauge < r.stats.get('slideMin') ? '#bdbdbd' : '#1a73e8';
     this.#set('drift', (v) => { el.driftLabel.textContent = v; }, r.boost > 0 ? 'SPRINT!' : r.drifting ? (r.driftCharge > 1 ? 'MAX SLIDE' : 'SLIDING…')
-      : r.slideGauge < r.stats.get('slideMin') ? 'RECHARGING…' : 'SLIDE (SHIFT)');
+      : r.slideGauge < r.stats.get('slideMin') ? 'RECHARGING…' : (document.documentElement.classList.contains('touch') ? 'SLIDE (SWIPE ↓)' : 'SLIDE (SHIFT)'));
 
     // arme + bonus actifs avec leur minuteur
     // (barre centrée en haut : le remplissage rétrécit par les deux côtés, le libellé au-dessus)
