@@ -58,9 +58,9 @@ export class Multiplayer {
   async #join(code) {
     this.leave();
     this.code = code;
-    this.#emit('status', 'Connexion au salon…');
+    this.#emit('status', 'Connecting to the lobby…');
     this.net = await this.connectFn(`dino-${code}`, {
-      onPeerJoin: (id) => { this.#hello(id); this.#emit('status', 'Un joueur a rejoint !'); },
+      onPeerJoin: (id) => { this.#hello(id); this.#emit('status', 'A player joined!'); },
       onPeerLeave: (id) => { this.peers.delete(id); this.#emit('peer:left', { id }); this.#emit('lobby'); },
     });
     const n = this.net;
@@ -106,8 +106,7 @@ export class Multiplayer {
     });
     this.ch.dn.on((d, id) => { const p = this.#peer(id); p.alive = false; p.final = d; this.game.emit('mp:out', { name: p.name }); this.#emit('lobby'); this.#emit('results'); });
     this.#hello(); // je me présente à tout le monde une fois mes canaux prêts
-    const via = ` (via ${this.net.transport})`;
-    this.#emit('status', (this.isHost ? 'Share the code: your friends type it in “Join”.' : 'Connected! Waiting for the host to start…') + via);
+    this.#emit('status', `Connected · ${this.net.transport}`);
     this.#emit('lobby');
     return code;
   }

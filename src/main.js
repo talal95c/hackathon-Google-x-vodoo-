@@ -32,6 +32,7 @@ import { PortalView } from './view/PortalView.js';
 import { Input } from './input/Input.js';
 import { Haptics, bindHaptics } from './input/Haptics.js';
 import { Sfx, bindSfx } from './audio/Sfx.js';
+import { SkinVoices, bindVoices } from './audio/SkinVoices.js';
 import { LyriaEngine } from './audio/music/LyriaEngine.js';
 import { SynthEngine } from './audio/music/SynthEngine.js';
 import { MusicDirector } from './audio/music/MusicDirector.js';
@@ -89,7 +90,9 @@ if (lyria.hasKey()) lyria.connect();
 // --- Interface
 const hud = new Hud(game, profile);
 const input = new Input();
-const menus = new Menus({ game, profile, shop, lyria, music, onPlay: play, onBack: back });
+const voices = new SkinVoices({ sfx }); // répliques des skins à la claque (clips pré-générés dans public/voices/)
+voices.preload();
+const menus = new Menus({ game, profile, shop, lyria, music, voices, onPlay: play, onBack: back });
 const hapticsToggle = document.getElementById('haptics');
 hapticsToggle.checked = haptics.enabled;
 document.getElementById('hapticsRow').classList.toggle('hidden', !haptics.supported);
@@ -116,6 +119,7 @@ function play() {
 
 const lobby = new Lobby({ mp, bots, menus, hud, onLaunch: () => play() });
 views.push(new CombatView(ctx, [mp, bots]), new CombatHud(ctx, () => lobby.race));
+bindVoices(game, voices, { mp, bots });
 const club = new FightClub(game, { mp, bots, profile });
 const clubView = new FightClubView(ctx, club), clubHud = new FightClubHud(ctx, club);
 game.on('club:open', () => { input.reset(); input.enabled = false; });
@@ -187,4 +191,4 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // Debug depuis la console : __dino.game.runner, __dino.profile.earn(1000)…
-window.__dino = { game, profile, shop, lyria, music, mp, menus, lobby, bots };
+window.__dino = { game, profile, shop, lyria, music, voices, mp, menus, lobby, bots };
