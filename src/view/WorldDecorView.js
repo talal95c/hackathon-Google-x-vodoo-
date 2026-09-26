@@ -17,14 +17,14 @@ export class WorldDecorView extends View {
   constructor(ctx) {
     super(ctx);
     const colors = [
-      [0x8fa6b5, 0xe2e8e7, 0x344f60, 0x91a7b3, 0x64bbdf, 0x129cff, 0xffa338],
-      [0xdce5ed, 0xffffff, 0x364358, 0x9eb7c9, 0x9ccfec, 0x268df3, 0xffbd47],
-      [0x79a6cc, 0xe7f5ff, 0x214b71, 0x527da6, 0x2496f2, 0x4ec7ff, 0xffd058],
+      [0xc08766, 0xf1d4ad, 0x57674e, 0xb88162, 0x83b6b2, 0x77dfcf, 0xffbd67],
+      [0xb7a3c7, 0xf3e8d6, 0x625773, 0x978bab, 0x9dcbd5, 0xa790ff, 0xffcc85],
+      [0x80a6b5, 0xdeebdf, 0x355e78, 0x769da4, 0x599ccc, 0x58c8e7, 0xf2c270],
       [0x175445, 0x829599, 0x132728, 0x216755, 0x203a3f, 0x35edb5, 0xe6b75a],
       [0xd7eaf1, 0xffffff, 0x477787, 0xb4dce8, 0x9ce6ed, 0x23c4df, 0xffd87a],
     ];
     this.palettes = colors.map(row => Object.fromEntries(['base', 'white', 'dark', 'ground', 'glass', 'neon', 'gold'].map((name, i) => [name, new THREE.MeshStandardMaterial({
-      color: row[i], roughness: name === 'glass' ? .22 : .58, metalness: name === 'glass' ? .24 : .06, flatShading: true,
+      color: row[i], roughness: name === 'glass' ? .48 : .85, metalness: name === 'glass' ? .10 : 0, flatShading: true,
       emissive: ['neon', 'gold'].includes(name) ? row[i] : 0, emissiveIntensity: name === 'neon' ? 2.4 : 1.6,
       side: THREE.DoubleSide,
     })])));
@@ -52,17 +52,18 @@ export class WorldDecorView extends View {
 
   build(chunk) {
     const group = new THREE.Group(), buckets = new Map(), fans = [], track = this.track;
+    let floor = 3.4;
     const put = (key, geo, f, x, y, z, yaw = 0) => {
-      geo.rotateY(yaw).translate(x, y, z).rotateY(f.th).translate(f.x, f.y, f.z);
+      geo.rotateY(yaw).translate(x, y + floor, z).rotateY(f.th).translate(f.x, f.y, f.z);
       if (!buckets.has(key)) buckets.set(key, []);
       buckets.get(key).push(geo);
     };
-    const box = (key, f, x, y, z, w, h, d, yaw = 0) => put(key, (w > 3 && h > 3 && d > .7 && ['white', 'dark', 'glass'].includes(key) ? new RoundedBoxGeometry(w, h, d, 1, .18) : new THREE.BoxGeometry(w, h, d)), f, x, y, z, yaw);
+    const box = (key, f, x, y, z, w, h, d, yaw = 0) => put(key, (Math.min(w,h,d) > .6 ? new RoundedBoxGeometry(w, h, d, 1, Math.min(.38,Math.min(w,h,d)*.18)) : new THREE.BoxGeometry(w, h, d)), f, x, y, z, yaw);
     const rock = (key, f, x, y, z, sx, sy, sz, detail = 0) => put(key, new THREE.IcosahedronGeometry(1, detail).scale(sx, sy, sz), f, x, y, z);
     const cylinder = (key, f, x, y, z, radius, height, top = radius, sides = 10) => put(key, new THREE.CylinderGeometry(top, radius, height, sides), f, x, y, z);
     const sign = (f, x, y, z, width, text) => {
       const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, width / 3), this.label(text));
-      mesh.position.set(x, y, z).applyAxisAngle(UP, f.th).add(new THREE.Vector3(f.x, f.y, f.z));
+      mesh.position.set(x, y + floor, z).applyAxisAngle(UP, f.th).add(new THREE.Vector3(f.x, f.y, f.z));
       mesh.rotation.y = f.th + Math.PI; group.add(mesh);
     };
     const outline = (f, x, y, z, w, h, key = 'neon', thick = .19) => {
@@ -84,13 +85,30 @@ export class WorldDecorView extends View {
     const ground = [], edge = [];
     const pt = (i, d, y) => [track.X[i] + Math.cos(track.TH[i]) * d, track.Y[i] + y, track.Z[i] - Math.sin(track.TH[i]) * d];
     const quad = (arr, a, b, c, d) => arr.push(...a, ...b, ...c, ...b, ...d, ...c);
+    const width = chunk.zone === 4 ? 33 : 63;
+    // Une bande de sol s'arrête avant de recroiser la route plus loin (virage en U) :
+    // sinon, si la route a descendu entre-temps, le sol dépasserait au-dessus de la chaussée.
+    const reach = (i, side) => {
+      const nx = Math.cos(track.TH[i]) * side, nz = -Math.sin(track.TH[i]) * side;
+      const j0 = Math.max(0, i - 160), j1 = Math.min(track.X.length - 1, i + 160);
+      let d = track.W[i] / 2 + .5;
+      for (; d + 3 < width; d += 3) {
+        const x = track.X[i] + nx * (d + 3), z = track.Z[i] + nz * (d + 3);
+        for (let j = j0; j <= j1; j += 2) {
+          if (Math.abs(j - i) <= 4 || track.Y[j] > track.Y[i] - .1) continue;
+          if (Math.hypot(track.X[j] - x, track.Z[j] - z) < track.W[j] / 2 + 3) return d;
+        }
+      }
+      return width;
+    };
+    const reaches = { '-1': new Map(), 1: new Map() };
+    const far = (i, side) => { const m = reaches[side]; if (!m.has(i)) m.set(i, reach(i, side)); return m.get(i); };
     for (let i = chunk.i0; i < chunk.i1; i++) {
       if (isWorldSafe((i + .5) * TRACK.step)) continue;
       for (const side of [-1, 1]) {
-        const a = side * (track.W[i] / 2 + 2), b = side * (track.W[i + 1] / 2 + 2);
-        const width = chunk.zone === 4 ? 33 : 63;
-        quad(ground, pt(i, a, -3.8), pt(i, side * width, -3.8), pt(i + 1, b, -3.8), pt(i + 1, side * width, -3.8));
-        quad(edge, pt(i, a, -3.8), pt(i, a, -7), pt(i + 1, b, -3.8), pt(i + 1, b, -7));
+        const a = side * (track.W[i] / 2 + .5), b = side * (track.W[i + 1] / 2 + .5);
+        quad(ground, pt(i, a, -.4), pt(i, side * far(i, side), -.4), pt(i + 1, b, -.4), pt(i + 1, side * far(i + 1, side), -.4));
+        quad(edge, pt(i, a, -.4), pt(i, a, -3.6), pt(i + 1, b, -.4), pt(i + 1, b, -3.6));
       }
     }
     for (const [key, points] of [['ground', ground], ['base', edge]]) if (points.length) {
@@ -99,16 +117,32 @@ export class WorldDecorView extends View {
       buckets.set(key, [geometry]);
     }
 
+    // Un décor occupe jusqu'à ±16 m de large et ±10 m de long autour de son ancre (dx > 0 =
+    // vers l'extérieur) : aucun point de cette emprise ne doit tomber sur un autre tronçon de
+    // route (virage en U, épingle), sinon le décor dépasserait sur la chaussée.
+    const roadFree = (f, i, x, side, dxs = [-16, 0, 16], dzs = [-10, 0, 10]) => {
+      const j0 = Math.max(0, i - 160), j1 = Math.min(track.X.length - 1, i + 160), fx = Math.sin(f.th), fz = Math.cos(f.th);
+      for (const dx of dxs) for (const dz of dzs) {
+        const px = f.x + f.lx * (x + side * dx) + fx * dz, pz = f.z + f.lz * (x + side * dx) + fz * dz;
+        for (let j = j0; j <= j1; j += 2) {
+          if (Math.abs(j - i) <= 10) continue;
+          if (Math.hypot(track.X[j] - px, track.Z[j] - pz) < track.W[j] / 2 + 2) return false;
+        }
+      }
+      return true;
+    };
     for (let j = 0; j < 5; j++) {
       const s = chunk.s0 + 12 + j * 23;
       if (isWorldSafe(s)) continue;
-      const f = track.frame(s, {}), seed = chunk.index * 57 + j * 17;
+      const f = track.frame(s, {}), seed = (chunk.index + track.salt) * 57 + j * 17; // track.salt : décor différent à chaque partie
+      // largeur max de la route à ±14 m : un élargissement en virage ne doit pas passer sous le décor
+      const i = Math.round(s / TRACK.step), wide = Math.max(...track.W.slice(Math.max(0, i - 7), i + 8));
       for (const side of [-1, 1]) {
-        const n = seed + (side > 0 ? 19 : 0), x = side * (f.w / 2 + 15 + noise(n) * 10);
+        const n = seed + (side > 0 ? 19 : 0), x = side * (wide / 2 + 15 + noise(n) * 10);
         const wx = f.x + f.lx * x, wz = f.z + f.lz * x;
-        if (track.clearance(wx, wz, s) < f.w / 2 + 13) continue;
+        if (track.clearance(wx, wz, s) < f.w / 2 + 13 || !roadFree(f, i, x, side)) continue;
         const h = 8 + noise(n + 1) * 13;
-        const variant = (j + chunk.index + (side > 0 ? 1 : 0)) % 3;
+        const variant = (j + chunk.index + track.salt + (side > 0 ? 1 : 0)) % 3;
         if (chunk.zone === 0) {
           // Three silhouettes: eroded arches, stepped mesas and an offline signal monument.
           if (variant === 0) {
@@ -139,7 +173,7 @@ export class WorldDecorView extends View {
             sign(f, x, 11.5, -1, 9, 'NO SIGNAL');
             for (let k = 0; k < 4; k++) rock(k % 2 ? 'base' : 'white', f, x + (k - 1.5) * 3, -2.6, -5, 2.8, 2 + k, 2.4);
           }
-          if (j % 2 === 0) rock('base', f, x + side * 18, 1, 7, 8, h * 1.2, 11);
+          if (j % 2 === 0 && roadFree(f, i, x, side, [10, 18, 27], [-18, -5, 7, 18])) rock('base', f, x + side * 18, 1, 7, 8, h * 1.2, 11);
           if (j % 2 === 1) {
             const cx = x - side * 7;
             box('dark', f, cx, -.6, -5, .85, 5.7, .85);
@@ -219,7 +253,7 @@ export class WorldDecorView extends View {
             const mesh = new THREE.Mesh(new THREE.BoxGeometry(1.1, 3.8, .3), this.palettes[3].dark);
             const a = blade * Math.PI / 3; mesh.position.set(Math.sin(a) * 1.9, Math.cos(a) * 1.9, 0); mesh.rotation.z = -a + .3; fan.add(mesh);
           }
-          fan.position.set(x, 12, 2).applyAxisAngle(UP, f.th).add(new THREE.Vector3(f.x, f.y, f.z)); fan.rotation.y = f.th; group.add(fan); fans.push(fan);
+          fan.position.set(x, 12 + floor, 2).applyAxisAngle(UP, f.th).add(new THREE.Vector3(f.x, f.y, f.z)); fan.rotation.y = f.th; group.add(fan); fans.push(fan);
           put('neon', new THREE.TorusGeometry(4.2, .25, 4, 20), f, x, 12, 2);
           } else if (variant === 1) {
             for (let k = 0; k < 3; k++) {
@@ -235,7 +269,7 @@ export class WorldDecorView extends View {
           }
         } else {
           // The road reaches floating cloud banks and luminous data centres.
-          for (let k = 0; k < 5; k++) rock('white', f, x + (k - 2) * 4, -3 + Math.sin(k * 2) * 1.5, Math.cos(k) * 2, 5.5, 4, 5, 1);
+          for (let k = 0; k < 5; k++) rock('white', f, x + side * (k - 1.5) * 4, -3 + Math.sin(k * 2) * 1.5, Math.cos(k) * 2, 5.5, 4, 5, 1);
           for (let k = 0; k < (variant === 0 ? 3 : 1); k++) {
             const cx = x + (k - 1) * 4;
             box('white', f, cx, 3.7 + k, 1, 3.3, 12 + k * 2, 4);
@@ -256,14 +290,10 @@ export class WorldDecorView extends View {
           if (j % 2 === 0) sign(f, x, 9, -2, 9, 'CLOUD');
         }
       }
-      // Close markers provide parallax and rhythm without filling the sky.
-      for (const side of [-1, 1]) {
-        const x = side * (f.w / 2 + 1.5);
-        box('dark', f, x, -.6, 0, .35, 1.2, .45);
-        box(chunk.zone === 0 ? 'gold' : 'neon', f, x, .07, 0, .45, .15, 1.7);
-      }
+
     }
 
+    floor = 0;
     // A literal doorway through the next computer layer, suspended in the gap.
     for (let number = 1; number < ZONES.length; number++) {
       const boundary = number * TRACK.zoneLength;
@@ -303,8 +333,8 @@ export class WorldDecorView extends View {
     // The full route ahead is already generated when these chunks become visible.
     for (const chunk of this.track.chunks) if (!this.chunks.has(chunk.index) && chunk.s0 < this.game.runner.z + 310) this.build(chunk);
     for (const palette of this.palettes) {
-      palette.neon.emissiveIntensity = 2.1 + (this.ctx.fx?.pulse ?? 0) * 1.35;
-      palette.gold.emissiveIntensity = 1.5 + (this.ctx.fx?.down ?? 0) * .9;
+      palette.neon.emissiveIntensity = 1.7 + (this.ctx.fx?.pulse ?? 0) * .65;
+      palette.gold.emissiveIntensity = 1.35 + (this.ctx.fx?.down ?? 0) * .5;
     }
     for (const group of this.chunks.values()) for (const fan of group.userData.fans) fan.rotation.z += dt * 3.5;
   }

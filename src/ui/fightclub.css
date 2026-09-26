@@ -1,0 +1,70 @@
+body.in-fight-club #hud, body.in-fight-club #banner, body.in-fight-club #flash, body.in-fight-club #vignette { visibility: hidden; }
+.fight-club { position: fixed; inset: 0; z-index: 15; color: #fff4da; font-family: Arial, sans-serif; pointer-events: none; background: linear-gradient(#11172c88, transparent 33%, transparent 66%, #11172cbb); }
+.fc-heading { position: absolute; top: max(18px, env(safe-area-inset-top)); left: 0; right: 0; text-align: center; }
+.fc-kicker { font-size: 9px; letter-spacing: 4px; color: #80f9e0; font-weight: 900; }
+.fc-heading h1 { margin: 5px 0; font: italic 1000 clamp(27px, 5vw, 42px)/1 Arial, sans-serif; letter-spacing: -1.8px; text-shadow: 0 3px #111827; }
+.fc-heading h1 i { color: #ffe273; }
+.fc-rule { font-size: 11px; opacity: .85; }
+.fc-scoreboard { position: absolute; top: 112px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 14px; width: min(450px, 90vw); }
+.fc-player { flex: 1; min-width: 0; background: #202840cf; border: 1px solid #fff3; border-radius: 14px; padding: 9px 10px 7px; text-align: center; box-shadow: 0 5px 20px #0002; }
+.fc-player:first-child { border-top: 3px solid #74f6d6; } .fc-player:last-child { border-top: 3px solid #ff87b1; }
+.fc-name { display: block; font-size: 11px; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fc-count { display: block; font-size: 34px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.fc-bank { font-size: 9px; letter-spacing: .8px; opacity: .65; }
+.fc-ahead { background: #3c4b4fd9; box-shadow: 0 0 20px #ffe57d22; }
+.fc-vs { font-style: italic; color: #ffdf77; font-weight: 1000; }
+.fc-callout { position: absolute; top: 30%; left: 0; right: 0; text-align: center; filter: drop-shadow(0 3px #182033); }
+.fc-callout strong { display: block; font: italic 1000 clamp(27px, 5vw, 43px)/1 Arial; color: #ffe070; }
+.fc-callout span { display: inline-block; margin-top: 7px; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
+.fc-callout.counting strong { font-size: clamp(50px, 10vw, 90px); color: #fff4d1; }
+.fc-pulse { position: absolute; inset: 18px; border: 2px solid #ffe58a; border-radius: 24px; opacity: 0; box-shadow: inset 0 0 40px #ffde8533; }
+.fc-controls { position: absolute; bottom: max(19px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: min(430px, calc(100vw - 32px)); }
+.fc-time { display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: 900; letter-spacing: 1px; }.fc-time b { font-size: 23px; font-variant-numeric: tabular-nums; }
+.fc-meter { height: 7px; border-radius: 8px; overflow: hidden; background: #fff2; margin: 7px 0 13px; }.fc-meter div { height: 100%; background: linear-gradient(90deg,#ff76a7,#ffe574); transform-origin: left; }
+button.fc-tap { pointer-events: auto; touch-action: none; -webkit-tap-highlight-color: transparent; display: flex; width: 100%; min-height: 105px; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 2px solid #fff2ae; border-radius: 23px; background: linear-gradient(135deg,#fff097,#ffd452); color: #222740; box-shadow: 0 6px 0 #a87a2e, 0 0 30px #ffdc7133; cursor: pointer; }
+button.fc-tap:disabled { opacity: .55; cursor: default; } .fc-tap .fc-hand { position: absolute; left: 24px; font-size: 38px; transform: rotate(-13deg); }.fc-tap strong { font: italic 1000 33px/1 Arial; letter-spacing: -.8px; }.fc-tap small { font-size: 10px; font-weight: 700; margin-top: 3px; }
+button.fc-hot { background: linear-gradient(135deg,#ffb774,#ff6b91); box-shadow: 0 6px 0 #a34755, 0 0 40px #ff779377; }
+.fc-footnote { font-size: 9px; text-align: center; margin-top: 15px; opacity: .6; }
+.fc-result { position: absolute; bottom: max(38px, env(safe-area-inset-bottom)); left: 50%; width: min(450px, 92vw); transform: translateX(-50%) translateY(30px); text-align: center; opacity: 0; transition: opacity .25s, transform .25s; }.fc-result.visible { opacity: 1; transform: translateX(-50%); }
+.fc-result-label { display: block; font-size: 10px; letter-spacing: 2px; font-weight: 900; }.fc-result strong { display: block; font: italic 1000 clamp(38px, 8vw, 65px)/1.1 Arial; color: #ffe17e; margin: 8px 0; }.fc-result p { font-size: 11px; background: #1b223de6; border: 1px solid #fff2; padding: 12px; border-radius: 12px; }.fc-result small { display: block; font-size: 10px; margin-top: 12px; opacity: .7; }.fc-result.lost strong { color: #ff93b1; }
+.fc-teaser { position: absolute; top: 82px; left: 50%; transform: translateX(-50%); padding: 7px 11px; border-radius: 20px; color: #fff1c5; background: #282a42d9; font: 800 9px Arial; letter-spacing: .9px; }
+@media(max-height: 650px) { .fc-heading { top: 10px; }.fc-heading h1 { font-size: 27px; }.fc-rule { display: none; }.fc-scoreboard { top: 72px; width: 350px; max-width: 90vw; }.fc-count { font-size: 25px; }.fc-callout { top: 31%; }.fc-controls { bottom: 12px; width: min(360px,90vw); }button.fc-tap { min-height: 77px; }.fc-footnote { margin-top: 10px; }.fc-result { bottom: 20px; } }
+@media(prefers-reduced-motion: reduce) { .fc-result { transition: none; } }
+
+.fc-callout.fc-hit { top: 208px; }
+.fc-callout.fc-hit strong { display: none; }
+.fc-callout.fc-hit span { margin-top: 0; background: #ffe37b; color: #20263d; border-radius: 20px; padding: 6px 12px; letter-spacing: 1.5px; }
+.fc-callout.counting { top: 37%; }
+.fight-club::after { content: ''; position: absolute; inset: 0; background: #161a2c; animation: fc-arrive .4s ease-out both; pointer-events: none; }
+@keyframes fc-arrive { from { clip-path: polygon(0 0,100% 0,100% 100%,0 100%); } to { clip-path: polygon(0 0,100% 0,100% 0,0 0); } }
+@media(max-height:650px) { .fc-callout.fc-hit { top: 161px; } }
+
+
+/* Le panneau arrive avant le ring et laisse la route ainsi que les commandes libres. */
+.fc-approach { position: fixed; z-index: 12; top: max(103px, calc(env(safe-area-inset-top) + 84px)); left: 50%; width: min(460px, calc(100vw - 28px)); transform: translateX(-50%); pointer-events: none; color: #fff2d3; border: 1px solid #7af7e299; border-radius: 17px; overflow: hidden; background: linear-gradient(115deg,#18243bf2,#28223ef2); box-shadow: 0 12px 32px #07112655, 0 0 24px #6af3d522; font-family: Arial,sans-serif; animation: fc-incoming-enter .55s cubic-bezier(.2,.9,.2,1.18) both; }
+.fc-incoming-body { display: flex; align-items: center; gap: 15px; padding: 14px 17px; }
+.fc-incoming-icon { position: relative; width: 73px; height: 62px; flex-shrink: 0; }
+.fc-incoming-icon span { position: absolute; font-size: 39px; top: 6px; left: -4px; transform: rotate(-22deg); animation: fc-incoming-slap 1.1s ease-in-out infinite alternate; }
+.fc-incoming-icon span:nth-child(2) { left: auto; right: -4px; transform: scaleX(-1) rotate(-22deg); animation-name: fc-incoming-slap-right; }
+.fc-incoming-icon b { position: absolute; left: 25px; bottom: -1px; font: italic 1000 17px Arial; color: #80ffe5; text-shadow: 0 2px #151629; }
+.fc-incoming-copy { flex: 1; min-width: 0; }
+.fc-incoming-copy small { display: block; color: #87f6de; letter-spacing: 2px; font-size: 8px; font-weight: 900; }
+.fc-incoming-copy strong { display: block; font: italic 1000 27px/1.08 Arial; letter-spacing: -.8px; margin: 4px 0; white-space: nowrap; }
+.fc-incoming-message { display: block; font-size: 10px; font-weight: 800; color: #e0d7ef; }
+.fc-incoming-distance { min-width: 53px; text-align: right; border-left: 1px solid #fff2; padding-left: 15px; }
+.fc-incoming-distance b { display: block; font: italic 1000 33px/1 Arial; color: #ffe279; font-variant-numeric: tabular-nums; }
+.fc-incoming-distance small { font-size: 7px; letter-spacing: 1.5px; opacity: .7; }
+.fc-incoming-progress { height: 4px; background: #ffffff12; }
+.fc-incoming-progress i { display: block; height: 100%; transform-origin: left; background: linear-gradient(90deg,#7bffe3,#ffd974,#ff72a6); }
+.fc-approach.fc-imminent { border-color: #ffd974; animation: fc-incoming-enter .4s ease-out both, fc-incoming-glow .7s ease-in-out infinite alternate; }
+.fc-imminent .fc-incoming-copy small, .fc-imminent .fc-incoming-message { color: #ffe279; }
+.fc-imminent .fc-incoming-icon span { animation-duration: .4s; }
+@keyframes fc-incoming-enter { from { opacity: 0; transform: translateX(-50%) translateY(-35px) scale(.82) rotate(-4deg); } to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1) rotate(0); } }
+@keyframes fc-incoming-slap { to { transform: translateX(6px) rotate(9deg); } }
+@keyframes fc-incoming-slap-right { to { transform: translateX(-6px) scaleX(-1) rotate(9deg); } }
+@keyframes fc-incoming-glow { to { box-shadow: 0 12px 32px #07112655,0 0 28px #ffd97455; } }
+@media(max-width:480px) { .fc-incoming-body { padding: 11px 12px; gap: 10px; }.fc-incoming-icon { width: 54px; height: 51px; }.fc-incoming-icon span { font-size: 31px; }.fc-incoming-icon b { left: 16px; }.fc-incoming-copy strong { font-size: 23px; }.fc-incoming-distance { padding-left: 10px; min-width: 44px; }.fc-incoming-distance b { font-size: 28px; }.fc-incoming-message { font-size: 9px; } }
+@media(max-height:550px) { .fc-approach { top: 76px; width: 340px; }.fc-incoming-body { padding: 7px 12px; }.fc-incoming-icon { height: 44px; }.fc-incoming-copy strong { font-size: 23px; } }
+@media(prefers-reduced-motion:reduce) { .fc-approach, .fc-approach.fc-imminent, .fc-incoming-icon span { animation: none; } }
+
+.fc-teaser.fc-stunned { color: #ffe485; border: 1px solid #ffd974; box-shadow: 0 0 22px #ffd97444; }

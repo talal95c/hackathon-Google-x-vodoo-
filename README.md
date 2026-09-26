@@ -1,60 +1,86 @@
-# Dino Escape
+# Dino Race Fight Club
 
-Runner 3D : le dino de la page « Pas de connexion » s'enfuit du navigateur en courant, poursuivi
-par un curseur géant qui veut fermer l'onglet. Route procédurale (virages serrés, dénivelé), armes,
-boss, boutique (skins, musiques, améliorations) et musique générée en direct par Google DeepMind Lyria.
+The offline dinosaur is escaping the browser — and taking the fight with it.
 
-## Dino reggae et rendu
+A colorful 3D racing game for desktop and mobile. Dodge obstacles, drift around corners, slap nearby rivals and battle in quick Fight Club duels, with a soundtrack generated live by AI.
 
-- **Riddim**, le dino reggae low poly, est disponible dès le départ. Le bouton « Dino reggae »
-  l'équipe aussi sur les anciennes sauvegardes, sans effacer la progression.
-- Son thème Reggae est inclus tant qu'il est équipé ; les autres thèmes et achats restent disponibles.
-- Cinq mondes : désert hors ligne, navigateur, Windows, hardware, cloud. Cactus et mesas,
-  onglets et pop-ups, dossiers du bureau, circuits et ventilateurs, serveurs sur les nuages.
-- Tous les 720 m, un saut guidé franchit un portail vers le monde suivant. Le contrôle revient
-  à l'atterrissage ; les zones de départ et d'arrivée sont dégagées. Le cloud se poursuit à l'infini.
-- Néons réactifs au rythme, décors fusionnés par matériau et libérés derrière le joueur.
-- Rendu : éclairages cyan/corail, faisceaux animés, sculptures de données, matériaux réfléchissants,
-  variantes de décors par monde. Post-traitement : ombres de contact GTAO sur ordinateur, bloom HDR,
-  contraste coloré, grain fin, vignette et décomposition chromatique pendant les sprints et portails, tone mapping ACES
-  et anticrénelage MSAA. La résolution est plafonnée pour limiter le coût sur mobile.
-- Le jury saisit sa propre clé Gemini dans le menu Musique. Aucun relais serveur n'est nécessaire.
+![Racing through the desert and its glowing tunnels](docs/screenshots/race-desert-desktop.png)
 
-## Lancer
-    npm install
-    npm run dev        # http://localhost:5173 (accessible sur le réseau local pour tester sur mobile)
+## How to play
 
-## Contrôles
-- ← / → (ou A/Q, D) : se décaler
-- ESPACE / ↑ : sauter
-- SHIFT (en tournant) : glissade ; relâcher = sprint (bleu, puis orange si chargé)
-- ↓ : freiner
-- F : parer un bloc violet à proximité (fenêtre de 0,14 s)
-- Mobile : moitié gauche/droite de l'écran, glisser vers le haut = saut, deux doigts = glissade, tap bref = parade
+- Select **Play** to race against three bots, or **Multiplayer** to race with friends. Create a game, share its room code and start the race once everyone has joined.
+- Escape through five worlds: **Offline Desert → Browser → Windows → Hardware → Cloud**.
+- Stay on the road, dodge cactus and cookie obstacles, and collect coins to spend in the shop. Pick your favorite dino skin and music style.
+- You start with **three lives**. Outlast your rivals and see how far you can go!
 
-Les pièces remplissent la jauge de Frénésie : pendant 6 secondes, le dino écrase les obstacles
-sur la route, mais peut toujours tomber. Certaines sections proposent une voie sûre avec des
-pièces normales et une voie en bord de piste avec des pièces dorées. Le menu Défis permet de
-sélectionner un objectif facultatif par course, sans limite de temps.
+## Multiplayer powered by MQTT
 
-## Publier sur itch.io
-    npm run zip        # crée dino-escape-itch.zip
-Sur itch.io : Kind of project = HTML, uploader le zip, cocher « This file will be played in the browser »,
-viewport 1280×720, activer « Fullscreen button » et « Mobile friendly ».
+Race with friends directly in the browser. One player selects **Multiplayer → Create a game**, shares the room code, and starts the race once everyone has joined. No account or multiplayer API key is needed.
 
-## Tests
-    npm test           # tests du kernel (sans navigateur)
+The game uses **MQTT over secure WebSockets (WSS)**. MQTT brokers relay messages between players in the same room, keeping their positions, slaps and Fight Club events in sync. Everyone races on the same generated track.
 
-## Architecture
-Voir **[ARCHITECTURE.md](ARCHITECTURE.md)** : kernel / vues / contenu, liste des événements, et comment
-ajouter un ennemi, un boss, une arme, un skin (y compris un .glb), une musique ou une amélioration.
+This hackathon version uses public brokers from **HiveMQ, Mosquitto and EMQX**, so there is no separate game server to set up. An internet connection is required.
 
-## Où régler quoi
-- `src/kernel/config.js` : physique du dino (`RUNNER`), règles (`GAME`), route (`TRACK`), rythme (`DIRECTOR`)
-- `src/content/` : zones, ennemis, armes, boss, skins, musiques, boutique
-- `src/view/models/` : apparence de chaque entité et du dino
+## Controls
 
-## Musique Lyria
-Menu 🎵 MUSIQUE → saisir une clé API Gemini (https://aistudio.google.com/apikey). Sans clé, un synthé
-procédural prend le relais. En dev, on peut aussi mettre `VITE_GEMINI_API_KEY=...` dans `.env.local`
-(jamais dans un build publié).
+| Action | Desktop |
+| --- | --- |
+| Run | Hold ↑ or W |
+| Steer | ← / → or A / D |
+| Jump | Space |
+| Drift | Hold Shift while steering; release to boost |
+| Brake | ↓ or S |
+| Slap a nearby rival | E / F or the hand button |
+| Fight Club | Repeatedly press Space / E / F, or click the tap button |
+
+**On mobile:** hold the left or right half of the screen to run and steer, swipe up to jump, use two fingers to drift and tap the hand button to slap. In Fight Club, tap the big button as fast as you can.
+
+## Fight Club: three seconds to win
+
+Every **450 meters**, an animated warning announces the next arena. The race pauses for everyone while the duel takes place, including the bots in solo mode.
+
+- **Tap for three seconds.** The player with the most taps wins, with slaps, kicks, flips, explosions and a crowd of cheering dinos bringing the fight to life.
+- **The winner steals coins:** half the loser's current-race coins, up to 20.
+- **The loser loses one life**, is held still for one second, then runs at 65% speed for five seconds. Losing the last life ends their run after the finishing move.
+- **A draw has no penalty.**
+
+In solo, you fight a bot. In multiplayer, the host duels the nearest active rival while the other racers watch.
+
+## A live AI soundtrack
+
+**Google DeepMind Lyria RealTime** generates music as you play. Your selected music style, the pace of the race and the action influence the soundtrack, while lights and visual effects pulse to the beat.
+
+To try it, open **Music**, paste your **Gemini API key with access to Lyria RealTime**, then select **Connect**. Turn your sound on!
+
+You can also play without a key using the built-in synthesized soundtrack.
+
+## Skin voices
+
+Every skin has **its own voice**: when a dino slaps, it shouts a one-to-three-word line from its own inventory (a deep menacing Vader, a cheerful Mario plumber, a chill reggae Riddim, an offline Classic robot...). The clips are **generated ahead of time** with Gemini TTS (`npm run voices:gen`, key in `.env`) into `public/voices/` and shipped with the game, so players need no key and no API call. Turn them off with the **Skin voices** checkbox in the Music panel.
+
+## Run the game locally
+
+```sh
+npm install
+npm run dev
+```
+
+Open **http://localhost:5173** in your browser, then select **Play**. To test on a phone on the same Wi-Fi network, use the network address printed in the terminal.
+
+## More screenshots
+
+**Inside the browser**
+
+![Browser-world race with giant windows and cookie obstacles](docs/screenshots/race-browser-desktop.png)
+
+**Through the hardware**
+
+![Hardware-world race through circuits and neon tunnels](docs/screenshots/race-hardware-desktop.png)
+
+**Fight Club flips**
+
+![A dino flipping through the Fight Club arena in front of the crowd](docs/screenshots/fight-club-salto-desktop.png)
+
+**The finishing blow**
+
+![Fight Club finishing move with an explosion and impact effects](docs/screenshots/fight-club-impact-desktop.png)

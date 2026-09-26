@@ -43,6 +43,7 @@ Models.register('blockDino', (view = {}) => {
 
   return {
     object: root,
+    rig: { body, head, arms, legs, tail },
     head, // point d'attache (armes, chapeaux…)
 
     update(p, dt) {
@@ -77,6 +78,8 @@ Models.register('blockDino', (view = {}) => {
       head.rotation.x = -0.1 * run + Math.sin(p.gait * 2) * 0.04;
       head.rotation.y = steerVis * 0.25;
     },
+
+    dispose() { mat.dispose(); eyeMat.dispose(); },
 
     onEvent(type, payload) {
       if (type === 'runner:land') squash = Math.min(1, payload.impact * 1.2);

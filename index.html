@@ -1,12 +1,27 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Dino Escape</title>
+  <title>Dino Race Fight Club</title>
   <link rel="stylesheet" href="/src/ui/style.css" />
 </head>
-<body>
+<body class="booting">
+  <!-- Écran de lancement « pas de connexion » (piloté par src/ui/Boot.js) -->
+  <div id="boot" aria-hidden="true">
+    <div class="boot-sheet">
+      <div class="boot-page">
+        <div class="boot-stage"><svg class="boot-dino" viewBox="0 0 12 13" shape-rendering="crispEdges"><path fill="currentColor" d="M7 0h5v1h-5zM6 1h2v1h-2zM9 1h3v1h-3zM6 2h6v1h-6zM6 3h3v1h-3zM0 4h1v1h-1zM5 4h6v1h-6zM0 5h1v1h-1zM4 5h5v1h-5zM10 5h1v1h-1zM0 6h2v1h-2zM3 6h6v1h-6zM0 7h9v1h-9zM1 8h7v1h-7zM2 9h5v1h-5z"/><path class="leg-a" transform="translate(0 10)" fill="currentColor" d="M3 0h2v1h-2zM6 0h2v1h-2zM3 1h1v1h-1zM8 1h2v1h-2zM3 2h2v1h-2z"/><path class="leg-b" transform="translate(0 10)" fill="currentColor" d="M3 0h2v1h-2zM6 0h2v1h-2zM2 1h2v1h-2zM8 1h1v1h-1zM8 2h2v1h-2z"/></svg><svg class="boot-cactus" viewBox="0 0 5 7" shape-rendering="crispEdges"><path fill="currentColor" d="M2 0h1v1h-1zM2 1h1v1h-1zM4 1h1v1h-1zM0 2h1v1h-1zM2 2h1v1h-1zM4 2h1v1h-1zM0 3h1v1h-1zM2 3h3v1h-3zM0 4h3v1h-3zM2 5h1v1h-1zM2 6h1v1h-1z"/></svg><div class="boot-ground"></div><span class="boot-score">00000</span></div>
+        <h2 class="boot-title"><span class="t-off">No internet</span><span class="t-on">No internet? Run.</span></h2>
+        <p class="boot-try">Try:</p>
+        <ul class="boot-list"><li>Checking the network cables, modem and router</li><li>Reconnecting to Wi-Fi</li><li>Outrunning the cursor</li></ul>
+        <p class="boot-code"><span class="t-off">ERR_INTERNET_DISCONNECTED</span><span class="t-on">DINO_ESCAPE_READY</span></p>
+      </div>
+      <p class="boot-skip">Click or press any key</p>
+    </div>
+    <svg class="boot-cracks"></svg>
+    <div class="boot-flash"></div>
+  </div>
   <!-- HUD (piloté par src/ui/Hud.js) -->
   <div id="hud">
     <div class="row" id="top">
@@ -15,19 +30,18 @@
         <div class="small" id="coins">★ 0</div>
         <div id="lives"></div>
       </div>
-      <div class="right"><div class="small">RECORD</div><div id="best">0</div></div>
+      <div class="right"><div class="small">BEST</div><div id="best">0</div></div>
     </div>
-    <div id="danger"><div id="dangerTxt">CURSEUR</div><div class="bar"><div class="fill" id="dangerFill"></div></div></div>
-    <div id="journey"><span id="worldName">01 / 05 · DÉSERT HORS LIGNE</span><div class="bar"><div class="fill" id="worldProgress"></div></div></div>
-    <div id="feverGauge">FRÉNÉSIE <span id="feverText">0%</span><div class="bar"><div class="fill" id="feverFill"></div></div></div>
-    <div id="challengeHud" class="hidden"></div>
+    <div id="journey"><span id="worldName">01 / 05 · OFFLINE DESERT</span><div class="bar"><div class="fill" id="worldProgress"></div></div></div>
     <div id="boss" class="hidden"><div id="bossName">BOSS</div><div class="bar"><div class="fill" id="bossFill"></div></div></div>
     <div id="buffs"></div>
     <div class="row" id="bottom">
       <div id="speed">0 <small>km/h</small></div>
-      <div id="driftbox"><div class="label" id="driftLabel">GLISSADE</div><div class="bar"><div class="fill" id="driftFill"></div></div></div>
+      <div id="driftbox"><div class="label" id="driftLabel">SLIDE</div><div class="bar"><div class="fill" id="driftFill"></div></div></div>
     </div>
     <div id="music" class="small"></div>
+    <ol id="mpBoard" class="hidden"></ol>
+    <div id="shoveBox" class="hidden"><button id="shoveBtn">✋ E / F · SLAP</button><div class="bar"><div class="fill" id="shoveFill"></div></div></div>
   </div>
   <div id="vignette"></div>
   <div id="flash"></div>
@@ -35,66 +49,137 @@
 
   <!-- Écrans (pilotés par src/ui/Menus.js) -->
   <div class="screen" id="start">
-    <div class="menu-brand"><span class="brand-icon">d.</span><span>DINO ESCAPE</span><span class="edition">ERR_INTERNET_DISCONNECTED</span></div>
+    <div class="menu-brand"><svg class="brand-icon" viewBox="0 0 12 13" aria-hidden="true" shape-rendering="crispEdges"><path fill="currentColor" d="M7 0h5v1h-5zM6 1h2v1h-2zM9 1h3v1h-3zM6 2h6v1h-6zM6 3h3v1h-3zM0 4h1v1h-1zM5 4h6v1h-6zM0 5h1v1h-1zM4 5h5v1h-5zM10 5h1v1h-1zM0 6h2v1h-2zM3 6h6v1h-6zM0 7h9v1h-9zM1 8h7v1h-7zM2 9h5v1h-5zM3 10h2v1h-2zM6 10h2v1h-2zM3 11h1v1h-1zM7 11h1v1h-1zM3 12h2v1h-2zM7 12h2v1h-2z"/></svg><span>DINO RACE FIGHT CLUB</span></div>
     <div class="hero-copy">
-      <p class="eyebrow"><span class="live-dot"></span> NO CONNECTION. JUST GOOD VIBES.</p>
-      <h1>DINO<br /><span>ESCAPE.</span></h1>
-      <p class="hero-description">Suis le rythme.<br /> Sème le curseur.</p>
-      <p class="hero-detail">Du désert hors ligne jusqu’au cloud.<br />Traverse les cinq mondes pour semer le curseur.</p>
+      <h1>DINO RACE<br /><span>FIGHT CLUB.</span></h1>
+      <p class="hero-description">Follow the beat.<br /> Fight to survive.</p>
       <div class="buttons hero-actions">
-        <button class="primary" data-action="play"><span>▶</span> Lancer la session <span>↗</span></button>
-        <button class="reggae-button" data-action="reggae" aria-label="Équiper le dino reggae"><span class="reggae-stripes"></span> Dino reggae</button>
+        <button class="primary" data-action="play"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5z" fill="currentColor" stroke="none"/></svg><span>Play</span><svg class="i i-go" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <button class="mp-button" data-mp="open"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M9.5 17.5 21 6V3h-3L6.5 14.5M11 19l-6-6M8 16l-4 4M5 21l-2-2"/></svg><span>Multiplayer</span></button>
       </div>
-      <p class="small" id="wallet"></p>
     </div>
-    <div class="hero-tag"><span class="tag-dot"></span><div><b id="heroName">RIDDIM</b><span id="heroTheme">REGGAE DINO · VOL. 01</span></div><span class="equalizer"><i></i><i></i><i></i><i></i></span></div>
+    <div class="nudge" id="keyNudge" hidden>
+      <div class="nudge-icon">✨</div>
+      <div class="nudge-body">
+        <b>Want the full experience?</b>
+        <p>Add a free Gemini key and the music gets generated live by Lyria RealTime, following your race.</p>
+        <div class="buttons"><button class="primary" data-action="music">Add my key</button><button data-action="nudge-later">Later</button></div>
+      </div>
+      <button class="nudge-close" data-action="nudge-later" aria-label="Close">✕</button>
+    </div>
     <div class="menu-footer">
-      <div class="controls"><span><b>← →</b> tourner</span><span><b>ESPACE</b> sauter</span><span><b>SHIFT</b> glisser</span><span><b>F / TAP</b> parer les blocs violets</span></div>
-      <div class="buttons"><button data-action="challenges">Défis</button><button data-action="shop">Collection & boutique</button><button data-action="music">♫ Musique</button></div>
+      <div class="controls"><span><b>↑</b> run</span><span><b>← →</b> steer</span><span><b>SPACE</b> jump</span><span><b>SHIFT</b> slide</span><span><b>E / F</b> slap</span></div>
+      <div class="buttons"><button data-action="shop"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l1 13H5zM9 7a3 3 0 0 1 6 0"/></svg><span>Shop</span></button><button data-action="music"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><span>Music</span></button></div>
     </div>
   </div>
 
   <div class="screen hidden" id="over">
     <p class="err" id="overErr">ERR</p>
-    <h2 id="overTitle">Onglet fermé.</h2>
+    <h2 id="overTitle">Tab closed.</h2>
     <h1 id="overScore">0</h1>
-    <p id="overDetails"></p>
+    <div class="over-stats" id="overStats"></div>
+    <div id="overRace"></div>
     <div class="buttons">
-      <button class="primary" data-action="play">↻ REJOUER</button>
-      <button data-action="shop">🛒 BOUTIQUE</button>
+      <button class="primary" id="overBack" data-action="back"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span>Back to menu</span></button>
+      <button data-action="shop"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l1 13H5zM9 7a3 3 0 0 1 6 0"/></svg><span>Shop</span></button>
     </div>
   </div>
 
   <div class="panel hidden" id="shop">
-    <div class="panel-head"><h2>Boutique</h2><span id="shopCoins"></span><button data-action="close">✕</button></div>
+    <div class="panel-head"><h2>Shop</h2><span id="shopCoins"></span><button data-action="close">✕</button></div>
     <div class="tabs">
       <button data-tab="skin" class="active">Skins</button>
-      <button data-tab="music">Musiques</button>
-      <button data-tab="upgrade">Améliorations</button>
+      <button data-tab="music">Music</button>
+      <button data-tab="upgrade">Upgrades</button>
     </div>
     <div class="grid" id="shopGrid"></div>
   </div>
 
-  <div class="panel hidden" id="challengesPanel">
-    <div class="panel-head"><h2>Défis facultatifs</h2><button data-action="close">✕</button></div>
-    <p>Choisis un objectif pour tes prochaines courses. Sans minuteur : tu peux le retenter autant de fois que tu veux.</p>
-    <div class="grid" id="challengeGrid"></div>
+  <div class="panel hidden mp-panel" id="mpPanel">
+    <div class="panel-head">
+      <div><h2>⚔ Multiplayer</h2><p class="mp-sub">Same road, same beat. Slap your rivals off the page.</p></div>
+      <button data-action="close">✕</button>
+    </div>
+
+    <!-- Avant d'entrer dans un salon : identité + créer / rejoindre -->
+    <div id="mpJoin">
+      <div class="mp-you">
+        <div class="mp-avatar"><img id="mpMyPortrait" alt="" /></div>
+        <label>Your name <input id="mpName" maxlength="14" autocomplete="off" spellcheck="false" /></label>
+        <div class="mp-you-skin"><span class="small">Riding</span><b id="mpMySkin">Classic</b><button data-action="shop">Change dino</button></div>
+      </div>
+      <div class="mp-choices">
+        <button class="mp-choice primary" data-mp="create"><span class="mp-choice-icon">✦</span><b>Create a game</b><span>Get a code to share with friends</span></button>
+        <div class="mp-choice">
+          <span class="mp-choice-icon">#</span><b>Join a game</b>
+          <div class="mp-input"><input id="mpCode" placeholder="CODE" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" /><button data-mp="join">Join</button></div>
+        </div>
+      </div>
+      <ul class="mp-rules">
+        <li><span>🛣</span>Everyone runs the same road</li>
+        <li><span>✋</span><span class="key">E</span>/<span class="key">F</span> slaps the rival next to you</li>
+        <li><span>👑</span>Last dino standing wins</li>
+      </ul>
+    </div>
+
+    <!-- Dans le salon : code à partager, joueurs, lancement -->
+    <div id="mpRoom" class="hidden">
+      <div class="mp-ticket">
+        <div>
+          <div class="mp-ticket-label">Game code</div>
+          <div class="mp-ticket-code" id="mpCodeShow"></div>
+        </div>
+        <div class="mp-ticket-actions"><button class="primary" data-mp="copy">🔗 Copy invite link</button><button data-mp="copycode">Copy code</button></div>
+      </div>
+      <div class="mp-lobby-head"><b id="mpCount">1 player</b><span class="small" id="mpHint"></span></div>
+      <ul id="mpPlayers" class="mp-players"></ul>
+      <div class="mp-room-actions">
+        <button id="mpLaunch" class="primary" data-mp="launch">⚔ Start the race</button>
+        <span id="mpWait" class="mp-wait"><i></i>Waiting for the host to start…</span>
+        <button class="ghost" data-mp="leave">Leave game</button>
+      </div>
+    </div>
+    <p class="small mp-status" id="mpStatus"></p>
   </div>
 
-  <div class="panel hidden" id="musicPanel">
-    <div class="panel-head"><h2>Musique Lyria</h2><button data-action="close">✕</button></div>
-    <p>La musique est générée en direct par <b>Google DeepMind Lyria RealTime</b> et accélère avec le jeu.
-      Il faut une clé API Gemini (<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a>), gardée uniquement dans ton navigateur.
-      Sans clé, une musique synthétisée prend le relais.</p>
-    <input id="apiKey" type="password" placeholder="Clé API Gemini" autocomplete="off" />
-    <div class="buttons"><button class="primary" data-action="connect">Connecter</button><button data-action="forget">Oublier la clé</button></div>
-    <p class="small" id="lyriaStatus"></p>
-    <label class="small"><input id="vocals" type="checkbox" style="width:auto" /> Voix (mode vocal de Lyria)</label>
-    <label class="small">Synchro musique ↔ jeu : <b id="audioOffsetVal">0 ms</b>
-      <input id="audioOffset" type="range" min="-200" max="200" step="5" />
-    </label>
-    <p class="small">Cale les pulsations du décor sur la musique : si elles arrivent après le kick, baisse le réglage ; avant, monte-le (casque Bluetooth : environ +150 ms).</p>
-    <h3>Thème de la prochaine partie</h3>
+  <div class="panel hidden music-panel" id="musicPanel">
+    <div class="panel-head">
+      <div><h2>🎵 Live music</h2><p class="mp-sub">Generated on the fly by <b>Google DeepMind Lyria RealTime</b>. It speeds up with you.</p></div>
+      <button data-action="close">✕</button>
+    </div>
+
+    <!-- Carte Lyria : état de la connexion + clé. data-state = nokey | off | connecting | ready | playing | error -->
+    <div class="lyria-card" id="lyriaCard" data-state="nokey">
+      <div class="lyria-head">
+        <span class="lyria-pill"><i></i><span id="lyriaStatus"></span></span>
+        <button class="ghost only-key" data-action="forget">Forget key</button>
+      </div>
+      <div class="only-nokey">
+        <h3>Unlock the full experience</h3>
+        <p>Live music that follows the beat of your race, speeding up as you do. It takes a free Gemini API key, stored only in your browser.</p>
+        <ol class="steps">
+          <li><span>1</span><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Get a free key on Google AI Studio ↗</a></li>
+          <li><span>2</span>Paste it below and connect</li>
+        </ol>
+      </div>
+      <div class="only-key"><h3>You're all set</h3><p>Lyria plays live during the race. Without network, a synthesized track takes over.</p></div>
+      <div class="key-row">
+        <input id="apiKey" type="password" placeholder="Paste your Gemini API key" autocomplete="off" spellcheck="false" />
+        <button class="primary" data-action="connect" id="lyriaConnect">Connect</button>
+      </div>
+    </div>
+
+    <div class="opt-list">
+      <label class="opt"><span><b>Vocals</b><small>Lyria sings along (vocal mode)</small></span><input id="vocals" type="checkbox" /><i class="switch"></i></label>
+      <label class="opt"><span><b>Skin voices</b><small>Each dino taunts when it slaps</small></span><input id="skinVoices" type="checkbox" /><i class="switch"></i></label>
+      <label class="opt" id="hapticsRow"><span><b>Vibration</b><small>Haptic feedback on hits and slaps (mobile)</small></span><input id="haptics" type="checkbox" /><i class="switch"></i></label>
+      <div class="opt opt-range">
+        <span><b>Music ↔ game sync <em id="audioOffsetVal">0 ms</em></b><small>If the pulses land after the kick, lower it. Bluetooth headphones: about +150 ms.</small></span>
+        <input id="audioOffset" type="range" min="-200" max="200" step="5" />
+      </div>
+    </div>
+
+    <h3 class="section-title">Theme for the next run</h3>
     <div class="grid" id="themeGrid"></div>
   </div>
 

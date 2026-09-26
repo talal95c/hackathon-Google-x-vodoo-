@@ -37,7 +37,8 @@ export class LyriaEngine {
       saved = localStorage.getItem(KEY_STORAGE) || '';
       this.vocals = localStorage.getItem(VOCALS_STORAGE) !== '0';
     } catch { /* stockage bloqué */ }
-    this.apiKey = saved || (import.meta.env?.DEV ? import.meta.env.VITE_GEMINI_API_KEY || '' : '');
+    // import.meta.env.DEV (sans « ?. ») est remplacé par false au build : la branche et la clé disparaissent
+    this.apiKey = saved || (import.meta.env.DEV ? import.meta.env.VITE_GEMINI_API_KEY || '' : '');
   }
 
   // Tempo imposé à Lyria = bpm du thème × ratio du palier du jeu
@@ -82,9 +83,9 @@ export class LyriaEngine {
   }
 
   async connect() {
-    if (!this.hasKey()) { this.#set('off', 'Clé API Gemini requise'); return false; }
+    if (!this.hasKey()) { this.#set('off', 'Gemini API key required'); return false; }
     if (this.ready) return true;
-    this.#set('connecting', 'Connexion à Lyria RealTime…');
+    this.#set('connecting', 'Connecting to Lyria RealTime…');
     try {
       const { GoogleGenAI } = await import('@google/genai'); // chargé seulement si besoin
       const ai = new GoogleGenAI({ apiKey: this.apiKey, apiVersion: API_VERSION });
@@ -93,10 +94,10 @@ export class LyriaEngine {
         callbacks: {
           onmessage: (msg) => this.#onMessage(msg),
           onerror: (e) => { console.warn('[Lyria]', e); this.#set('error', 'Erreur du flux Lyria'); },
-          onclose: () => { this.#session = null; if (this.status !== 'error') this.#set('off', 'Lyria déconnecté'); },
+          onclose: () => { this.#session = null; if (this.status !== 'error') this.#set('off', 'Lyria disconnected'); },
         },
       });
-      this.#set('ready', 'Lyria prêt 🎶');
+      this.#set('ready', 'Lyria ready 🎶');
       return true;
     } catch (e) {
       console.warn('[Lyria] connexion impossible', e);
@@ -113,6 +114,7 @@ export class LyriaEngine {
     this.level = promptIndex(theme, tempo.level, GAME.tempoLevels.length);
     this.pending = null;
     this.switchAt = null;
+    this.mood = null;
     this.nextTime = this.ctx.currentTime + 0.25;
     this.filter.frequency.cancelScheduledValues(0);
     this.filter.frequency.value = OPEN;
@@ -134,7 +136,7 @@ export class LyriaEngine {
     for (const s of this.#sources) { try { s.stop(); } catch { /* */ } }
     this.#sources.clear();
     if (this.#session) { try { this.#session.stop(); } catch { /* */ } }
-    if (this.status === 'playing') this.#set('ready', 'Lyria prêt 🎶');
+    if (this.status === 'playing') this.#set('ready', 'Lyria ready 🎶');
   }
 
   // Nouveau palier de vitesse du jeu → transition DJ vers le tempo correspondant
@@ -147,6 +149,32 @@ export class LyriaEngine {
   }
 
   setIntensity() { /* mode DJ : rien ne bouge entre deux paliers */ }
+
+  // Ambiance du match (MatchMood) → prompts d'ambiance mélangés en douceur à la musique.
+  // Jamais de relance ni de changement de tempo ; au plus une mise à jour toutes les 1,5 s,
+  // et seulement si l'ambiance a vraiment changé.
+  setMood(m) {
+    if (this.status !== 'playing' || !this.theme?.moods || this.switchTimer || this.switchAt !== null) return;
+    const q = (v) => Math.round(v * 4) / 4; // paliers de 0,25 : évite d'envoyer du bruit
+    const mood = { fight: q(m.fight), danger: q(m.danger), triumph: q(m.triumph) };
+    const prev = this.mood || { fight: 0, danger: 0, triumph: 0 };
+    const changed = Object.keys(mood).some((k) => mood[k] !== prev[k]);
+    const now = performance.now();
+    if (!changed || now - (this.lastMood || 0) < 1500) return;
+    this.mood = mood; this.lastMood = now;
+    this.#sendPrompts().catch(() => {});
+    this.#sendConfig().catch(() => {});
+  }
+
+  // Réaction immédiate (locale, sans latence) : le son s'étouffe un instant sur un coup encaissé
+  duck(depth = 0.6) {
+    if (!this.filter || this.switchTimer || this.switchAt !== null) return;
+    const f = this.filter.frequency, now = this.ctx.currentTime;
+    f.cancelScheduledValues(now);
+    f.setValueAtTime(OPEN, now);
+    f.exponentialRampToValueAtTime(OPEN * (1 - depth) * 0.06 + 500, now + 0.06);
+    f.exponentialRampToValueAtTime(OPEN, now + 0.45);
+  }
 
   #scheduleTransition() {
     const now = this.ctx.currentTime;
@@ -182,18 +210,24 @@ export class LyriaEngine {
     const core = this.vocals ? t.core : `${t.core}, Instrumental`;
     const list = [{ text: core, weight: 1 }, { text: t.levels[this.level], weight: 1.2 }];
     if (this.vocals && t.vocals) list.push({ text: t.vocals, weight: 0.9 });
+    // ambiance du match : bagarre / danger / triomphe, poids proportionnel à son intensité
+    const m = this.mood || {};
+    for (const [k, w] of [['fight', 1.3], ['danger', 1], ['triumph', 1.2]]) {
+      if (t.moods?.[k] && m[k] > 0.1) list.push({ text: t.moods[k], weight: +(m[k] * w).toFixed(2) });
+    }
     return this.#session.setWeightedPrompts({ weightedPrompts: list });
   }
 
   // Densité / brillance fixées par palier (montent avec l'énergie), BPM et tonalité du thème
   #sendConfig() {
-    const t = this.theme, x = this.level / Math.max(1, t.levels.length - 1);
-    const lerp = ([a, b]) => +(a + (b - a) * x).toFixed(2);
+    const t = this.theme, x = this.level / Math.max(1, t.levels.length - 1), m = this.mood || {};
+    const lerp = ([a, b]) => a + (b - a) * x;
+    const clamp = (v) => +Math.max(0, Math.min(1, v)).toFixed(2);
     return this.#session.setMusicGenerationConfig({
       musicGenerationConfig: {
         bpm: this.bpm,
-        density: lerp(t.density),
-        brightness: lerp(t.brightness),
+        density: clamp(lerp(t.density) + (m.fight || 0) * 0.15),                               // bagarre : plus dense
+        brightness: clamp(lerp(t.brightness) + (m.triumph || 0) * 0.15 - (m.danger || 0) * 0.12), // triomphe : plus clair ; danger : plus sombre
         guidance: 3.5,
         scale: t.scale,
         musicGenerationMode: this.vocals ? 'VOCALIZATION' : 'QUALITY',

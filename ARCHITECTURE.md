@@ -1,4 +1,4 @@
-# Architecture de Dino Escape
+# Architecture de Dino Race Fight Club
 
 Le jeu est découpé en **couches**. Le principe clé : le **kernel** contient toute la logique
 et ne connaît ni Three.js ni le DOM. Les **vues** lisent son état et écoutent ses événements
@@ -11,7 +11,7 @@ les animations ou la musique **sans jamais toucher au gameplay**, et inversement
  input/ ─▶ kernel/ ──événements──▶ view/  (Three.js : route, entités, dino, caméra, particules)
  (intent)  Game                  ├▶ audio/ (bruitages + musique Lyria / synthé)
            Runner, Track,        └▶ ui/    (HUD, menus, boutique)
-           Director, Chaser
+           Director
             ▲
  meta/ ─────┘ (profil, portefeuille, boutique → "loadout" de la partie)
 ```
@@ -22,13 +22,13 @@ les animations ou la musique **sans jamais toucher au gameplay**, et inversement
 
 | Dossier | Contenu | Dépend de Three.js ? |
 |---|---|---|
-| `kernel/` | `Game` (états, vies, score, boucle à pas fixe), `Runner` (physique du dino), `Track` (route procédurale), `Director` (spawns, boss), `Chaser`, `Stats`, `Registry`, `EventBus`, `Random`, `config` | **non** |
+| `kernel/` | `Game` (états, vies, score, boucle à pas fixe), `Runner` (physique du dino), `Track` (route procédurale), `Director` (spawns, boss), `Stats`, `Registry`, `EventBus`, `Random`, `config` | **non** |
 | `entities/` | `Entity` → `Collectable` (`CoinPickup`, `WeaponPickup`, `EffectPickup`, `BoostPad`), `Enemy` (`Obstacle`, `MovingEnemy`), `Boss`, `Projectile` | non |
 | `weapons/` | `Weapon` → `LaserWeapon`, `ShieldWeapon` ; `StatusEffect` (bonus temporaires) | non |
 | `meta/` | `Profile` (sauvegarde), `Shop` (achats + loadout), `Storage` | non |
 | `content/` | les définitions de contenu (un fichier par famille) + `index.js` | non |
-| `view/` | `World`, `CameraRig`, `TrackView`, `EntityViews`, `RunnerView`, `ChaserView`, `Particles`, `ModelRegistry`, `models/` | oui |
-| `audio/` | `Sfx` + `bindSfx`, `music/` (`LyriaEngine`, `SynthEngine`, `MusicDirector`) | non |
+| `view/` | `World`, `CameraRig`, `TrackView`, `EntityViews`, `RunnerView`, `Particles`, `PortalView`, `TransitionFx`, `PostProcessing`, `ModelRegistry`, `models/` | oui |
+| `audio/` | `Sfx` + `bindSfx`, `SkinVoices` + `bindVoices` (répliques des skins à la claque, clips pré-générés dans `public/voices/`), `music/` (`LyriaEngine`, `SynthEngine`, `MusicDirector`) | non |
 | `ui/` | `Hud`, `Menus`, `style.css` | non (DOM) |
 | `input/` | `Input` (clavier AZERTY/QWERTY + tactile → intent) | non |
 
@@ -49,7 +49,7 @@ S'abonner : `game.on('type', (payload) => …)`, ou `game.on('*', (type, payload
 | Événement | Payload |
 |---|---|
 | `state` | `{ state, prev }` : `menu`, `playing`, `falling`, `over` |
-| `game:start` / `game:over` | `{ loadout, seed }` / `{ reason: 'fall'\|'dead'\|'caught', distance, coins, score, zone }` |
+| `game:start` / `game:over` | `{ loadout, seed }` / `{ reason: 'fall'\|'dead', distance, coins, score, zone }` |
 | `zone` | `{ index, number, zone }` |
 | `tempo` | `{ level, ratio }` : nouveau palier de vitesse |
 | `chunk:add` / `chunk:remove` | morceau de route `{ index, i0, i1, s0, s1, zone }` |
@@ -69,6 +69,7 @@ S'abonner : `game.on('type', (payload) => …)`, ou `game.on('*', (type, payload
 | `effect:add` / `effect:expire` | `{ effect }` |
 | `boss:start` · `boss:phase` · `boss:attack` · `boss:damage` · `boss:defeated` · `boss:escaped` | `{ boss, … }` |
 | `shop:purchase` | `{ item, price }` |
+| `mp:shove` · `bot:shove` · `bots:start` | `{ hit, dir }` (ma claque) · `{ bot, id, skin, s, d }` (claque d'un PNJ) · `{ skins }` (départ des PNJ) |
 
 ## Recettes
 
@@ -157,7 +158,7 @@ MusicThemes.define('jazz', {
 });
 ```
 `levels` : un prompt par palier d'intensité. Le `MusicDirector` calcule l'intensité à partir de la vitesse,
-de la progression, du danger et des boss. Lyria change de palier au plus toutes les 6 s ; le BPM
+de la progression et des boss. Lyria change de palier au plus toutes les 6 s ; le BPM
 s'applique à ce moment-là (`resetContext`), ce qui produit un effet de « drop ».
 
 ### Une amélioration de boutique
@@ -173,6 +174,19 @@ ShopItems.define('upgrade:jump', {
 Ajoute une entrée dans `content/zones.js` : `palette`, `decor` (clé `decor:<nom>` du registre de modèles),
 `spawns` (table pondérée, avec `minDistance` optionnel) et `boss`.
 
+## Passage d'un monde à l'autre
+Tous les `TRACK.zoneLength` (720 m), la route s'interrompt (`WORLD_JUMP.gap`) et le kernel fait faire au dino un saut
+guidé (`Game.#stepWorldJump`, `kernel/WorldJourney.js`) : commandes coupées, invulnérable, arc de `WORLD_JUMP.height` m,
+événements `world:jump` → `zone` (pile au passage de la porte) → `world:land`. Rien ne spawne à moins de `WORLD_JUMP.safe` m.
+Côté vues :
+- `WorldDecorView` bâtit la porte (cadre néon + panneau) et les rampes ; `PortalView` y place un **vortex** animé aux
+  couleurs du monde suivant, qui s'intensifie à l'approche (`near`) et pulse au rythme.
+- `TransitionFx` calcule les effets plein écran lus par `PostProcessing` (`ctx.transition`) : **lignes de vitesse**
+  toujours présentes en jeu, de plus en plus denses avec la vitesse (0 à 30 m/s, 1 à 62 m/s), tempête pendant le saut ;
+  flou radial et aberration chromatique (sprint, saut) ; **flash** coloré au passage de la porte et à l'atterrissage.
+- `Particles` : explosion au décollage, traînée de comète pendant le vol, gerbe à l'atterrissage.
+- `CameraRig` : recul + grand angle au sommet de l'arc, secousses au décollage et à l'atterrissage.
+
 ## Rythme et musique
 - **Le gameplay ne dépend jamais de la musique** : aucune latence audio ne peut gêner le joueur.
   Les paliers de vitesse (`GAME.tempoLevels`) s'appliquent dès la distance atteinte (événement `tempo`).
@@ -180,8 +194,20 @@ Ajoute une entrée dans `content/zones.js` : `palette`, `decor` (clé `decor:<no
   DJ calée sur les mesures (filtre doux + fondu enchaîné). Le synthé de secours accélère progressivement.
 - **L'environnement pulse au rythme** : `game.beat` (`kernel/BeatClock.js`) est recalé sur la musique
   réelle (le `BeatTracker` analyse le PCM de Lyria avant lecture). `BeatFx` fait pulser les bordures
-  de route, le curseur et, légèrement, la caméra (`ctx.fx.pulse` / `ctx.fx.down`).
+  de route et, légèrement, la caméra (`ctx.fx.pulse` / `ctx.fx.down`).
 - Latence audio : réglage « Synchro musique ↔ jeu » dans le menu Musique (`music.offsetMs`).
+
+## Multijoueur (`src/net/`)
+- **Réseau** : brokers MQTT publics en WebSocket sécurisé (`MqttNet.js` : HiveMQ, puis Mosquitto, puis EMQX en secours).
+  Pas de serveur à nous ni de compte, et ça passe sur tous les réseaux, y compris sur itch.io.
+  La bibliothèque `mqtt` n'est chargée qu'à l'ouverture du multijoueur.
+- **Principe** (`Multiplayer.js`) : l'hôte crée un code de salon. Au lancement, tout le monde reçoit la même graine
+  (donc la même route) et une ligne de départ. Chaque joueur fait tourner **son propre jeu** et diffuse sa position
+  15 fois par seconde. Les rivaux sont affichés lissés (`RivalView`).
+- **Combat** (`rules.js`, fonctions pures testées) : lors d'un contact, celui qui fonce envoie la poussée au percuté.
+  Le coup d'épaule (touche E) éjecte le rival le plus proche. Chacun applique à son dino ce qu'il subit
+  (`runner.knock`). Tomber coûte une vie (réapparition là où on est tombé) ; à 0 vie, éliminé ; le dernier en vie gagne.
+- Tests : `test/multiplayer.test.js` relie deux joueurs par un faux réseau en mémoire (`connectFn` injectable).
 
 ## Règles
 1. **Le kernel ne dépend pas de Three.js ni du DOM** : `npm test` le fait tourner sous Node.
@@ -195,3 +221,14 @@ La musique Lyria a besoin d'une clé Gemini. Elle est **saisie par le joueur** d
 et stockée seulement dans son navigateur. `VITE_GEMINI_API_KEY` (fichier `.env`) n'est lu **qu'en dev** :
 un build public ne doit jamais contenir de clé. Sans clé, `SynthEngine` joue une musique procédurale
 qui suit aussi le tempo du jeu.
+
+### Donner une voix à un skin
+```js
+// content/voices.js : voix Gemini TTS + style + inventaire de répliques (en anglais), coordonnés avec le skin
+VOICES.pirate = { voiceName: 'Algenib', style: 'Say in a gruff pirate voice', lines: ['Arrr, walk the plank!', 'Yo ho, off ye go!'] };
+```
+Puis `npm run voices:gen` (clé Gemini dans `.env`) synthétise les clips manquants dans `public/voices/<skin>/` et met
+à jour `public/voices/index.json` ; `npm run voices` les fait écouter. Ces fichiers sont livrés avec le jeu : aucun appel
+API en jeu. Quand ce dino lance une claque (`mp:shove` pour le joueur, `bot:shove` pour un PNJ, `combat:impact` avec
+`sourceId` pour un joueur en ligne), `SkinVoices.say(skin)` joue une réplique de son inventaire (jamais la même deux
+fois de suite), accélérée pour tenir en ~1 s. Répliques d'1 à 3 mots : le jeu est ultra dynamique.

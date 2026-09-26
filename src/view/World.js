@@ -11,9 +11,9 @@ export class World {
     this.pixelRatio = Math.min(window.devicePixelRatio, window.matchMedia('(pointer: coarse)').matches ? 1.25 : 1.5);
     r.setPixelRatio(this.pixelRatio);
     r.toneMapping = THREE.ACESFilmicToneMapping;
-    r.toneMappingExposure = .86;
+    r.toneMappingExposure = .96;
     r.outputColorSpace = THREE.SRGBColorSpace;
-    r.domElement.setAttribute('aria-label', 'Dino Escape — scène 3D');
+    r.domElement.setAttribute('aria-label', 'Dino Race Fight Club — 3D scene');
     r.setSize(window.innerWidth, window.innerHeight);
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFShadowMap;
@@ -36,7 +36,7 @@ export class World {
     const room = new RoomEnvironment(), pmrem = new THREE.PMREMGenerator(r);
     this.environmentTarget = pmrem.fromScene(room, .04);
     this.scene.environment = this.environmentTarget.texture;
-    this.scene.environmentIntensity = .22;
+    this.scene.environmentIntensity = .28;
     room.dispose(); pmrem.dispose();
     this.post = new PostProcessing(r, this.scene, this.camera);
     this.post.resize(window.innerWidth, window.innerHeight, this.pixelRatio);
@@ -51,14 +51,49 @@ export class World {
 
   setPalette(palette) { this.palette = palette; }
 
+  // Ciel en shader (aucun coût CPU) : dégradé, brume lumineuse à l'horizon, soleil + halo (qui
+  // "bave" grâce au bloom), voiles de cirrus qui défilent, et étoiles scintillantes si le ciel est sombre.
   #buildSky() {
+    this.skyUniforms = {
+      top: { value: this.colors.skyTop }, bottom: { value: this.colors.sky },
+      sunColor: { value: new THREE.Color(0xfff1d0) }, sunDir: { value: new THREE.Vector3(-0.35, 0.2, 1).normalize() },
+      cirrus: { value: this.colors.cloud }, time: { value: 0 }, stars: { value: 0 },
+    };
     this.sky = new THREE.Mesh(
-      new THREE.SphereGeometry(380, 32, 16),
+      new THREE.SphereGeometry(380, 48, 24),
       new THREE.ShaderMaterial({
         side: THREE.BackSide, depthWrite: false, fog: false,
-        uniforms: { top: { value: this.colors.skyTop }, bottom: { value: this.colors.sky } },
+        uniforms: this.skyUniforms,
         vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-        fragmentShader: 'uniform vec3 top; uniform vec3 bottom; varying vec3 vP; void main(){ float h = smoothstep(-0.05, 0.55, vP.y); gl_FragColor = vec4(mix(bottom, top * .78, h), 1.0); }',
+        fragmentShader: `
+          uniform vec3 top, bottom, sunColor, sunDir, cirrus; uniform float time, stars; varying vec3 vP;
+          float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+          float noise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f);
+            return mix(mix(hash(i), hash(i+vec2(1,0)), f.x), mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y); }
+          float fbm(vec2 p){ float v = 0., a = .5; for (int i = 0; i < 4; i++) { v += a * noise(p); p *= 2.03; a *= .5; } return v; }
+          void main(){
+            vec3 d = normalize(vP);
+            float h = smoothstep(-0.05, 0.55, d.y);
+            vec3 c = mix(bottom, top * .78, h);
+            // brume lumineuse à l'horizon, teintée par le soleil
+            float sd = max(dot(d, sunDir), 0.);
+            c += sunColor * pow(1. - abs(d.y), 6.) * .18 * (.4 + sd);
+            // voiles de cirrus (projetés sur un plafond, défilent lentement)
+            if (d.y > 0.02) {
+              vec2 uv = d.xz / (d.y + .25) * 1.6 + vec2(time * .006, time * .0025);
+              float w = smoothstep(.52, .82, fbm(uv * vec2(1., 3.2)));
+              c = mix(c, cirrus * 1.05 + sunColor * sd * .15, w * .42 * smoothstep(.02, .3, d.y));
+            }
+            // étoiles (ciel sombre)
+            if (stars > .01 && d.y > .05) {
+              vec2 g = floor(d.xz / (d.y + .6) * 180.);
+              float st = step(.9965, hash(g)) * (.6 + .4 * sin(time * 2.5 + hash(g + 7.) * 40.));
+              c += vec3(st) * stars * smoothstep(.05, .4, d.y);
+            }
+            // soleil : disque + halo (valeurs > 1 → bloom)
+            c += sunColor * (smoothstep(.9985, .9993, sd) * 2.2 + pow(sd, 350.) * 1.1 + pow(sd, 18.) * .22);
+            gl_FragColor = vec4(c, 1.);
+          }`,
       }),
     );
     this.sky.renderOrder = -1;
@@ -87,12 +122,16 @@ export class World {
   }
 
   #buildLights() {
-    this.scene.add(new THREE.HemisphereLight(0xb5d7f5, 0x7c7078, .7));
-    const sun = this.sun = new THREE.DirectionalLight(this.colors.sun, 1.85);
+    this.ambient = new THREE.HemisphereLight(0xb6c7ef, 0x987259, .92);
+    this.scene.add(this.ambient);
+    const sun = this.sun = new THREE.DirectionalLight(this.colors.sun, 2.65);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.bias = -0.0005;
-    Object.assign(sun.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 120 });
+    const size = window.matchMedia('(pointer: coarse)').matches ? 1024 : 2048;
+    sun.shadow.mapSize.set(size, size);
+    sun.shadow.bias = -0.0003;
+    sun.shadow.normalBias = .045;
+    sun.shadow.radius = 3;
+    Object.assign(sun.shadow.camera, { left: -38, right: 38, top: 38, bottom: -38, near: 1, far: 120 });
     this.scene.add(sun, sun.target);
   }
 
@@ -110,17 +149,45 @@ export class World {
     this.cloudMaterial.emissive.copy(c.cloud);
     const cam = this.camera.position;
     this.sky.position.copy(cam);
+    // ciel : soleil de la couleur de la zone, cirrus aux couleurs des nuages, étoiles si le ciel est sombre
+    const u = this.skyUniforms;
+    u.time.value += dt;
+    u.sunColor.value.copy(this.sun.color);
+    const darkness = 1 - (c.skyTop.r * .2126 + c.skyTop.g * .7152 + c.skyTop.b * .0722);
+    u.stars.value += (THREE.MathUtils.smoothstep(darkness, .7, .9) - u.stars.value) * Math.min(1, dt);
     for (const cl of this.clouds) {
       cl.g.visible = p.clouds !== false;
       cl.a += dt * 0.004;
       cl.g.position.set(cam.x + Math.cos(cl.a) * cl.r, cl.y, cam.z + Math.sin(cl.a) * cl.r);
       cl.g.lookAt(cam.x, cl.y, cam.z);
     }
-    this.sun.position.set(focus.x + 25, focus.y + 22, focus.z - 18);
+    const inside = this.enclosure ?? 0;
+    this.ambient.intensity = .92 - inside * .53;
+    this.sun.intensity = 2.65 - inside * 2.1;
+    this.scene.environmentIntensity = .28 - inside * .13;
+    this.sun.position.set(focus.x + 25, focus.y + 32, focus.z - 18);
     this.sun.target.position.copy(focus);
   }
 
-  render(pulse = 0, rush = 0) { this.post.render(pulse, rush); }
+  // fx : effets de vitesse calculés par view/TransitionFx.js
+  render(pulse = 0, fx) { this.post.render(pulse, fx); }
+
+  // Qualité adaptative : si l'image tombe sous ~48 i/s pendant 1,5 s, on baisse la résolution, puis les ombres.
+  adapt(dt) {
+    if (!(dt > 0) || dt > 0.5) return;
+    this.frameAvg = (this.frameAvg ?? 1 / 60) * 0.95 + dt * 0.05;
+    this.slowFor = this.frameAvg > 1 / 48 ? (this.slowFor ?? 0) + dt : 0;
+    if (this.slowFor < 1.5) return;
+    this.slowFor = 0;
+    this.frameAvg = 1 / 60;
+    if (this.pixelRatio > 0.75) {
+      this.pixelRatio = Math.max(0.75, this.pixelRatio - 0.25);
+      this.renderer.setPixelRatio(this.pixelRatio);
+      this.post.resize(window.innerWidth, window.innerHeight, this.pixelRatio);
+    } else if (this.sun.castShadow) {
+      this.sun.castShadow = false;
+    }
+  }
 }
 
 const tmp = new THREE.Color();

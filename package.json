@@ -1,5 +1,5 @@
 {
-  "name": "dino-escape",
+  "name": "dino-race-fight-club",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -7,11 +7,15 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
-    "zip": "vite build && cd dist && rm -f ../dino-escape-itch.zip && zip -r ../dino-escape-itch.zip .",
-    "test": "node --test test/*.test.js"
+    "zip": "vite build && node scripts/check-secrets.mjs && cd dist && rm -f ../dino-race-fight-club-itch.zip && zip -qr ../dino-race-fight-club-itch.zip .",
+    "test": "node --test test/*.test.js",
+    "share": "vite build && node scripts/check-secrets.mjs && (vite preview --port 4180 --strictPort & npx -y cloudflared tunnel --url http://localhost:4180)",
+    "voices": "node scripts/test-voices.mjs",
+    "voices:gen": "node scripts/gen-voices.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.24.0",
+    "mqtt": "^5.16.0",
     "three": "^0.186.1"
   },
   "devDependencies": {

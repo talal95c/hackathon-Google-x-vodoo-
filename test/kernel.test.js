@@ -3,142 +3,16 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import '../src/content/index.js';
 import { Game } from '../src/kernel/Game.js';
+import { GAME } from '../src/kernel/config.js';
 import { Shop } from '../src/meta/Shop.js';
 import { Profile } from '../src/meta/Profile.js';
 import { MemoryStorage } from '../src/meta/Storage.js';
-import { CHALLENGES } from '../src/content/challenges.js';
-import { Input } from '../src/input/Input.js';
 
 const idle = { steer: 0, drift: false, brake: false, jump: false };
 const run = (game, seconds, intent = idle) => { for (let t = 0; t < seconds; t += 1 / 60) game.update(1 / 60, typeof intent === 'function' ? intent(game) : intent); };
 
 // Pilote simple : reste au centre, contre la force centrifuge
 const pilot = (g) => ({ ...idle, steer: Math.max(-1, Math.min(1, (-g.runner.x * 3 - g.runner.push) / 10)) });
-
-test('tap bref = une parade ; glissement vers le haut = saut sans parade', () => {
-  const handlers = {}, oldWindow = globalThis.window;
-  globalThis.window = { innerWidth: 800 };
-  try {
-    const input = new Input({ addEventListener: (type, fn) => { handlers[type] = fn; } });
-    const touch = (identifier, x, y) => ({ identifier, clientX: x, clientY: y });
-    const event = (type, changedTouches, touches) => ({ type, changedTouches, touches, target: {}, preventDefault() {} });
-    const start = touch(1, 200, 300);
-    handlers.touchstart(event('touchstart', [start], [start]));
-    handlers.touchend(event('touchend', [touch(1, 202, 302)], []));
-    assert.equal(input.read(1 / 60).attack, true);
-    assert.equal(input.read(1 / 60).attack, false);
-    handlers.touchstart(event('touchstart', [start], [start]));
-    handlers.touchmove(event('touchmove', [touch(1, 200, 220)], [start]));
-    handlers.touchend(event('touchend', [touch(1, 200, 220)], []));
-    const intent = input.read(1 / 60);
-    assert.equal(intent.jump, true);
-    assert.equal(intent.attack, false);
-    handlers.touchstart(event('touchstart', [start], [start]));
-    handlers.touchend(event('touchend', [touch(1, 200, 220)], []));
-    const fastSwipe = input.read(1 / 60);
-    assert.equal(fastSwipe.jump, true);
-    assert.equal(fastSwipe.attack, false);
-  } finally {
-    if (oldWindow === undefined) delete globalThis.window;
-    else globalThis.window = oldWindow;
-  }
-});
-
-test('parade : cible violette proche uniquement, cooldown et récompense', () => {
-  const g = new Game({ seed: 10 });
-  g.start({ seed: 10 });
-  for (const e of g.entities) e.destroy();
-  g.entities = [];
-  const far = g.spawn('parryBlock', g.runner.z + 14, g.runner.x);
-  g.update(1 / 60, { ...idle, attack: true });
-  assert.equal(far.alive, true);
-  assert.equal(g.parries, 0);
-  const near = g.spawn('parryBlock', g.runner.z + 3, g.runner.x);
-  g.update(1 / 60, { ...idle, attack: true });
-  assert.equal(near.alive, true, 'une deuxième attaque immédiate est bloquée');
-  run(g, 0.55, pilot);
-  const next = g.spawn('parryBlock', g.runner.z + 3, g.runner.x);
-  g.update(1 / 60, { ...idle, attack: true });
-  assert.equal(far.alive, false, 'la cible la plus proche est parée en priorité');
-  assert.equal(next.alive, true);
-  assert.equal(g.parries, 1);
-  assert.equal(g.fever, 25);
-  assert.ok(g.coins >= far.reward);
-});
-
-test('les pièces se ramassent plus largement que les obstacles ne frappent', () => {
-  const g = new Game({ seed: 11 });
-  g.start({ seed: 11 });
-  const { z, x } = g.runner;
-  const hazard = g.spawn('cactus', z, x + 1.8);
-  const coin = g.spawn('coin', z, x + 1.8);
-  assert.equal(hazard.overlapsRunner(), false);
-  assert.equal(coin.overlapsRunner(), true);
-});
-
-test('Frénésie : la collecte remplit une jauge temporaire, sans la recharger pendant son effet', () => {
-  const g = new Game({ seed: 12 });
-  g.start({ seed: 12 });
-  const coin = g.spawn('goldCoin', g.runner.z, g.runner.x);
-  coin.onContact(g.runner);
-  assert.equal(g.coins >= 3, true);
-  assert.equal(g.fever, 12);
-  g.addFever(88);
-  assert.equal(g.feverTime, 6);
-  assert.equal(g.runner.smashes, true);
-  const hazard = g.spawn('cactus', g.runner.z, g.runner.x);
-  hazard.onContact(g.runner);
-  assert.equal(hazard.alive, false);
-  g.addFever(80);
-  assert.equal(g.fever, 0);
-  let ended = 0;
-  g.on('fever:end', () => ended++);
-  g.feverTime = 1 / 120;
-  g.update(1 / 60, idle);
-  assert.equal(ended, 1);
-  assert.equal(g.runner.smashes, false);
-  assert.equal(g.runner.isInvulnerable, false);
-  g.start({ seed: 12 });
-  assert.equal(g.feverTime, 0);
-  assert.equal(g.fever, 0);
-});
-
-test('défis facultatifs : sélection conservée, seule la réussite crédite la récompense', () => {
-  const profile = new Profile(new MemoryStorage());
-  profile.selectChallenge('parrier');
-  profile.selectChallenge('unknown');
-  assert.equal(profile.data.challenge, 'parrier');
-  const g = new Game({ seed: 13 });
-  g.start({ seed: 13, challenge: profile.data.challenge });
-  assert.equal(g.challengeProgress, 0);
-  g.parries = 2;
-  assert.equal(g.challengeProgress, 2);
-  let result;
-  g.on('game:over', (r) => { result = r; });
-  for (let i = 0; i < 3; i++) { g.runner.invul = 0; g.runner.hurt({}); }
-  assert.equal(result.challenge.complete, true);
-  assert.equal(profile.recordRun(result).challengeReward, CHALLENGES[1].reward);
-  assert.equal(profile.coins, result.coins + CHALLENGES[1].reward);
-  g.start({ seed: 13, challenge: profile.data.challenge });
-  for (let i = 0; i < 3; i++) { g.runner.invul = 0; g.runner.hurt({}); }
-  assert.equal(result.challenge.complete, false);
-  assert.equal(profile.recordRun(result).challengeReward, 0);
-});
-
-test('le choix de trajectoire propose une voie sûre et une voie dorée en bord de piste', () => {
-  for (const seed of [14, 81]) {
-    const g = new Game({ seed });
-    g.track.ensure(700);
-    const gold = g.entities.filter((e) => e.type === 'goldCoin');
-    assert.ok(gold.length > 0);
-    for (const e of gold) {
-      const safe = g.entities.find((c) => c.type === 'coin' && c.s === e.s && Math.sign(c.d) === -Math.sign(e.d));
-      assert.ok(safe, `voie sûre absente à ${e.s}`);
-      assert.ok(Math.abs(e.d) > Math.abs(safe.d));
-      assert.ok(Math.abs(e.d) < g.track.frame(e.s, {}).w / 2);
-    }
-  }
-});
 
 test('même graine = même route', () => {
   const a = new Game({ seed: 42 }), b = new Game({ seed: 42 });
@@ -208,7 +82,7 @@ test('pas de boss dans les zones', () => {
   g.start({ seed: 5 });
   let boss = null;
   g.on('boss:start', (e) => { boss = e.boss; });
-  g.runner.z = 690; g.sMax = 690; g.chaser.reset(690);
+  g.runner.z = 690; g.sMax = 690;
   run(g, 3, pilot);
   assert.equal(boss, null);
 });
@@ -239,7 +113,8 @@ test('paliers de vitesse : appliqués dès la distance atteinte (sans attendre l
   g.start({ seed: 4 });
   const tempos = [];
   g.on('tempo', (t) => tempos.push(t));
-  g.runner.z = 460; g.sMax = 460; g.chaser.reset(460);
+  const at = GAME.tempoLevels[1].at + 10;
+  g.runner.z = at; g.sMax = at;
   run(g, 0.2, pilot);
   assert.equal(tempos.at(-1)?.level, 1);
   assert.ok(Math.abs(g.runner.cruise - 34 * 1.1) < 1e-9, `cruise ${g.runner.cruise}`);
@@ -284,7 +159,7 @@ test('virages durs : présents de temps en temps, jouables, sans obstacle dedans
   for (let i = 1; i < Z.length; i++) assert.ok(Z[i] > Z[i - 1], 'la route ne revient jamais en arrière');
   // pas d'obstacle dans le premier virage dur
   const t = turns[0];
-  g.runner.z = t.s - 200; g.sMax = g.runner.z; g.chaser.reset(g.runner.z);
+  g.runner.z = t.s - 200; g.sMax = g.runner.z;
   run(g, 1, pilot);
   assert.ok(!g.entities.some((e) => e.kind === 'enemy' && e.s >= t.s - 20 && e.s <= t.end), 'aucun ennemi dans le virage');
 });
@@ -292,7 +167,7 @@ test('virages durs : présents de temps en temps, jouables, sans obstacle dedans
 test('même graine = même route, même si on génère la route loin devant avant de jouer', () => {
   const a = new Game({ seed: 12 }); a.start({ seed: 12 }); a.track.ensure(3000);
   const b = new Game({ seed: 12 }); b.start({ seed: 12 });
-  b.runner.z = 1200; b.sMax = 1200; b.chaser.reset(1200);
+  b.runner.z = 1200; b.sMax = 1200;
   run(b, 1, pilot); // b peuple des morceaux au fil de l'eau
   b.track.ensure(3000);
   assert.deepEqual(a.track.X.slice(0, 1400), b.track.X.slice(0, 1400));
@@ -305,7 +180,7 @@ test('virages durs : il faut tenir la direction (lâcher = sortir), jouable au c
     for (const t of g.track.hardTurns.slice(0, 3)) {
       for (const mode of ['hold', 'late', 'release']) {
         const h = new Game({ seed }); h.start({ seed }); const r = h.runner;
-        r.z = t.s - 60; h.sMax = r.z; h.chaser.reset(r.z); r.speed = 34 * h.tempoAt(r.z).ratio;
+        r.z = t.s - 60; h.sMax = r.z; r.speed = 34 * h.tempoAt(r.z).ratio;
         let inTurn = 0, key = 0;
         for (let k = 0; k < 400 && h.state === 'playing' && r.z < t.end + 30; k++) {
           r.invul = 99;
@@ -347,4 +222,120 @@ test('les ennemis qui foncent avancent vers le dino ; le ptérodactyle ne se sau
   }
   assert.ok(s0 - p.s > 5 || !p.alive, 'le ptérodactyle a avancé');
   assert.ok(hit, 'sauter ne suffit pas : il faut esquiver');
+});
+
+test('un coup latéral pousse le dino puis s\'amortit (et peut le faire tomber)', () => {
+  const g = new Game({ seed: 2 });
+  g.start({ seed: 2 });
+  for (const e of g.entities) e.destroy();
+  g.entities = [];
+  const r = g.runner, x0 = r.x;
+  r.knock(20);
+  for (let t = 0; t < 0.3; t += 1 / 60) g.update(1 / 60, { steer: 0, drift: false, brake: false, jump: false });
+  assert.ok(r.x - x0 > 3, `poussé de ${(r.x - x0).toFixed(1)} m`);
+  assert.ok(Math.abs(r.knockV) < 8, 'amorti');
+  r.knock(60, { stumble: 0.4 });
+  let fell = false;
+  for (let t = 0; t < 2 && !fell; t += 1 / 60) { g.update(1 / 60, { steer: 0, drift: false, brake: false, jump: false }); fell = g.state !== 'playing'; }
+  assert.ok(fell, 'un gros coup au bord fait tomber');
+});
+
+test('le dino ne court que si on le demande : il ralentit puis s\'arrête', () => {
+  const g = new Game({ seed: 2 });
+  g.start({ seed: 2 });
+  for (const e of g.entities) e.destroy();
+  g.entities = [];
+  const r = g.runner, go = { steer: 0, drift: false, brake: false, jump: false };
+  for (let t = 0; t < 2; t += 1 / 60) g.update(1 / 60, { ...go, throttle: 1 });
+  assert.ok(r.speed > 30, `court : ${r.speed.toFixed(1)} m/s`);
+  for (let t = 0; t < 3; t += 1 / 60) g.update(1 / 60, { ...go, throttle: 0 });
+  assert.ok(r.speed < 1.5, `arrêté : ${r.speed.toFixed(1)} m/s`);
+  const z = r.z;
+  for (let t = 0; t < 1; t += 1 / 60) g.update(1 / 60, { ...go, throttle: 0 });
+  assert.ok(r.z - z < 1.5, 'ne bouge presque plus');
+});
+
+test('multijoueur : une chute coûte une vie et on réapparaît au bon endroit ; à 0 vie, fin', () => {
+  const g = new Game({ seed: 3 });
+  g.start({ seed: 3, respawn: true });
+  const respawns = [];
+  let over = null;
+  g.on('runner:respawn', () => respawns.push(Math.round(g.runner.z)));
+  g.on('game:over', (r) => { over = r; });
+  const idle = { steer: 0, throttle: 1, drift: false, brake: false, jump: false };
+  for (let t = 0; t < 120 && !over; t += 1 / 60) {
+    if (g.state === 'playing' && g.runner.invul <= 0) g.runner.x += 0.5; // on se jette dans le vide
+    g.update(1 / 60, idle);
+  }
+  assert.equal(respawns.length, 2, 'deux réapparitions (3 vies)');
+  assert.ok(respawns[1] > respawns[0], 'on réapparaît plus loin, là où on est tombé');
+  assert.equal(over?.reason, 'fall');
+  assert.equal(g.lives, 0);
+});
+
+test('chaque partie génère une nouvelle carte (route et décor), même graine = même carte', () => {
+  const runs = [1, 2, 3].map(() => { const g = new Game(); g.start({}); g.track.ensure(1500); return g; });
+  assert.notEqual(runs[0].seed, runs[1].seed);
+  assert.notDeepEqual(runs[0].track.X.slice(0, 700), runs[1].track.X.slice(0, 700), 'route différente');
+  assert.ok(new Set(runs.map((g) => g.track.salt)).size > 1, 'décor différent');
+  const a = new Game(); a.start({ seed: 77 }); const b = new Game(); b.start({ seed: 77 });
+  assert.equal(a.track.salt, b.track.salt);
+});
+
+test('les pièces se ramassent plus largement que les obstacles ne frappent', () => {
+  const g = new Game({ seed: 11 });
+  g.start({ seed: 11 });
+  const { z, x } = g.runner;
+  const hazard = g.spawn('cactus', z, x + 1.8);
+  const coin = g.spawn('coin', z, x + 1.8);
+  assert.equal(hazard.overlapsRunner(), false);
+  assert.equal(coin.overlapsRunner(), true);
+});
+
+test('frôler un obstacle sans le toucher déclenche un ralenti, sans perte de vie', () => {
+  const g = new Game({ seed: 11 });
+  g.start({ seed: 11 });
+  for (const e of g.entities) e.destroy();
+  g.entities = [];
+  const events = [];
+  g.on('runner:nearMiss', (e) => events.push(e));
+  const hazard = g.spawn('cactus', g.runner.z + 4, g.runner.x + 1.1 + 0.85 * 0.8 + 0.3);
+  const far = g.spawn('cactus', g.runner.z + 4, g.runner.x + 6);
+  const lives = g.lives;
+  for (let i = 0; i < 90 && g.timeWarp.left === 0; i++) g.update(1 / 60, idle);
+  assert.equal(events.length, 1);
+  assert.equal(events[0].entity, hazard);
+  assert.ok(events[0].margin >= 0 && events[0].margin <= 0.9);
+  assert.equal(g.lives, lives);
+  assert.ok(g.timeWarp.left > 0 && g.timeWarp.scale < 1);
+  const s = g.runner.z;
+  g.update(0.1, idle);
+  assert.ok(g.runner.z - s < g.runner.speed * 0.1 * 0.6, 'la simulation avance au ralenti');
+  g.update(1 / 20, idle, 1);
+  assert.equal(g.timeWarp.left, 0, 'le ralenti suit le temps réel même si dt est plafonné');
+  run(g, 1);
+  assert.equal(events.length, 1, 'un seul frôlement par obstacle ; l’obstacle lointain ne compte pas');
+  assert.equal(far.nearMissDone, true);
+});
+
+test('pas de frôlement récompensé si le dino était protégé pendant le croisement', () => {
+  const g = new Game({ seed: 11 });
+  g.start({ seed: 11 });
+  for (const e of g.entities) e.destroy();
+  g.entities = [];
+  let count = 0;
+  g.on('runner:nearMiss', () => count++);
+  g.spawn('cactus', g.runner.z + 1.5, g.runner.x + 1.1 + 0.85 * 0.8 + 0.3);
+  g.runner.invul = 0.05;
+  run(g, 1);
+  assert.equal(count, 0);
+});
+
+test('un ralenti en cours expire pendant un duel au lieu de reprendre après', () => {
+  const g = new Game({ seed: 11 });
+  g.start({ seed: 11 });
+  g.slow(0.35, 0.4);
+  assert.equal(g.pauseForDuel(), true);
+  g.update(1 / 20, idle, 5);
+  assert.equal(g.timeWarp.left, 0);
 });

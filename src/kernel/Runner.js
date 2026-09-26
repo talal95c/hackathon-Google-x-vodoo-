@@ -31,6 +31,7 @@ export class Runner {
     this.speed = RUNNER.startSpeed;
     this.cruise = RUNNER.baseSpeed;
     this.latV = 0; this.push = 0; this.steer = 0;
+    this.knockV = 0;          // coup latéral reçu (multijoueur), amorti indépendamment de la direction
     this.manual = false;      // true = dans un virage dur (aspiration vers l'extérieur)
     this.boost = 0;
     this.drifting = false; this.driftDir = 0; this.driftCharge = 0;
@@ -41,10 +42,18 @@ export class Runner {
     this.gait = 0; this.lastStep = 0;
   }
 
-  get isInvulnerable() { return !!this.game.worldJump || this.invul > 0 || this.game.feverTime > 0 || !!this.weapon?.grantsInvulnerability; }
-  get smashes() { return this.game.feverTime > 0 || !!this.weapon?.smashes; }
+  get isInvulnerable() { return !!this.game.worldJump || this.invul > 0 || !!this.weapon?.grantsInvulnerability; }
+  get smashes() { return !!this.weapon?.smashes; }
 
   // --- API utilisée par les entités / armes
+  // Coup latéral (bousculade / coup d'épaule d'un rival). lateral en m/s (+ = gauche).
+  // Il s'ajoute au déplacement et s'amortit en ~0,5 s : au bord de la route, ça peut faire tomber.
+  knock(lateral, { stumble = 0, source = null } = {}) {
+    this.knockV += lateral;
+    if (stumble) this.stumble = Math.max(this.stumble, stumble);
+    this.game.emit('runner:knocked', { lateral, source });
+  }
+
   hurt(source) {
     if (this.isInvulnerable) return false;
     const S = this.stats;
@@ -82,12 +91,22 @@ export class Runner {
   }
 
   // --- Simulation
-  // intent : { steer: -1..1 (+1 = gauche), drift, brake, jump (front montant) }
+  // intent : { steer: -1..1 (+1 = gauche), throttle: 0..1 (courir), drift, brake, jump (front montant) }
   // road : { y, vy, slope, k, hard } sous le dino (hard = dans un virage dur)
   update(dt, intent, road) {
     const S = this.stats, g = this.game;
     this.stumble = Math.max(0, this.stumble - dt);
     this.invul = Math.max(0, this.invul - dt);
+
+    const stun = this.effects.get('fightStun');
+    if (stun) {
+      // Le perdant attend une seconde après le ring. Aucun saut, boost ou virage ne peut l'emporter.
+      this.speed = this.latV = this.push = this.knockV = this.steer = this.jumpBuf = this.boost = 0;
+      this.#stopDrift(false); this.invul = Math.max(this.invul, .2);
+      stun.update(dt);
+      if (stun.timeLeft <= 0) { stun.remove(); this.effects.delete('fightStun'); g.emit('effect:expire', { effect: stun }); }
+      return; // le ralentissement de cinq secondes commence ensuite
+    }
 
     // Vertical (altitude absolue)
     if (intent.jump) this.jumpBuf = S.get('jumpBuffer');
@@ -134,12 +153,14 @@ export class Runner {
 
     // Vitesse
     this.boost = Math.max(0, this.boost - dt);
-    let target = this.cruise + (this.boost > 0 ? S.get('boostSpeed') : 0) - road.slope * S.get('slopeEffect');
-    if (intent.brake) target *= 0.5;
+    // Le dino ne court que si le joueur le demande (intent.throttle : 0 → 1 ; absent = court, pour les tests/bots)
+    const throttle = intent.brake ? 0 : Math.max(0, Math.min(1, intent.throttle ?? 1));
+    let target = (this.cruise + (this.boost > 0 ? S.get('boostSpeed') : 0) - road.slope * S.get('slopeEffect')) * throttle;
     if (this.drifting) target *= 0.95;
     if (this.stumble > 0) target *= 0.6;
     if (this.manual) target *= S.get('hardSlowdown');
-    this.speed += (target - this.speed) * Math.min(1, S.get('accel') * dt * (this.boost > 0 ? 2 : 1));
+    const rate = target >= this.speed ? S.get('accel') * (this.boost > 0 ? 2 : 1) : intent.brake ? S.get('brakeDecel') : S.get('decel');
+    this.speed = Math.max(0, this.speed + (target - this.speed) * Math.min(1, rate * dt));
 
     const control = this.grounded ? 1 : S.get('airControl');
     const hardDir = road.hard ? Math.sign(road.k) : 0; // +1 = virage à gauche
@@ -153,7 +174,8 @@ export class Runner {
       const cf = S.get('centrifugal') * (this.drifting ? S.get('driftCentrifugal') : 1) * (this.grounded ? 1 : 0.5);
       this.push = -road.k * this.speed * this.speed * cf;
     }
-    this.x += (this.latV + this.push) * dt;
+    this.knockV *= Math.exp(-dt * this.stats.get('knockDecay'));
+    this.x += (this.latV + this.push + this.knockV) * dt;
     this.z += this.speed * dt;
 
     // Cycle de course (animation + bruits de pas), proportionnel à la vitesse

@@ -1,0 +1,10 @@
+import { GoogleGenAI } from '@google/genai';
+import fs from 'fs';
+import { WorldGenerator } from './src/ai/WorldGenerator.js';
+const key = fs.readFileSync('.env', 'utf8').split('=').slice(1).join('=').trim();
+const gen = new WorldGenerator(new GoogleGenAI({ apiKey: key }));
+const t0 = Date.now();
+const spec = await gen.generate(process.argv[2], { onStep: (l, p) => console.log(`${((Date.now() - t0) / 1000).toFixed(1)}s ${Math.round(p * 100)}% ${l}`) });
+const out = { ...spec, obstacles: spec.obstacles.map((o) => ({ ...o, texture: o.texture ? `${o.texture.slice(0, 30)}… (${Math.round(o.texture.length / 1024)} Ko)` : null })), billboardTexture: spec.billboardTexture ? `(${Math.round(spec.billboardTexture.length / 1024)} Ko)` : null };
+console.log(JSON.stringify(out, null, 1));
+fs.writeFileSync(`/private/tmp/claude-501/-Users-jacques/1b431618-9256-46d9-9ea6-3517d1aa6f1d/scratchpad/site-${spec.host}.json`, JSON.stringify(spec));

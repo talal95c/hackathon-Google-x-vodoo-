@@ -1,29 +1,32 @@
 import { Skins, MusicThemes } from '../kernel/Registry.js';
 import { GAME } from '../kernel/config.js';
-import { CHALLENGES } from '../content/challenges.js';
+import { skinPortraits } from './SkinPortraits.js';
+import './skins.css';
 
 // Écrans (titre, fin de partie) et panneaux (boutique, musique Lyria).
-// Ne connaît le jeu qu'à travers des callbacks : onPlay().
+// Ne connaît le jeu qu'à travers des callbacks : onPlay(), onBack() (retour depuis l'écran de fin).
 const $ = (id) => document.getElementById(id);
 const hex = (n) => `#${n.toString(16).padStart(6, '0')}`;
+
+const LEAVE_MS = 520; // durée de la sortie animée du menu au lancement d'une partie
 
 export class Menus {
   tab = 'skin';
 
-  constructor({ game, profile, shop, lyria, music, onPlay }) {
-    Object.assign(this, { game, profile, shop, lyria, music, onPlay });
+  constructor({ game, profile, shop, lyria, music, voices, onPlay, onBack }) {
+    Object.assign(this, { game, profile, shop, lyria, music, voices, onPlay, onBack });
     this.screens = { start: $('start'), over: $('over') };
-    this.panels = { shop: $('shop'), music: $('musicPanel'), challenges: $('challengesPanel') };
+    this.panels = { shop: $('shop'), music: $('musicPanel') };
 
     document.addEventListener('click', (e) => {
       const b = e.target.closest('button');
       if (!b) return;
       const a = b.dataset.action;
       if (a === 'play') this.onPlay();
-      else if (a === 'reggae') { profile.selectSkin('reggae'); game.emit('skin:preview', { skin: 'reggae' }); this.refresh(); }
+      else if (a === 'back') this.onBack?.();
       else if (a === 'shop') this.open('shop');
-      else if (a === 'music') this.open('music');
-      else if (a === 'challenges') this.open('challenges');
+      else if (a === 'music') { this.#nudge(false); this.open('music'); if (!lyria.hasKey()) $('apiKey').focus(); }
+      else if (a === 'nudge-later') this.#nudge(false, true);
       else if (a === 'close') this.closePanels();
       else if (a === 'connect') this.#connect();
       else if (a === 'forget') { lyria.setApiKey(''); $('apiKey').value = ''; this.#renderMusic(); }
@@ -31,24 +34,45 @@ export class Menus {
       else if (b.dataset.buy) { shop.buy(b.dataset.buy); this.refresh(); }
       else if (b.dataset.skin) { profile.selectSkin(b.dataset.skin); game.emit('skin:preview', { skin: b.dataset.skin }); this.refresh(); }
       else if (b.dataset.theme) { profile.selectTheme(b.dataset.theme); this.refresh(); }
-      else if (b.dataset.challenge) { profile.selectChallenge(b.dataset.challenge === 'none' ? null : b.dataset.challenge); this.refresh(); }
     });
     lyria.onStatus(() => this.#renderMusic());
     const voc = $('vocals');
     voc.checked = lyria.vocals;
     voc.addEventListener('change', () => lyria.setVocals(voc.checked)); // pris en compte à la prochaine partie / au prochain palier
+    const sv = $('skinVoices');
+    if (sv && voices) { sv.checked = voices.enabled; sv.addEventListener('change', () => voices.setEnabled(sv.checked)); }
     const off = $('audioOffset');
     off.value = music.offsetMs;
     $('audioOffsetVal').textContent = `${music.offsetMs} ms`;
     off.addEventListener('input', () => { music.setOffset(+off.value); $('audioOffsetVal').textContent = `${off.value} ms`; });
     this.refresh();
+    // Pas de clé : petite carte « full experience » qui s'ouvre sur l'accueil (une fois par session)
+    let dismissed = false;
+    try { dismissed = !!sessionStorage.getItem('dino-nudge'); } catch { /* */ }
+    if (!lyria.hasKey() && !dismissed) setTimeout(() => this.#nudge(true), 1200);
+  }
+
+  #nudge(show, remember = false) {
+    const n = $('keyNudge');
+    if (!n) return;
+    if (show && this.lyria.hasKey()) return;
+    n.hidden = !show;
+    if (remember) { try { sessionStorage.setItem('dino-nudge', '1'); } catch { /* */ } }
   }
 
   get panelOpen() { return Object.values(this.panels).some((p) => !p.classList.contains('hidden')); }
 
   show(name) {
     document.body.classList.toggle('in-game', !name);
-    for (const [k, el] of Object.entries(this.screens)) el.classList.toggle('hidden', k !== name);
+    const start = this.screens.start;
+    clearTimeout(this.leaving);
+    start.classList.remove('leaving');
+    const leave = !name && !start.classList.contains('hidden');
+    for (const [k, el] of Object.entries(this.screens)) if (!(leave && el === start)) el.classList.toggle('hidden', k !== name);
+    if (leave) {
+      start.classList.add('leaving');
+      this.leaving = setTimeout(() => start.classList.replace('leaving', 'hidden'), LEAVE_MS);
+    }
     if (!name) this.closePanels();
     this.refresh();
   }
@@ -56,35 +80,26 @@ export class Menus {
   open(name) { this.closePanels(); this.panels[name].classList.remove('hidden'); this.refresh(); }
   closePanels() { for (const p of Object.values(this.panels)) p.classList.add('hidden'); }
 
-  showGameOver(result, { isBest, best, challengeReward }) {
+  // multi : le bouton de retour ramène au salon plutôt qu'au menu
+  showGameOver(result, { isBest, best }, { multiplayer = false } = {}) {
+    $('overBack').querySelector('span').textContent = multiplayer ? 'Back to lobby' : 'Back to menu';
     const TXT = {
-      fall: ['ERR_404 — le dino est tombé hors de la page', 'Page introuvable.'],
-      dead: ['ERR_TOO_MANY_HITS — plus de vies', 'Le dino a planté.'],
-      caught: ['ERR_DINO_CAPTURED — le curseur a cliqué sur ✕', 'Onglet fermé.'],
+      fall: ['ERR_404 — the dino fell off the page', 'Page not found.'],
+      dead: ['ERR_TOO_MANY_HITS — out of lives', 'The dino crashed.'],
     }[result.reason];
     $('overErr').textContent = TXT[0];
     $('overTitle').textContent = TXT[1];
     $('overScore').textContent = `${result.score} pts`;
-    $('overDetails').innerHTML = `${result.distance} m · +${result.coins} ★${challengeReward ? ` · Défi +${challengeReward} ★` : ''} (total ${this.profile.coins} ★)<br/>${isBest ? '🏆 NOUVEAU RECORD !' : `Record : ${best} pts`}`;
+    const tile = (v, l, cls = '') => `<div class="stat ${cls}"><b>${v}</b><span>${l}</span></div>`;
+    $('overStats').innerHTML = tile(`${result.distance} m`, 'distance') + tile(`+${result.coins} ★`, `${this.profile.coins} ★ total`)
+      + (isBest ? tile('🏆', 'new best!', 'best') : tile(`${best}`, 'best score'));
+    $('overRace').innerHTML = '';
     this.show('over');
   }
 
   refresh() {
-    $('heroName').textContent = this.profile.data.skin === 'reggae' ? 'RIDDIM' : Skins.get(this.profile.data.skin).name.toUpperCase();
-    $('heroTheme').textContent = `${MusicThemes.get(this.profile.data.theme).name.toUpperCase()} · DINO ESCAPE`;
-    $('wallet').textContent = `★ ${this.profile.coins} pièces · skin ${Skins.get(this.profile.data.skin).name} · musique ${MusicThemes.get(this.profile.data.theme).name}`;
     this.#renderShop();
     this.#renderMusic();
-    this.#renderChallenges();
-  }
-
-  #renderChallenges() {
-    const selected = this.profile.data.challenge;
-    $('challengeGrid').innerHTML = CHALLENGES.map((c) => `<div class="card ${selected === c.id ? 'selected' : ''}">
-      <div class="name">${c.name}</div><div class="desc">${c.description} · +${c.reward} ★ par course réussie</div>
-      <button data-challenge="${c.id}" ${selected === c.id ? 'disabled' : ''}>${selected === c.id ? 'Sélectionné' : 'Choisir'}</button></div>`).join('')
-      + `<div class="card"><div class="name">Sans défi</div><div class="desc">Joue librement sans objectif supplémentaire.</div>
-      <button data-challenge="none" ${selected ? '' : 'disabled'}>${selected ? 'Choisir' : 'Sélectionné'}</button></div>`;
   }
 
   #renderShop() {
@@ -93,18 +108,21 @@ export class Menus {
     document.querySelectorAll('#shop [data-tab]').forEach((b) => b.classList.toggle('active', b.dataset.tab === this.tab));
     let cards = '';
     if (this.tab === 'skin') {
+      // Generate portraits only when the collection is actually opened.
+      const portraits = this.panels.shop.classList.contains('hidden') ? null : skinPortraits();
       for (const s of Skins.all()) {
         const owned = p.ownsSkin(s.id), sel = p.data.skin === s.id;
-        const btn = sel ? '<button disabled>Équipé</button>'
-          : owned ? `<button data-skin="${s.id}">Équiper</button>`
+        const btn = sel ? '<button disabled>Equipped</button>'
+          : owned ? `<button data-skin="${s.id}">Equip</button>`
             : this.#buyButton(`skin:${s.id}`);
-        cards += `<div class="card ${sel ? 'selected' : ''}"><div class="swatch" style="background:${hex(s.view.color)}"></div>
-          <div class="name">${s.name}</div><div class="desc rarity-${s.rarity}">${s.description || s.rarity}${s.modifiers ? ' · bonus' : ''}</div>${btn}</div>`;
+        const portrait = portraits?.get(s.id);
+        cards += `<div class="card skin-card ${sel ? 'selected' : ''}" aria-label="${s.name}"><div class="skin-art">${portrait ? `<img class="skin-portrait" src="${portrait}" alt=""/>` : `<div class="swatch" style="background:${hex(s.view.color)}"></div>`}</div>
+          <div class="name">${s.name}</div><div class="desc rarity-${s.rarity}">${s.description || s.rarity}${s.modifiers ? ' · bonus' : ''}</div>${s.starter ? '<span class="skin-included">In your collection</span>' : ''}${btn}</div>`;
       }
     } else {
       for (const item of shop.items(this.tab)) {
         const lvl = p.upgradeLevel(item.id);
-        const extra = item.category === 'music' ? `Possédé : ${p.musicCount(item.ref)}` : item.category === 'upgrade' ? `Niveau ${lvl} / ${item.maxLevel}` : '';
+        const extra = item.category === 'music' ? `Owned: ${p.musicCount(item.ref)}` : item.category === 'upgrade' ? `Level ${lvl} / ${item.maxLevel}` : '';
         cards += `<div class="card"><div class="name">${item.name}</div><div class="desc">${item.desc || ''}<br/>${extra}</div>${this.#buyButton(item.id)}</div>`;
       }
     }
@@ -113,7 +131,7 @@ export class Menus {
 
   #buyButton(id) {
     const c = this.shop.check(id);
-    if (c.reason === 'owned') return '<button disabled>Possédé</button>';
+    if (c.reason === 'owned') return '<button disabled>Owned</button>';
     if (c.reason === 'maxed') return '<button disabled>Max</button>';
     return `<button data-buy="${id}" ${c.ok ? '' : 'disabled'}>★ ${c.price}</button>`;
   }
@@ -122,11 +140,19 @@ export class Menus {
     const l = this.lyria, p = this.profile;
     const input = $('apiKey');
     if (document.activeElement !== input) input.value = l.apiKey ? '••••••••••••' : '';
-    $('lyriaStatus').textContent = l.message || (l.hasKey() ? 'Clé enregistrée' : 'Pas de clé : musique synthétisée');
+    const state = l.hasKey() ? l.status : 'nokey';
+    $('lyriaCard').dataset.state = state;
+    $('lyriaStatus').textContent = {
+      nokey: 'Synth track · no key yet', off: l.message || 'Key saved · not connected', connecting: 'Connecting to Lyria…',
+      ready: 'Lyria live · ready', playing: 'Lyria live · playing', error: l.message || 'Connection failed',
+    }[state];
+    $('lyriaConnect').textContent = state === 'error' || state === 'off' ? 'Reconnect' : 'Connect';
+    $('lyriaConnect').disabled = state === 'connecting';
+    if (l.hasKey()) this.#nudge(false);
     $('themeGrid').innerHTML = MusicThemes.all().map((t) => {
       const count = p.musicCount(t.id), sel = p.data.theme === t.id;
-      const label = count === Infinity ? (t.consumable ? 'Inclus avec ton dino' : 'Gratuit') : `${count} partie(s)`;
-      const btn = sel ? '<button disabled>Choisi</button>' : count > 0 ? `<button data-theme="${t.id}">Choisir</button>` : this.#buyButton(`music:${t.id}`);
+      const label = count === Infinity ? (t.consumable ? 'Included with your dino' : 'Free') : `${count} run(s)`;
+      const btn = sel ? '<button disabled>Selected</button>' : count > 0 ? `<button data-theme="${t.id}">Select</button>` : this.#buyButton(`music:${t.id}`);
       return `<div class="card ${sel ? 'selected' : ''}"><div class="name">🎵 ${t.name}</div><div class="desc">${label} · ${t.bpm}→${Math.round(t.bpm * GAME.tempoLevels.at(-1).ratio)} BPM</div>${btn}</div>`;
     }).join('');
   }

@@ -1,0 +1,19 @@
+#shoveBox { width: min(290px, calc(100vw - 32px)); bottom: 92px; }
+#shoveBtn { border: 2px solid #fff8d8; border-radius: 12px; background: #262639; color: #fff6e1; padding: 11px 15px; font-size: 15px; box-shadow: 0 4px 0 #151727, 0 6px 20px #17112433; transition: background .15s, color .15s, box-shadow .15s; }
+.combat-target { margin-bottom: 8px; font-size: 10px; font-weight: 900; letter-spacing: 1.4px; color: #262639; text-shadow: 0 1px 2px #fff9; }
+#shoveBox .bar { height: 5px; margin: 8px 10px 0; background: #26263933; }
+#shoveFill { background: linear-gradient(90deg, #ff8c7d, #ffe16a); }
+#shoveBox.combat-ready #shoveBtn { background: #ffe371; color: #292638; border-color: #fff4bb; box-shadow: 0 4px 0 #bd7938, 0 0 24px #ffe37988; }
+#shoveBox.combat-ready .combat-target { color: #843705; }
+#shoveBox.combat-cooling #shoveBtn { background: #49455c; }
+.combat-feedback { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .16s; }
+.combat-feedback.active { opacity: 1; }
+.combat-badge { position: absolute; top: 31%; left: 0; right: 0; text-align: center; color: #ffe96d; filter: drop-shadow(0 3px 0 #2b253e); }
+.combat-badge strong { display: block; font: italic 1000 clamp(23px, 4vw, 40px)/1.1 Arial, sans-serif; -webkit-text-stroke: 1px #35283e; paint-order: stroke fill; }
+.combat-badge span { display: inline-block; margin-top: 7px; padding: 4px 9px; background: #302d43e6; border-radius: 5px; color: #fff7dc; font: 700 10px/1.2 Arial, sans-serif; letter-spacing: .5px; }
+.combat-feedback.received .combat-badge { color: #ff94b6; }
+.combat-feedback.received.from-left { background: linear-gradient(90deg, #ff558a55, transparent 22%); }
+.combat-feedback.received.from-right { background: linear-gradient(-90deg, #ff558a55, transparent 22%); }
+.combat-feedback.miss .combat-badge strong { color: #fff; font-size: 23px; }
+@media (max-width: 600px) { #shoveBox { bottom: 113px; width: 240px; } .combat-badge { top: 29%; } }
+@media (prefers-reduced-motion: reduce) { .combat-feedback, #shoveBtn { transition: none; } }
