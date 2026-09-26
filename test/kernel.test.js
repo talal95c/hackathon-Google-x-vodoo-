@@ -33,6 +33,11 @@ test('tap bref = une parade ; glissement vers le haut = saut sans parade', () =>
     const intent = input.read(1 / 60);
     assert.equal(intent.jump, true);
     assert.equal(intent.attack, false);
+    handlers.touchstart(event('touchstart', [start], [start]));
+    handlers.touchend(event('touchend', [touch(1, 200, 220)], []));
+    const fastSwipe = input.read(1 / 60);
+    assert.equal(fastSwipe.jump, true);
+    assert.equal(fastSwipe.attack, false);
   } finally {
     if (oldWindow === undefined) delete globalThis.window;
     else globalThis.window = oldWindow;
@@ -121,15 +126,17 @@ test('défis facultatifs : sélection conservée, seule la réussite crédite la
 });
 
 test('le choix de trajectoire propose une voie sûre et une voie dorée en bord de piste', () => {
-  const g = new Game({ seed: 14 });
-  g.track.ensure(700);
-  const gold = g.entities.filter((e) => e.type === 'goldCoin');
-  assert.ok(gold.length > 0);
-  for (const e of gold) {
-    const safe = g.entities.find((c) => c.type === 'coin' && c.s === e.s && Math.sign(c.d) === -Math.sign(e.d));
-    assert.ok(safe, `voie sûre absente à ${e.s}`);
-    assert.ok(Math.abs(e.d) > Math.abs(safe.d));
-    assert.ok(Math.abs(e.d) < g.track.frame(e.s, {}).w / 2);
+  for (const seed of [14, 81]) {
+    const g = new Game({ seed });
+    g.track.ensure(700);
+    const gold = g.entities.filter((e) => e.type === 'goldCoin');
+    assert.ok(gold.length > 0);
+    for (const e of gold) {
+      const safe = g.entities.find((c) => c.type === 'coin' && c.s === e.s && Math.sign(c.d) === -Math.sign(e.d));
+      assert.ok(safe, `voie sûre absente à ${e.s}`);
+      assert.ok(Math.abs(e.d) > Math.abs(safe.d));
+      assert.ok(Math.abs(e.d) < g.track.frame(e.s, {}).w / 2);
+    }
   }
 });
 
