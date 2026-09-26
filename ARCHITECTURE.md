@@ -183,20 +183,17 @@ Ajoute une entrée dans `content/zones.js` : `palette`, `decor` (clé `decor:<no
   de route, le curseur et, légèrement, la caméra (`ctx.fx.pulse` / `ctx.fx.down`).
 - Latence audio : réglage « Synchro musique ↔ jeu » dans le menu Musique (`music.offsetMs`).
 
-## Killer feature : n'importe quel site devient un monde (`src/ai/`)
-1. `WorldGenerator.spec(url)` : **Gemini 3.8 Flash** (réflexion basse, outil `urlContext`) lit le site et renvoie un JSON :
-   nom, palette, 4 obstacles (comportement `jump` / `dodge` / `charge` / `zigzag`), slogans, prompts Lyria. Il met environ
-   5 à 10 s. `normalizeSpec` valide tout, avec des valeurs de secours : une réponse farfelue ne casse jamais le jeu.
-2. **La partie démarre tout de suite.** `WorldGenerator.images()` demande en parallèle à **Gemini 3.1 Flash Lite Image**
-   une texture par obstacle et une affiche (environ 2,5 s chacune, avec une nouvelle tentative en cas d'échec). Elles
-   s'appliquent en direct : en attendant, chaque obstacle montre son nom sur sa couleur.
-3. `SiteWorld.installSite(spec)` enregistre les types d'entités, la zone et le thème musical dans les registres ;
-   `activateSite(zone)` remplace les 5 mondes par ce monde unique et infini ; `restoreWorlds()` les remet.
-   **Aucune modification du kernel.**
-4. Vues : `view/models/site.js` (une forme par comportement, textures mises à jour en direct) et
-   `SiteDecorView` (panneaux parodiques et blocs aux couleurs du site). La musique Lyria utilise les prompts du site.
-5. Cache : `ai/siteCache.js` (images réduites à 256 px en JPEG, environ 60 Ko par site). Mondes livrés avec le jeu :
-   `public/sites/`, générés par `node scripts/generate-sites.mjs [site…]`, jouables sans clé.
+## Multijoueur (`src/net/`)
+- **Réseau** : brokers MQTT publics en WebSocket sécurisé (`MqttNet.js` : HiveMQ, puis Mosquitto, puis EMQX en secours).
+  Pas de serveur à nous ni de compte, et ça passe sur tous les réseaux, y compris sur itch.io.
+  La bibliothèque `mqtt` n'est chargée qu'à l'ouverture du multijoueur.
+- **Principe** (`Multiplayer.js`) : l'hôte crée un code de salon. Au lancement, tout le monde reçoit la même graine
+  (donc la même route) et une ligne de départ. Chaque joueur fait tourner **son propre jeu** et diffuse sa position
+  15 fois par seconde. Les rivaux sont affichés lissés (`RivalView`).
+- **Combat** (`rules.js`, fonctions pures testées) : lors d'un contact, celui qui fonce envoie la poussée au percuté.
+  Le coup d'épaule (touche E) éjecte le rival le plus proche. Chacun applique à son dino ce qu'il subit
+  (`runner.knock`). Tomber = éliminé ; le dernier en vie gagne.
+- Tests : `test/multiplayer.test.js` relie deux joueurs par un faux réseau en mémoire (`connectFn` injectable).
 
 ## Règles
 1. **Le kernel ne dépend pas de Three.js ni du DOM** : `npm test` le fait tourner sous Node.

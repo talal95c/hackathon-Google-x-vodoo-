@@ -1,25 +1,28 @@
 import { connect } from './Net.js';
 import { bumpImpulse, shoveTarget, roomCode, FIGHT } from './rules.js';
 
-// Multijoueur "course de combat" : même graine = même route pour tous ; chaque joueur fait
-// tourner son propre jeu et diffuse sa position (15 fois/s). Les rivaux sont affichés avec un
-// léger retard lissé. Contacts et coups d'épaule : chacun applique ce qu'il SUBIT à son dino.
+// Multijoueur "course de combat" (réseau : brokers MQTT publics) : même graine = même route pour tous ; chaque joueur fait
+// tourner son propre jeu et diffuse sa position (30 fois/s). Les rivaux sont affichés à leur position
+// ACTUELLE PRÉDITE (dernière position reçue + vitesse × (âge du message + latence mesurée)),
+// avec correction douce des écarts. Contacts et coups d'épaule : chacun applique ce qu'il SUBIT.
 //
-// Événements (mp.on) : 'lobby' (joueurs), 'status' (texte), 'start' { seed, world, delay },
+// Événements (mp.on) : 'lobby' (joueurs), 'status' (texte), 'start' { seed, delay, lane },
 // 'shove' { hit }, 'shoved' { from }, 'bump', 'results'.
 const COLORS = ['#ff4f8b', '#1a73e8', '#34a853', '#fbbc04', '#a142f4', '#ff6d00', '#00bcd4'];
-const SEND_EVERY = 1 / 15, RENDER_DELAY = 110, NAME_KEY = 'dino-escape-name';
-const LATENCY = 0.05; // s : latence réseau estimée, ajoutée à la prédiction des collisions
+const SEND_EVERY = 1 / 30, NAME_KEY = 'dino-escape-name';
+const PING_EVERY = 1;   // s : mesure de la latence avec chaque rival
+const CORRECT = 10;     // vitesse de correction des écarts de position (1/s) : pas de téléportation
 
 export class Multiplayer {
   code = null;
   net = null;
   isHost = false;
   inRace = false;
-  peers = new Map();       // id → { id, name, skin, color, samples[], view, alive, final }
+  peers = new Map();       // id → { id, name, skin, color, last, view, rtt, alive, final }
   #listeners = new Map();
   #sendTimer = 0;
   #shoveCd = 0;
+  #pingTimer = 0;
   #bumpCd = new Map();      // contact avec ce rival déjà traité récemment
   #bumpRecv = new Map();    // poussée reçue de ce rival récemment
 
@@ -57,7 +60,7 @@ export class Multiplayer {
     });
     const n = this.net;
     this.color = COLORS[[...n.selfId].reduce((a, c) => a + c.charCodeAt(0), 0) % COLORS.length];
-    this.ch = { hi: n.channel('hi'), st: n.channel('st'), go: n.channel('go'), wd: n.channel('wd'), sh: n.channel('sh'), bp: n.channel('bp'), dn: n.channel('dn') };
+    this.ch = { hi: n.channel('hi'), st: n.channel('st'), go: n.channel('go'), sh: n.channel('sh'), bp: n.channel('bp'), dn: n.channel('dn'), pg: n.channel('pg'), po: n.channel('po') };
     this.ch.hi.on((d, id) => {
       const p = this.#peer(id);
       Object.assign(p, { name: d.name, skin: d.skin, color: d.color, host: d.host });
@@ -65,11 +68,15 @@ export class Multiplayer {
     });
     this.ch.st.on((d, id) => {
       const p = this.#peer(id);
-      p.samples.push({ ...d, t: performance.now() });
-      if (p.samples.length > 30) p.samples.shift();
+      p.last = { ...d, t: performance.now() };
       if (d.st === 'playing') p.alive = true;
     });
-    this.ch.wd.on((d) => { this.pendingWorld = d; });
+    // ping / pong : latence aller-retour avec chaque rival (lissée)
+    this.ch.pg.on((d, id) => this.ch.po.send({ t: d.t }, id));
+    this.ch.po.on((d, id) => {
+      const p = this.#peer(id), rtt = performance.now() - d.t;
+      p.rtt = p.rtt ? p.rtt * 0.7 + rtt * 0.3 : rtt;
+    });
     this.ch.go.on((d) => this.#onGo(d));
     this.ch.sh.on((d, id) => {
       if (this.game.state !== 'playing') return;
@@ -87,13 +94,14 @@ export class Multiplayer {
     });
     this.ch.dn.on((d, id) => { const p = this.#peer(id); p.alive = false; p.final = d; this.#emit('lobby'); this.#emit('results'); });
     this.#hello(); // je me présente à tout le monde une fois mes canaux prêts
-    this.#emit('status', this.isHost ? 'Partage le code : tes amis le tapent dans « Rejoindre ».' : 'Connecté ! En attente du lancement par l\'hôte…');
+    const via = ` (via ${this.net.transport})`;
+    this.#emit('status', (this.isHost ? 'Partage le code : tes amis le tapent dans « Rejoindre ».' : 'Connecté ! En attente du lancement par l\'hôte…') + via);
     this.#emit('lobby');
     return code;
   }
 
   #peer(id) {
-    if (!this.peers.has(id)) this.peers.set(id, { id, name: '…', skin: 'classic', color: '#888', samples: [], view: null, alive: false, final: null });
+    if (!this.peers.has(id)) this.peers.set(id, { id, name: '…', skin: 'classic', color: '#888', last: null, view: null, rtt: 0, alive: false, final: null });
     return this.peers.get(id);
   }
 
@@ -106,22 +114,21 @@ export class Multiplayer {
     this.#emit('lobby');
   }
 
-  // Hôte : lance la course pour tout le monde (world = spec d'un site, ou null = mondes classiques)
-  startRace(world = null) {
+  // Hôte : lance la course pour tout le monde
+  startRace() {
     if (!this.isHost) return;
-    const d = { seed: (Math.random() * 2 ** 32) >>> 0, delay: 3500, world: !!world };
-    if (world) this.ch.wd.send(world);
-    // petit délai pour que le monde (plus lourd) arrive avant le signal de départ
-    setTimeout(() => { this.ch.go.send(d); this.#onGo(d, world); }, world ? 400 : 0);
+    const d = { seed: (Math.random() * 2 ** 32) >>> 0, delay: 3500 };
+    this.ch.go.send(d);
+    this.#onGo(d);
   }
 
-  #onGo(d, localWorld) {
+  #onGo(d) {
     this.inRace = true;
-    for (const p of this.peers.values()) { p.alive = true; p.final = null; p.samples = []; }
+    for (const p of this.peers.values()) { p.alive = true; p.final = null; p.last = null; p.view = null; }
     // lignes de départ côte à côte, dans le même ordre chez tout le monde (tri des ids)
     const ids = [this.net.selfId, ...this.peers.keys()].sort();
     const lane = (ids.indexOf(this.net.selfId) - (ids.length - 1) / 2) * 2.6;
-    this.#emit('start', { seed: d.seed, delay: d.delay, lane, world: d.world ? (localWorld ?? this.pendingWorld ?? null) : null });
+    this.#emit('start', { seed: d.seed, delay: d.delay, lane });
   }
 
   // À appeler chaque frame, après game.update
@@ -141,15 +148,18 @@ export class Multiplayer {
       }
     }
 
-    // position affichée des rivaux (lissée, avec un léger retard)
-    const now = performance.now(), at = now - RENDER_DELAY;
-    for (const p of this.peers.values()) p.view = viewAt(p.samples, at, now);
+    // latence : un ping par seconde
+    const now = performance.now();
+    this.#pingTimer = (this.#pingTimer ?? 0) - dt;
+    if (this.#pingTimer <= 0) { this.#pingTimer = PING_EVERY; this.ch.pg.send({ t: now }); }
+
+    // position affichée des rivaux = position actuelle prédite, corrigée en douceur
+    for (const p of this.peers.values()) p.view = predict(p, now, dt);
 
     // contacts et coup d'épaule (uniquement quand je cours)
     if (g.state !== 'playing' || !this.inRace) return;
     const me = { s: r.z, d: r.x, y: r.y, lat: r.latV + r.push };
-    // position PRÉDITE du rival à l'instant présent : affichage (lissé, en retard) + latence réseau
-    const predicted = (v) => { const dt = (now - v.at) / 1000 + LATENCY; return { ...v, s: v.s + (v.v || 0) * dt, d: v.d + (v.lat || 0) * dt }; };
+    const predicted = (v) => v; // la vue est déjà la position actuelle prédite
     for (const p of this.peers.values()) {
       const v = p.view;
       if (!v || v.st !== 'playing' || (this.#bumpCd.get(p.id) ?? 0) > 0) continue;
@@ -182,6 +192,9 @@ export class Multiplayer {
     this.#emit('results');
   }
 
+  // Rivaux à afficher (interface commune avec les PNJ : RivalView)
+  rivals() { return this.inRace ? [...this.peers.values()] : []; }
+
   // Classement : les vivants d'abord (distance live), puis les éliminés (distance finale)
   ranking() {
     const g = this.game;
@@ -191,17 +204,19 @@ export class Multiplayer {
   }
 }
 
-// Interpolation entre deux échantillons reçus ; extrapolation courte si rien de neuf
-function viewAt(samples, at, now) {
-  if (!samples.length) return null;
-  for (let i = samples.length - 1; i > 0; i--) {
-    const a = samples[i - 1], b = samples[i];
-    if (a.t <= at && at <= b.t) {
-      const k = (at - a.t) / Math.max(1, b.t - a.t);
-      return { ...b, at, s: a.s + (b.s - a.s) * k, d: a.d + (b.d - a.d) * k, y: a.y + (b.y - a.y) * k };
-    }
-  }
-  const last = samples[samples.length - 1];
-  const dt = Math.min(0.5, (now - last.t) / 1000);
-  return { ...last, at: last.t + dt * 1000, s: last.s + (last.st === 'playing' ? last.v * dt : 0) };
+// Prédiction ("dead reckoning") : où est le rival MAINTENANT ?
+//   cible = dernière position reçue + vitesse × (âge du message + demi-latence mesurée)
+// La vue avance à la vitesse du rival à chaque frame et rattrape la cible en douceur (pas de saut),
+// sauf gros écart (> 12 m, ex. après une chute) où elle se recale directement.
+function predict(p, now, dt) {
+  const L = p.last;
+  if (!L) return null;
+  const ahead = Math.min(0.35, (now - L.t) / 1000 + (p.rtt || 60) / 2000);
+  const running = L.st === 'playing';
+  const target = { ...L, s: L.s + (running ? L.v * ahead : 0), d: L.d + (running ? (L.lat || 0) * ahead * 0.6 : 0) };
+  const v = p.view;
+  if (!v || Math.abs(target.s - v.s) > 12 || v.st !== L.st) return target;
+  const k = Math.min(1, dt * CORRECT);
+  const s = v.s + (running ? L.v * dt : 0), d = v.d;
+  return { ...target, s: s + (target.s - s) * k, d: d + (target.d - d) * k, y: v.y + (target.y - v.y) * Math.min(1, dt * 20) };
 }

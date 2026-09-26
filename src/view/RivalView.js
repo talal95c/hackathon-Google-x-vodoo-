@@ -3,15 +3,15 @@ import { View } from './View.js';
 import { Models } from './ModelRegistry.js';
 import { Skins } from '../kernel/Registry.js';
 
-// Dinos des autres joueurs : leur skin, un anneau à leur couleur au sol et leur pseudo au-dessus.
-// Positions fournies par Multiplayer (déjà lissées). Purement visuel.
+// Dinos rivaux (autres joueurs ET PNJ) : leur skin, un anneau à leur couleur au sol et leur nom au-dessus.
+// sources : objets exposant rivals() → [{ id, name, skin, color, view: { s, d, y, v, lat, st } }]. Purement visuel.
 export class RivalView extends View {
   rivals = new Map(); // id → { root, model, tag, skin, gait }
   #f = {};
 
-  constructor(ctx, mp) {
+  constructor(ctx, sources) {
     super(ctx);
-    this.mp = mp;
+    this.sources = sources;
     this.ringGeo = new THREE.RingGeometry(1.2, 1.55, 28).rotateX(-Math.PI / 2);
   }
 
@@ -31,7 +31,7 @@ export class RivalView extends View {
     g.fillText(p.name, 128, 33);
     const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
     const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false }));
-    tag.scale.set(3.2, 0.8, 1); tag.position.y = 5.2; tag.renderOrder = 10;
+    tag.scale.set(2.4, 0.6, 1); tag.position.y = 5; tag.renderOrder = 10;
     root.add(tag);
     this.scene.add(root);
     const r = { root, model, tag, skin: p.skin, name: p.name, gait: 0 };
@@ -48,7 +48,8 @@ export class RivalView extends View {
   }
 
   update(dt, time) {
-    const peers = this.mp.inRace ? this.mp.peers : new Map();
+    const peers = new Map();
+    for (const src of this.sources) for (const p of src.rivals()) peers.set(p.id, p);
     for (const id of [...this.rivals.keys()]) if (!peers.has(id)) this.#remove(id);
     for (const p of peers.values()) {
       const v = p.view;

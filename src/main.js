@@ -9,7 +9,6 @@ import './view/models/decor.js';
 import './view/models/blockDino.js';
 import './view/models/reggaeDino.js';
 import './view/models/weapons.js';
-import { registerSiteModels, setSiteImage } from './view/models/site.js';
 
 import { Game } from './kernel/Game.js';
 import { LocalStorage } from './meta/Storage.js';
@@ -21,7 +20,6 @@ import { SideLightShow } from './view/SideLightShow.js';
 import { WorldDecorView } from './view/WorldDecorView.js';
 import { DioramaView } from './view/DioramaView.js';
 import { TunnelView } from './view/TunnelView.js';
-import { SiteDecorView } from './view/SiteDecorView.js';
 import { EntityViews } from './view/EntityViews.js';
 import { RunnerView } from './view/RunnerView.js';
 import { ChaserView } from './view/ChaserView.js';
@@ -35,11 +33,11 @@ import { SynthEngine } from './audio/music/SynthEngine.js';
 import { MusicDirector } from './audio/music/MusicDirector.js';
 import { Hud } from './ui/Hud.js';
 import { Menus } from './ui/Menus.js';
-import { SitePanel } from './ui/SitePanel.js';
-import { installSite, activateSite, restoreWorlds } from './ai/SiteWorld.js';
 import { Multiplayer } from './net/Multiplayer.js';
 import { Lobby } from './ui/Lobby.js';
 import { RivalView } from './view/RivalView.js';
+import { Bots } from './bots/Bots.js';
+import { Skins } from './kernel/Registry.js';
 import { MusicThemes } from './kernel/Registry.js';
 
 // --- Logique
@@ -57,7 +55,6 @@ const views = [
   new WorldDecorView(ctx),
   new DioramaView(ctx),
   new TunnelView(ctx),
-  new SiteDecorView(ctx), // monde généré depuis un site
   new SideLightShow(ctx),
   new EntityViews(ctx),
   // (RivalView ajoutée plus bas, une fois le multijoueur créé)
@@ -81,45 +78,31 @@ const hud = new Hud(game, profile);
 const input = new Input();
 const menus = new Menus({ game, profile, shop, lyria, music, onPlay: play });
 let overAt = 0;
-let site = null; // monde généré en cours : { spec, theme }
 
 // --- Multijoueur (WebRTC pair-à-pair, sans serveur)
 const mp = new Multiplayer(game, profile);
-views.splice(views.findIndex((v) => v instanceof RunnerView), 0, new RivalView(ctx, mp));
+const bots = new Bots(game, 3); // PNJ du mode solo
+views.splice(views.findIndex((v) => v instanceof RunnerView), 0, new RivalView(ctx, [mp, bots]));
 
 function play() {
   sfx.init(); // l'audio ne peut démarrer qu'après une action du joueur
   if (lyria.hasKey() && !lyria.ready && lyria.status !== 'connecting') lyria.connect();
   if (mp.inRoom) { // en multi, seul l'hôte lance (revanche = nouvelle course)
-    if (mp.isHost) mp.startRace(site?.spec ?? null);
+    if (mp.isHost) mp.startRace();
     return;
   }
   menus.show(null);
-  game.start(shop.prepareRun(site ? { theme: site.theme } : {}));
+  game.start(shop.prepareRun());
+  bots.start(Skins.ids()); // solo : 3 dinos IA pour se battre
 }
 
-function enterSite(spec) {
-  const { zone, theme } = installSite(spec);
-  registerSiteModels(spec);
-  activateSite(zone);
-  site = { spec, theme };
-}
-function exitSite() { site = null; restoreWorlds(); }
-
-// --- Killer feature : n'importe quel site devient un monde
-new SitePanel({
-  menus, lyria,
-  onReady(spec) { enterSite(spec); play(); },
-  onImage: (spec, id) => setSiteImage(spec, id),
-  onExit() { exitSite(); menus.show('start'); },
-});
-
-const lobby = new Lobby({ mp, menus, hud, onLaunch: () => play() });
-mp.on('start', ({ seed, delay, lane, world }) => {
+const lobby = new Lobby({ mp, bots, menus, hud, onLaunch: () => play() });
+game.on('bot:out', ({ bot, reason }) => hud.banner(reason === 'fall' ? `💥 ${bot} est tombé !` : `${bot} s'est fait attraper`, 1));
+mp.on('start', ({ seed, delay, lane }) => {
   sfx.init();
-  if (world) enterSite(world); else if (site) exitSite();
   menus.show(null);
-  lobby.countdown(delay, () => { game.start({ ...shop.prepareRun(site ? { theme: site.theme } : {}), seed }); game.runner.x = lane; });
+  bots.stop(); // en multijoueur : pas de PNJ
+  lobby.countdown(delay, () => { game.start({ ...shop.prepareRun(), seed }); game.runner.x = lane; });
 });
 document.getElementById('shoveBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); input.shove(); });
 game.on('mp:shove', ({ hit }) => sfx.tone(hit ? 180 : 420, 0.18, 'square', 0.15, hit ? -80 : -200));
@@ -140,7 +123,7 @@ game.on('game:over', (result) => {
   mp.finish(result);
   setTimeout(() => {
     menus.showGameOver(result, record);
-    if (mp.inRace) document.getElementById('overDetails').insertAdjacentHTML('beforeend', lobby.resultsHtml() + (mp.isHost ? '' : '<p class="small">L\'hôte peut relancer une revanche.</p>'));
+    if (mp.inRace || bots.list.length) document.getElementById('overDetails').insertAdjacentHTML('beforeend', lobby.resultsHtml() + (mp.inRace && !mp.isHost ? '<p class="small">L\'hôte peut relancer une revanche.</p>' : ''));
   }, 700);
 });
 
@@ -156,6 +139,7 @@ function frame(now) {
   const intent = input.read(dt);
   game.update(dt, intent);
   mp.update(dt, intent);
+  bots.update(dt, intent);
   lobby.update();
   for (const v of views) v.update(dt, time);
   music.update(dt);

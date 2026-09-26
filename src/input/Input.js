@@ -1,5 +1,5 @@
 // Clavier (QWERTY + AZERTY) et tactile → "intention" lue par le kernel à chaque frame :
-//   { steer: -1..1 (+1 = gauche), drift, brake, jump (front montant) }
+//   { steer: -1..1 (+1 = gauche), throttle: 0/1 (courir), drift, brake, jump (front montant), shove }
 // onAction(fn) : fn('confirm') sur ESPACE / ENTRÉE / tap (démarrer, réessayer).
 export class Input {
   #keys = new Set();
@@ -12,7 +12,7 @@ export class Input {
   enabled = true; // false quand un menu a le focus
 
   constructor(target = window) {
-    const JUMP = ['Space', 'ArrowUp', 'KeyW', 'KeyZ'];
+    const JUMP = ['Space'];               // ↑ / W / Z servent maintenant à courir
     target.addEventListener('keydown', (e) => {
       if (e.target?.tagName === 'INPUT') return;
       if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code)) e.preventDefault();
@@ -59,6 +59,8 @@ export class Input {
     const jump = this.#jump && this.enabled;
     const shove = this.#shove && this.enabled;
     this.#jump = false; this.#shove = false;
-    return { steer: this.steer, drift, brake: k.has('ArrowDown') || k.has('KeyS'), jump, shove };
+    // courir : ↑ / W / Z maintenu (tactile : un doigt posé)
+    const throttle = k.has('ArrowUp') || k.has('KeyW') || k.has('KeyZ') || this.#touches.size > 0 ? 1 : 0;
+    return { steer: this.steer, throttle, drift, brake: k.has('ArrowDown') || k.has('KeyS'), jump, shove };
   }
 }

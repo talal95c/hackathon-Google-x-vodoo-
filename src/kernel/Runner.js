@@ -91,7 +91,7 @@ export class Runner {
   }
 
   // --- Simulation
-  // intent : { steer: -1..1 (+1 = gauche), drift, brake, jump (front montant) }
+  // intent : { steer: -1..1 (+1 = gauche), throttle: 0..1 (courir), drift, brake, jump (front montant) }
   // road : { y, vy, slope, k, hard } sous le dino (hard = dans un virage dur)
   update(dt, intent, road) {
     const S = this.stats, g = this.game;
@@ -143,12 +143,14 @@ export class Runner {
 
     // Vitesse
     this.boost = Math.max(0, this.boost - dt);
-    let target = this.cruise + (this.boost > 0 ? S.get('boostSpeed') : 0) - road.slope * S.get('slopeEffect');
-    if (intent.brake) target *= 0.5;
+    // Le dino ne court que si le joueur le demande (intent.throttle : 0 → 1 ; absent = court, pour les tests/bots)
+    const throttle = intent.brake ? 0 : Math.max(0, Math.min(1, intent.throttle ?? 1));
+    let target = (this.cruise + (this.boost > 0 ? S.get('boostSpeed') : 0) - road.slope * S.get('slopeEffect')) * throttle;
     if (this.drifting) target *= 0.95;
     if (this.stumble > 0) target *= 0.6;
     if (this.manual) target *= S.get('hardSlowdown');
-    this.speed += (target - this.speed) * Math.min(1, S.get('accel') * dt * (this.boost > 0 ? 2 : 1));
+    const rate = target >= this.speed ? S.get('accel') * (this.boost > 0 ? 2 : 1) : intent.brake ? S.get('brakeDecel') : S.get('decel');
+    this.speed = Math.max(0, this.speed + (target - this.speed) * Math.min(1, rate * dt));
 
     const control = this.grounded ? 1 : S.get('airControl');
     const hardDir = road.hard ? Math.sign(road.k) : 0; // +1 = virage à gauche

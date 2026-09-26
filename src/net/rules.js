@@ -10,7 +10,7 @@ export const FIGHT = {
   shoveRangeS: 6,         // portée du coup d'épaule
   shoveRangeD: 5,
   shovePower: 26,         // m/s latéraux infligés
-  shoveStumble: 0.3,
+  shoveStumble: 0.45,     // la victime perd le contrôle un instant : au bord, elle tombe
   shoveCooldown: 2,
 };
 

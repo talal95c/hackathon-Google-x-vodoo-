@@ -61,6 +61,7 @@ export class RunnerView extends View {
     else if (r.stumble > 0) state = 'stumble';
     else if (!r.grounded) state = 'jump';
     else if (r.drifting) state = 'slide';
+    else if (r.speed < 1.5) state = 'idle'; // le dino ne court plus tout seul : à l'arrêt
     return { state, speed: g.state === 'menu' ? 14 : Math.max(0, r.speed), gait: g.state === 'menu' ? performance.now() / 1000 * 6 : r.gait, steer: r.steer, grounded: r.grounded || g.state === 'menu', vy: r.vy, boost: r.boost > 0, driftCharge: r.driftCharge };
   }
 
