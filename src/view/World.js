@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { ZONES } from '../content/zones.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { PostProcessing } from './PostProcessing.js';
 
 // Le "plateau" : renderer, scène, caméra, ciel en dégradé, nuages, lumières.
@@ -7,10 +8,10 @@ import { PostProcessing } from './PostProcessing.js';
 export class World {
   constructor(container = document.body) {
     const r = this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
-    this.pixelRatio = Math.min(window.devicePixelRatio, window.matchMedia('(pointer: coarse)').matches ? 1.25 : 1.75);
+    this.pixelRatio = Math.min(window.devicePixelRatio, window.matchMedia('(pointer: coarse)').matches ? 1.25 : 1.5);
     r.setPixelRatio(this.pixelRatio);
     r.toneMapping = THREE.ACESFilmicToneMapping;
-    r.toneMappingExposure = 1.08;
+    r.toneMappingExposure = .86;
     r.outputColorSpace = THREE.SRGBColorSpace;
     r.domElement.setAttribute('aria-label', 'Dino Escape — scène 3D');
     r.setSize(window.innerWidth, window.innerHeight);
@@ -26,12 +27,17 @@ export class World {
     this.palette = p;
     this.scene = new THREE.Scene();
     this.scene.background = this.colors.sky;
-    this.scene.fog = new THREE.Fog(this.colors.sky, 70, 260);
+    this.scene.fog = new THREE.Fog(this.colors.sky, 105, 320);
     this.camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.1, 400);
 
     this.#buildSky();
     this.#buildClouds();
     this.#buildLights();
+    const room = new RoomEnvironment(), pmrem = new THREE.PMREMGenerator(r);
+    this.environmentTarget = pmrem.fromScene(room, .04);
+    this.scene.environment = this.environmentTarget.texture;
+    this.scene.environmentIntensity = .22;
+    room.dispose(); pmrem.dispose();
     this.post = new PostProcessing(r, this.scene, this.camera);
     this.post.resize(window.innerWidth, window.innerHeight, this.pixelRatio);
 
@@ -52,15 +58,17 @@ export class World {
         side: THREE.BackSide, depthWrite: false, fog: false,
         uniforms: { top: { value: this.colors.skyTop }, bottom: { value: this.colors.sky } },
         vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-        fragmentShader: 'uniform vec3 top; uniform vec3 bottom; varying vec3 vP; void main(){ float h = smoothstep(-0.05, 0.55, vP.y); gl_FragColor = vec4(mix(bottom, top, h), 1.0); }',
+        fragmentShader: 'uniform vec3 top; uniform vec3 bottom; varying vec3 vP; void main(){ float h = smoothstep(-0.05, 0.55, vP.y); gl_FragColor = vec4(mix(bottom, top * .78, h), 1.0); }',
       }),
     );
     this.sky.renderOrder = -1;
+    this.sky.userData.noAO = true;
     this.scene.add(this.sky);
   }
 
   #buildClouds() {
     const mat = new THREE.MeshLambertMaterial({ color: this.colors.cloud, emissive: this.colors.cloud, emissiveIntensity: 0.6, flatShading: true, fog: false });
+    this.cloudMaterial = mat;
     const geo = new THREE.IcosahedronGeometry(1, 1);
     this.clouds = [];
     for (let i = 0; i < 14; i++) {
@@ -79,8 +87,8 @@ export class World {
   }
 
   #buildLights() {
-    this.scene.add(new THREE.HemisphereLight(0xdfeaff, 0x9a8f80, 1.5));
-    const sun = this.sun = new THREE.DirectionalLight(this.colors.sun, 1.7);
+    this.scene.add(new THREE.HemisphereLight(0xb5d7f5, 0x7c7078, .7));
+    const sun = this.sun = new THREE.DirectionalLight(this.colors.sun, 1.85);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
     sun.shadow.bias = -0.0005;
@@ -98,9 +106,12 @@ export class World {
     this.scene.fog.color.copy(c.sky);
     document.body.style.background = `#${c.sky.getHexString()}`;
 
+    this.cloudMaterial.color.copy(c.cloud);
+    this.cloudMaterial.emissive.copy(c.cloud);
     const cam = this.camera.position;
     this.sky.position.copy(cam);
     for (const cl of this.clouds) {
+      cl.g.visible = p.clouds !== false;
       cl.a += dt * 0.004;
       cl.g.position.set(cam.x + Math.cos(cl.a) * cl.r, cl.y, cam.z + Math.sin(cl.a) * cl.r);
       cl.g.lookAt(cam.x, cl.y, cam.z);
@@ -109,7 +120,7 @@ export class World {
     this.sun.target.position.copy(focus);
   }
 
-  render(pulse = 0) { this.post.render(pulse); }
+  render(pulse = 0, rush = 0) { this.post.render(pulse, rush); }
 }
 
 const tmp = new THREE.Color();

@@ -73,6 +73,7 @@ export function bindSfx(game, sfx) {
   on('runner:hit', () => sfx.crash());
   on('runner:fall', () => sfx.tone(600, 0.8, 'sawtooth', 0.12, -500));
   on('runner:drift', ({ on: d }) => sfx.skid(d));
+  on('runner:manual', ({ on: m }) => { if (m) sfx.tone(880, 0.12, 'square', 0.1, -300); });
   on('coins', ({ amount }) => { if (amount <= 2) sfx.coin(); });
   on('zone', () => sfx.zone());
   on('weapon:equip', () => sfx.tone(440, 0.3, 'sawtooth', 0.12, 440));

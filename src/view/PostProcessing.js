@@ -1,47 +1,69 @@
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
-// HDR bloom is deliberately restrained; MSAA keeps the polygon silhouettes crisp.
+// AO at half resolution. Transparent light shafts must never become solid
+// silhouettes in the normals/depth buffer.
+class SceneAO extends GTAOPass {
+  setSize(w, h) { super.setSize(Math.max(1, Math.ceil(w / 2)), Math.max(1, Math.ceil(h / 2))); }
+  render(...args) {
+    const hidden = [];
+    this.scene.traverse(object => {
+      if (object.visible && (object.userData.noAO || object.material?.transparent)) { hidden.push(object); object.visible = false; }
+    });
+    const shadows = args[0].shadowMap.autoUpdate;
+    args[0].shadowMap.autoUpdate = false;
+    try { super.render(...args); } finally { args[0].shadowMap.autoUpdate = shadows; hidden.forEach(object => { object.visible = true; }); }
+  }
+}
+
 export class PostProcessing {
   constructor(renderer, scene, camera) {
     const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
     target.samples = Math.min(4, renderer.capabilities.maxSamples);
     this.composer = new EffectComposer(renderer, target);
     this.composer.addPass(new RenderPass(scene, camera));
-    this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.2, 0.45, 1.12);
+    if (!window.matchMedia('(pointer: coarse)').matches) {
+      this.ao = new SceneAO(scene, camera, 512, 512);
+      this.ao.updateGtaoMaterial({ radius: 2.1, thickness: 1.5, distanceExponent: 1.6, scale: 1, samples: 8 });
+      this.ao.updatePdMaterial({ samples: 8, radius: 4 });
+      this.ao.blendIntensity = .6;
+      this.composer.addPass(this.ao);
+    }
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), .30, .42, 1.8);
     this.composer.addPass(this.bloom);
+    this.composer.addPass(new OutputPass());
     this.grade = new ShaderPass({
-      uniforms: { tDiffuse: { value: null }, vignette: { value: 0.13 } },
-      vertexShader: 'varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+      uniforms: { tDiffuse: { value: null }, time: { value: 0 }, rush: { value: 0 } },
+      vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
       fragmentShader: `
-        uniform sampler2D tDiffuse;
-        uniform float vignette;
-        varying vec2 vUv;
-        void main() {
-          vec3 c = texture2D(tDiffuse, vUv).rgb;
-          // Preserve the original browser-world palettes without a warm color cast.
-          vec2 edge = (vUv - .5) * 1.35;
-          c *= 1. - smoothstep(.15, .8, dot(edge, edge)) * vignette;
-          gl_FragColor = vec4(max(c, 0.), 1.);
+        uniform sampler2D tDiffuse; uniform float time; uniform float rush; varying vec2 vUv;
+        void main(){
+          vec2 edge=vUv-.5;
+          vec2 split=edge*dot(edge,edge)*(.001+ rush*.010);
+          vec3 c=vec3(texture2D(tDiffuse,vUv+split).r,texture2D(tDiffuse,vUv).g,texture2D(tDiffuse,vUv-split).b);
+          float l=dot(c,vec3(.2126,.7152,.0722));
+          c=mix(vec3(l),c,1.13);
+          c=(c-.5)*1.08+.5;
+          c*=mix(vec3(.93,1.015,1.065),vec3(1.025,1.006,.965),smoothstep(.08,.85,l));
+          c*=1.-smoothstep(.12,.64,dot(edge,edge))*.20;
+          float grain=fract(sin(dot(gl_FragCoord.xy+mod(time,60.),vec2(12.9898,78.233)))*43758.5453)-.5;
+          c+=grain*.0035;
+          gl_FragColor=vec4(clamp(c,0.,1.),1.);
         }`,
     });
     this.composer.addPass(this.grade);
-    this.composer.addPass(new OutputPass());
   }
-  resize(width, height, pixelRatio) {
-    this.composer.setPixelRatio(pixelRatio);
-    this.composer.setSize(width, height);
-  }
-  render(pulse = 0) {
-    this.bloom.strength = 0.2 + pulse * 0.025;
+  resize(w,h,dpr){this.composer.setPixelRatio(dpr);this.composer.setSize(w,h);}
+  render(pulse=0,rush=0){
+    this.bloom.strength=.30+pulse*.07+rush*.10;
+    this.grade.uniforms.time.value=performance.now()/1000;
+    this.grade.uniforms.rush.value=rush;
     this.composer.render();
   }
-  dispose() {
-    this.composer.passes.forEach((pass) => pass.dispose?.());
-    this.composer.dispose();
-  }
+  dispose(){this.composer.passes.forEach(pass=>pass.dispose?.());this.composer.dispose();}
 }

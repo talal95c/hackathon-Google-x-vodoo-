@@ -10,6 +10,11 @@ export const RUNNER = {
   airControl: 0.55,      // contrôle latéral en l'air
   centrifugal: 0.12,     // poussée vers l'extérieur des virages (∝ v² × courbure)
   driftCentrifugal: 0.4, // fraction de poussée conservée en glissade
+  // Virages durs : le virage "aspire" vers l'extérieur à vitesse constante (prévisible) :
+  // il faut MAINTENIR la direction du virage ; si on lâche, on sort.
+  hardPull: 0.85,        // aspiration = 85 % de la vitesse latérale max (on tient en maintenant la touche)
+  hardPullDrift: 0.5,    // en glissant, aspiration réduite de moitié
+  hardSlowdown: 0.85,    // le dino ralentit un peu dans le virage (plus de temps pour réagir)
   boostSpeed: 18,        // vitesse ajoutée pendant le sprint
   driftChargeRate: 0.9,  // charge du sprint par seconde de glissade
   slideDrain: 0.85,      // jauge de glissade vidée par seconde (pleine ≈ 1,2 s de glissade)
@@ -35,8 +40,8 @@ export const RUNNER = {
 
 // Règles de la partie
 export const GAME = {
-  // Paliers de tempo : vitesse du dino ET tempo de la musique multipliés par ratio.
-  // À chaque palier la musique change d'énergie (événement 'tempo').
+  // Paliers de vitesse : la vitesse du dino est multipliée par ratio dès le palier atteint.
+  // La musique suit (tempo × ratio) avec une transition DJ, en décalé : le jeu ne l'attend jamais.
   tempoLevels: [
     { at: 0, ratio: 1 },
     { at: 450, ratio: 1.1 },
@@ -44,9 +49,6 @@ export const GAME = {
     { at: 1900, ratio: 1.3 },
     { at: 2900, ratio: 1.4 },
   ],
-  // Le palier est d'abord DEMANDÉ ('tempo:request') ; la musique le confirme au moment du
-  // drop (game.commitTempo()). Sans confirmation au bout de ce délai, il s'applique seul.
-  tempoCommitTimeout: 8,
   fixedDt: 1 / 120,      // pas de simulation fixe (physique déterministe)
   maxSubSteps: 8,
   difficultyDistance: 5000,
@@ -75,7 +77,13 @@ export const TRACK = {
   width: 16,             // largeur au départ (m)
   widthMin: 12,          // largeur mini (la route se rétrécit avec la distance)
   curveWidening: 90,     // la route s'élargit dans les virages serrés
-  zoneLength: 1200,      // multiple de 120 (10 morceaux)
+  // Virages durs (rares, annoncés par des chevrons) : il faut freiner ou glisser
+  hardTurnFrom: 300,     // pas avant 300 m
+  hardTurnSpacing: 250,  // au moins 250 m entre deux
+  hardTurnChance: 0.14,  // probabilité à chaque nouvel arc (+ 0.1 avec la difficulté)
+  hardTurnRadius: [10, 12],
+  hardTurnAngle: [1.3, 1.9], // rad (75° → 110°)
+  zoneLength: 720,       // 6 morceaux : un nouveau monde environ toutes les 20 secondes
 };
 
 // Rythme des apparitions et des boss
@@ -86,9 +94,4 @@ export const DIRECTOR = {
   bossStart: 700,        // le boss apparaît à 700 m dans la zone…
   // …et l'arène dure jusqu'à la fin de la zone (500 m) : s'il est encore en vie, il s'enfuit
   arenaWeaponEvery: 90,  // une arme garantie tous les 90 m dans l'arène
-  // Rythme : les apparitions sont espacées en TEMPS musicaux puis "aimantées" sur les temps
-  gapBeatsEasy: [3, 4, 4, 6],   // écarts possibles (en temps) au début…
-  gapBeatsHard: [2, 2, 3, 4],   // …et à pleine difficulté
-  snapWindow: [10, 90],         // on aimante les entités entre 10 et 90 m devant le dino
-  snapRate: 6,                  // correction max (m/s) : invisible à l'œil
 };

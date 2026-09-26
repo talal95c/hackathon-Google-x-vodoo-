@@ -31,6 +31,7 @@ export class Runner {
     this.speed = RUNNER.startSpeed;
     this.cruise = RUNNER.baseSpeed;
     this.latV = 0; this.push = 0; this.steer = 0;
+    this.manual = false;      // true = dans un virage dur (aspiration vers l'extérieur)
     this.boost = 0;
     this.drifting = false; this.driftDir = 0; this.driftCharge = 0;
     this.slideGauge = 1;      // jauge de glissade (0 → 1)
@@ -40,7 +41,7 @@ export class Runner {
     this.gait = 0; this.lastStep = 0;
   }
 
-  get isInvulnerable() { return this.invul > 0 || !!this.weapon?.grantsInvulnerability; }
+  get isInvulnerable() { return !!this.game.worldJump || this.invul > 0 || !!this.weapon?.grantsInvulnerability; }
   get smashes() { return !!this.weapon?.smashes; }
 
   // --- API utilisée par les entités / armes
@@ -82,7 +83,7 @@ export class Runner {
 
   // --- Simulation
   // intent : { steer: -1..1 (+1 = gauche), drift, brake, jump (front montant) }
-  // road : { y, vy, slope, k } sous le dino
+  // road : { y, vy, slope, k, hard } sous le dino (hard = dans un virage dur)
   update(dt, intent, road) {
     const S = this.stats, g = this.game;
     this.stumble = Math.max(0, this.stumble - dt);
@@ -137,20 +138,27 @@ export class Runner {
     if (intent.brake) target *= 0.5;
     if (this.drifting) target *= 0.95;
     if (this.stumble > 0) target *= 0.6;
+    if (this.manual) target *= S.get('hardSlowdown');
     this.speed += (target - this.speed) * Math.min(1, S.get('accel') * dt * (this.boost > 0 ? 2 : 1));
 
-    // Latéral : pilotage direct + force centrifuge
-    const latMax = (S.get('latSpeed') + this.speed * 0.12) * (this.drifting ? 1.15 : 1);
     const control = this.grounded ? 1 : S.get('airControl');
+    const hardDir = road.hard ? Math.sign(road.k) : 0; // +1 = virage à gauche
+    if ((hardDir !== 0) !== this.manual) { this.manual = hardDir !== 0; g.emit('runner:manual', { on: this.manual, dir: hardDir }); }
+    const latMax = (S.get('latSpeed') + this.speed * 0.12) * (this.drifting ? 1.15 : 1);
     this.latV += (steer * latMax - this.latV) * Math.min(1, dt * S.get('latResponse') * control);
-    const cf = S.get('centrifugal') * (this.drifting ? S.get('driftCentrifugal') : 1) * (this.grounded ? 1 : 0.5);
-    this.push = -road.k * this.speed * this.speed * cf;
+    if (this.manual) {
+      // Virage dur : aspiration constante vers l'extérieur, il faut tenir la direction du virage
+      this.push = -hardDir * latMax * S.get('hardPull') * (this.drifting ? S.get('hardPullDrift') : 1);
+    } else {
+      const cf = S.get('centrifugal') * (this.drifting ? S.get('driftCentrifugal') : 1) * (this.grounded ? 1 : 0.5);
+      this.push = -road.k * this.speed * this.speed * cf;
+    }
     this.x += (this.latV + this.push) * dt;
     this.z += this.speed * dt;
 
-    // Cycle de course calé sur la musique : une foulée complète (2 pas) par temps
+    // Cycle de course (animation + bruits de pas), proportionnel à la vitesse
     if (this.grounded) {
-      this.gait = g.beat.beats * Math.PI * 2;
+      this.gait += dt * this.speed * 0.42;
       const step = Math.floor(this.gait / Math.PI);
       if (step !== this.lastStep) { this.lastStep = step; g.emit('runner:step'); }
     }

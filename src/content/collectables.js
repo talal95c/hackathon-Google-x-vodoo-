@@ -4,7 +4,7 @@ import { Projectile } from '../entities/Projectile.js';
 import { LaserWeapon, ShieldWeapon } from '../weapons/Weapon.js';
 
 // --- Collectables
-Entities.define('coin', { class: CoinPickup, hitbox: { hx: 0.9, hz: 0.9, top: 3 }, value: 1, snap: 2 }); // sur les croches
+Entities.define('coin', { class: CoinPickup, hitbox: { hx: 0.9, hz: 0.9, top: 3 }, value: 1 });
 Entities.define('boostPad', { class: BoostPad, hitbox: { hx: 1.5, hz: 2.5, top: 0.5 }, boost: 1.5 });
 Entities.define('laserPickup', { class: WeaponPickup, hitbox: { hx: 1.2, hz: 1.2, top: 3.5 }, weapon: 'laser' });
 Entities.define('shieldPickup', { class: WeaponPickup, hitbox: { hx: 1.2, hz: 1.2, top: 3.5 }, weapon: 'shield' });
@@ -14,7 +14,7 @@ Entities.define('doubleCoinsPickup', { class: EffectPickup, hitbox: { hx: 1.2, h
 // --- Armes (durée en secondes, multipliée par la stat weaponDuration)
 Weapons.define('laser', { class: LaserWeapon, name: 'Laser', duration: 8, fireRate: 0.2, projectile: 'laserBolt', projectileSpeed: 60 });
 Weapons.define('shield', { class: ShieldWeapon, name: 'Bouclier', duration: 6 });
-Entities.define('laserBolt', { class: Projectile, snap: false, hitbox: { hx: 0.4, hz: 0.8, top: 1 }, damage: 1, life: 1.2 });
+Entities.define('laserBolt', { class: Projectile, hitbox: { hx: 0.4, hz: 0.8, top: 1 }, damage: 1, life: 1.2 });
 
 // --- Bonus temporaires (modificateurs de stats)
 Effects.define('magnet', { name: 'Aimant', duration: 10, modifiers: { add: { magnetRange: 14 } } });

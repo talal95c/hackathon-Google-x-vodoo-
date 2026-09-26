@@ -1,5 +1,5 @@
 import { TRACK } from './config.js';
-import { ZONES } from '../content/zones.js';
+import { worldIndex } from './WorldJourney.js';
 
 // Route procédurale continue (virages + dénivelé), en données pures.
 //
@@ -23,12 +23,13 @@ export class Track {
     this.nextChunk = 0;
     // Échantillons (tableaux parallèles, lecture seule pour les vues)
     this.X = [0]; this.Y = [0]; this.Z = [0]; this.TH = [0]; this.K = [0]; this.SL = [0]; this.W = [TRACK.width];
-    this.gen = { th: 0, k: 0, kT: 0, kLeft: 60, inArc: false, slope: 0, slT: 0, slLeft: 80 };
+    this.gen = { th: 0, k: 0, kT: 0, kLeft: 60, inArc: false, slope: 0, slT: 0, slLeft: 80, lastHard: -Infinity };
+    this.hardTurns = [];   // virages durs : { s, end, sign (+1 = à gauche) }, lus par le Director et les vues
   }
 
   get chunkLength() { return TRACK.step * TRACK.chunkSamples; }
 
-  static zoneIndex(s) { return Math.floor(Math.max(0, s) / TRACK.zoneLength) % ZONES.length; }
+  static zoneIndex(s) { return worldIndex(s); }
   static zoneNumber(s) { return Math.floor(Math.max(0, s) / TRACK.zoneLength); }
 
   // --- Échantillons
@@ -44,7 +45,16 @@ export class Track {
       // Courbure : arcs planifiés (angle + rayon) séparés de lignes droites
       g.kLeft -= TRACK.step;
       if (g.kLeft <= 0) {
-        if (g.inArc || r.chance(0.35)) {
+        const hard = !g.inArc && dist > TRACK.hardTurnFrom && dist - g.lastHard > TRACK.hardTurnSpacing
+          && r.chance(TRACK.hardTurnChance + diff * 0.1);
+        if (hard) {
+          // virage dur : on tourne du côté où il y a le plus de marge de cap
+          const sign = g.th <= 0 ? 1 : -1;
+          const angle = Math.min(TRACK.maxHeading - sign * g.th, r.range(...TRACK.hardTurnAngle));
+          const R = r.range(...TRACK.hardTurnRadius);
+          g.inArc = true; g.kT = sign / R; g.kLeft = angle * R; g.lastHard = dist;
+          this.hardTurns.push({ s: dist, end: dist + angle * R + 12, sign });
+        } else if (g.inArc || r.chance(0.35)) {
           g.inArc = false; g.kT = 0; g.kLeft = r.range(0, 40) * (1 - diff * 0.5);
         } else {
           const rMin = TRACK.radiusEasy + (TRACK.radiusHard - TRACK.radiusEasy) * diff;
@@ -76,7 +86,7 @@ export class Track {
       this.X.push(this.X[i - 1] + Math.sin(g.th) * TRACK.step);
       this.Z.push(this.Z[i - 1] + Math.cos(g.th) * TRACK.step);
       this.Y.push(this.Y[i - 1] + g.slope * TRACK.step);
-      this.W.push(Math.max(TRACK.widthMin, TRACK.width - dist / 900) + Math.min(5, Math.abs(g.k) * TRACK.curveWidening));
+      this.W.push(Math.max(TRACK.widthMin, TRACK.width - dist / 900) + Math.min(4, Math.abs(g.k) * TRACK.curveWidening));
     }
   }
 
@@ -97,6 +107,12 @@ export class Track {
     const f = this.frame(s, this._pf || (this._pf = {}));
     out.x = f.x + f.lx * d; out.y = f.y + h; out.z = f.z + f.lz * d;
     return out;
+  }
+
+  // Virage dur qui englobe s (avec une marge avant), sinon null
+  hardTurnAt(s, before = 0) {
+    for (const t of this.hardTurns) if (s >= t.s - before && s <= t.end) return t;
+    return null;
   }
 
   // Distance mini entre un point monde et l'axe de la route autour de s

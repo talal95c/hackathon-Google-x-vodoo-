@@ -11,19 +11,20 @@ import { MusicThemes } from '../kernel/Registry.js';
 //   vocals → tags de voix, utilisés en mode voix (VOCALIZATION) ; sinon "Instrumental" est ajouté
 //   density / brightness → plages parcourues en continu avec l'intensité
 // consumable : true = acheté à l'unité, consommé au lancement d'une partie.
+// Thème par défaut (gratuit) : doit être TRÈS entraînant, rythmé et rapide dès la première seconde
 MusicThemes.define('techno', {
   name: 'Techno', price: 0, consumable: false,
-  core: 'Techno, Melodic Techno, TR-909 Drum Machine, 303 Acid Bass, Retro 8-bit Arpeggios, Driving, Hypnotic, Tight Groove, Video Game Chase Soundtrack',
-  vocals: 'Ethereal Female Vocal Chops, Hypnotic Chanted Vocals, Rave Vocals',
+  core: 'Uptempo Techno, Electro House, Punchy Four-on-the-floor Kick, Bouncy Offbeat Bassline, Catchy Synth Hook, Euphoric, Energetic, Danceable, Retro 8-bit Arpeggios, Video Game Chase Music',
+  vocals: 'Catchy Vocal Chops, Energetic Hype Vocals, Rave Chants',
   levels: [
-    'Sparse, Filtered Kick, Ambient Pads, Subtle Build-up, Mysterious',
-    'Four-on-the-floor Kick, Rolling Bassline, Crisp Hi-hats, Groovy, Danceable',
-    'Peak Time, Acid Squelches, Rave Stabs, Energetic, Euphoric Synth Lead',
-    'Massive Drop, Hard Techno, Pounding Kick, Intense, Huge Energy, Climax',
+    'Upbeat, Groovy, Hand Claps, Crisp 16th Hi-hats, Catchy Riff, Head Nodding',
+    'Driving, Rolling Bass, Rising Synth Lead, Party Energy, Irresistible Groove',
+    'Peak Time, Euphoric Hook, Rave Stabs, Big Room Energy, Fast Arpeggios',
+    'Massive Drop, Hard Dance, Pounding Kick, Relentless, Maximum Energy, Festival Climax',
   ],
-  bpm: 124, scale: 'A_FLAT_MAJOR_F_MINOR',
-  density: [0.35, 0.95], brightness: [0.45, 0.9],
-  synth: { wave: 'sawtooth', scale: [0, 3, 5, 7, 10], root: 41 },
+  bpm: 136, scale: 'A_FLAT_MAJOR_F_MINOR',
+  density: [0.7, 1], brightness: [0.65, 1],
+  synth: { wave: 'sawtooth', scale: [0, 3, 5, 7, 10], root: 41, hook: [0, 0, 3, 0, 5, 0, 3, 7, 0, 0, 3, 0, 10, 7, 5, 3] },
 });
 
 MusicThemes.define('reggae', {

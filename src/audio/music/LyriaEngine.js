@@ -137,8 +137,7 @@ export class LyriaEngine {
     if (this.status === 'playing') this.#set('ready', 'Lyria prêt 🎶');
   }
 
-  // Nouveau palier demandé par le jeu → transition DJ. Renvoie true si un drop suivra
-  // (onDrop(heureAudio) sera appelé), false si le palier doit s'appliquer tout de suite.
+  // Nouveau palier de vitesse du jeu → transition DJ vers le tempo correspondant
   setTempo(tempo) {
     if (this.status !== 'playing' || !this.theme) { this.ratio = this.audibleRatio = tempo.ratio; return false; }
     if (tempo.ratio === this.ratio && !this.pending) return false;
@@ -243,7 +242,6 @@ export class LyriaEngine {
       f.exponentialRampToValueAtTime(OPEN, t + 2 * bar); // réouverture douce sur 2 mesures
       this.switchAt = null;
       this.audibleRatio = this.ratio;
-      this.onDrop?.(t); // le jeu accélère pile au drop
     }
 
     if (this.nextTime < now) this.nextTime = now + 0.1;
