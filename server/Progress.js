@@ -67,6 +67,7 @@ export class Progress {
     const out = new Map();
     for (const r of humans) {
       const acc = players.get(r.id), p = acc.profile;
+      if (acc.key) Object.assign(p, await this.store.get(acc.key), { name: p.name });
       const honest = !r.suspicious;
       const dElo = honest ? elo.get(r.id) ?? 0 : 0;
       const coins = honest ? r.coins : 0;
