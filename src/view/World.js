@@ -1,12 +1,18 @@
 import * as THREE from 'three';
 import { ZONES } from '../content/zones.js';
+import { PostProcessing } from './PostProcessing.js';
 
 // Le "plateau" : renderer, scène, caméra, ciel en dégradé, nuages, lumières.
 // Les couleurs suivent la palette de la zone courante (transition douce).
 export class World {
   constructor(container = document.body) {
-    const r = this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    r.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const r = this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+    this.pixelRatio = Math.min(window.devicePixelRatio, window.matchMedia('(pointer: coarse)').matches ? 1.25 : 1.75);
+    r.setPixelRatio(this.pixelRatio);
+    r.toneMapping = THREE.ACESFilmicToneMapping;
+    r.toneMappingExposure = 1.08;
+    r.outputColorSpace = THREE.SRGBColorSpace;
+    r.domElement.setAttribute('aria-label', 'Dino Escape — scène 3D');
     r.setSize(window.innerWidth, window.innerHeight);
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFShadowMap;
@@ -26,11 +32,14 @@ export class World {
     this.#buildSky();
     this.#buildClouds();
     this.#buildLights();
+    this.post = new PostProcessing(r, this.scene, this.camera);
+    this.post.resize(window.innerWidth, window.innerHeight, this.pixelRatio);
 
     window.addEventListener('resize', () => {
       this.camera.aspect = window.innerWidth / window.innerHeight;
       this.camera.updateProjectionMatrix();
       r.setSize(window.innerWidth, window.innerHeight);
+      this.post.resize(window.innerWidth, window.innerHeight, this.pixelRatio);
     });
   }
 
@@ -100,7 +109,7 @@ export class World {
     this.sun.target.position.copy(focus);
   }
 
-  render() { this.renderer.render(this.scene, this.camera); }
+  render(pulse = 0) { this.post.render(pulse); }
 }
 
 const tmp = new THREE.Color();

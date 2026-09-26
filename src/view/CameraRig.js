@@ -28,11 +28,17 @@ export class CameraRig extends View {
     const speed = Math.max(0, r.speed);
 
     if (g.state === 'menu') {
-      const a = time * 0.3;
-      cam.position.set(P.x + Math.sin(a) * 10, P.y + 4.5, P.z + Math.cos(a) * 10);
-      cam.lookAt(P.x, P.y + 2.2, P.z);
+      const a = .62 + Math.sin(time * .18) * .12;
+      const narrow = window.innerWidth < 760;
+      const radius = narrow ? 14.2 : 9.8;
+      cam.fov = 44;
+      cam.setViewOffset(window.innerWidth, window.innerHeight, narrow ? 0 : -window.innerWidth * .2, narrow ? window.innerHeight * .18 : 0, window.innerWidth, window.innerHeight);
+      cam.position.set(P.x + Math.sin(a) * radius, P.y + 4.5, P.z + Math.cos(a) * radius);
+      cam.lookAt(P.x, P.y + 2.1, P.z);
+      cam.updateProjectionMatrix();
       return;
     }
+    if (cam.view?.enabled) cam.clearViewOffset();
     if (g.state === 'playing') {
       const back = 8 + speed * 0.04;
       const fc = this.track.frame(Math.max(0, r.z - back), this.#fc);
@@ -53,7 +59,7 @@ export class CameraRig extends View {
     cam.position.x += (Math.random() - 0.5) * this.shake * 0.8;
     cam.position.y += (Math.random() - 0.5) * this.shake * 0.8;
     cam.lookAt(this.look);
-    const fov = 66 + Math.max(0, speed - 30) * 0.45 + (r.boost > 0 ? 8 : 0);
+    const fov = 62 + Math.max(0, speed - 30) * 0.45 + (r.boost > 0 ? 8 : 0);
     cam.fov += (fov - cam.fov) * Math.min(1, dt * 4);
     cam.fov += (this.ctx.fx?.down ?? 0) * 0.35; // "kick" de caméra sur le temps fort
     cam.updateProjectionMatrix();

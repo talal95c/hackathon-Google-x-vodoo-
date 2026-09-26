@@ -72,8 +72,8 @@ export const TRACK = {
   slopeEasy: 0.1,
   slopeHard: 0.22,
   heightLimit: 35,
-  width: 12,
-  widthMin: 9,
+  width: 16,             // largeur au départ (m)
+  widthMin: 12,          // largeur mini (la route se rétrécit avec la distance)
   curveWidening: 90,     // la route s'élargit dans les virages serrés
   zoneLength: 1200,      // multiple de 120 (10 morceaux)
 };

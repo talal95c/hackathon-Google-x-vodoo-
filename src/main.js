@@ -7,6 +7,7 @@ import './content/index.js';
 import './view/models/entities.js';
 import './view/models/decor.js';
 import './view/models/blockDino.js';
+import './view/models/reggaeDino.js';
 import './view/models/weapons.js';
 
 import { Game } from './kernel/Game.js';
@@ -37,6 +38,7 @@ const shop = new Shop(profile, game.bus);
 
 // --- Rendu (l'ordre compte : RunnerView met à jour ctx.focus pour les suivants)
 const world = new World();
+game.on('zone', ({ zone }) => world.setPalette(zone.palette));
 const ctx = { game, world, focus: new THREE.Vector3(), skin: profile.data.skin };
 const views = [
   new BeatFx(ctx),      // en premier : fournit ctx.fx et ctx.beatMaterials
@@ -98,7 +100,7 @@ function frame(now) {
   music.update(dt);
   hud.update(dt);
   world.update(dt, ctx.focus);
-  world.render();
+  world.render(ctx.fx?.pulse ?? 0);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

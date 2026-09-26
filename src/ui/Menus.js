@@ -19,6 +19,7 @@ export class Menus {
       if (!b) return;
       const a = b.dataset.action;
       if (a === 'play') this.onPlay();
+      else if (a === 'reggae') { profile.selectSkin('reggae'); game.emit('skin:preview', { skin: 'reggae' }); this.refresh(); }
       else if (a === 'shop') this.open('shop');
       else if (a === 'music') this.open('music');
       else if (a === 'close') this.closePanels();
@@ -26,7 +27,7 @@ export class Menus {
       else if (a === 'forget') { lyria.setApiKey(''); $('apiKey').value = ''; this.#renderMusic(); }
       else if (b.dataset.tab) { this.tab = b.dataset.tab; this.#renderShop(); }
       else if (b.dataset.buy) { shop.buy(b.dataset.buy); this.refresh(); }
-      else if (b.dataset.skin) { profile.selectSkin(b.dataset.skin); this.refresh(); }
+      else if (b.dataset.skin) { profile.selectSkin(b.dataset.skin); game.emit('skin:preview', { skin: b.dataset.skin }); this.refresh(); }
       else if (b.dataset.theme) { profile.selectTheme(b.dataset.theme); this.refresh(); }
     });
     lyria.onStatus(() => this.#renderMusic());
@@ -43,6 +44,7 @@ export class Menus {
   get panelOpen() { return Object.values(this.panels).some((p) => !p.classList.contains('hidden')); }
 
   show(name) {
+    document.body.classList.toggle('in-game', !name);
     for (const [k, el] of Object.entries(this.screens)) el.classList.toggle('hidden', k !== name);
     if (!name) this.closePanels();
     this.refresh();
@@ -65,6 +67,8 @@ export class Menus {
   }
 
   refresh() {
+    $('heroName').textContent = this.profile.data.skin === 'reggae' ? 'RIDDIM' : Skins.get(this.profile.data.skin).name.toUpperCase();
+    $('heroTheme').textContent = `${MusicThemes.get(this.profile.data.theme).name.toUpperCase()} · DINO ESCAPE`;
     $('wallet').textContent = `★ ${this.profile.coins} pièces · skin ${Skins.get(this.profile.data.skin).name} · musique ${MusicThemes.get(this.profile.data.theme).name}`;
     this.#renderShop();
     this.#renderMusic();
@@ -82,7 +86,7 @@ export class Menus {
           : owned ? `<button data-skin="${s.id}">Équiper</button>`
             : this.#buyButton(`skin:${s.id}`);
         cards += `<div class="card ${sel ? 'selected' : ''}"><div class="swatch" style="background:${hex(s.view.color)}"></div>
-          <div class="name">${s.name}</div><div class="desc rarity-${s.rarity}">${s.rarity}${s.modifiers ? ' · bonus' : ''}</div>${btn}</div>`;
+          <div class="name">${s.name}</div><div class="desc rarity-${s.rarity}">${s.description || s.rarity}${s.modifiers ? ' · bonus' : ''}</div>${btn}</div>`;
       }
     } else {
       for (const item of shop.items(this.tab)) {
@@ -108,7 +112,7 @@ export class Menus {
     $('lyriaStatus').textContent = l.message || (l.hasKey() ? 'Clé enregistrée' : 'Pas de clé : musique synthétisée');
     $('themeGrid').innerHTML = MusicThemes.all().map((t) => {
       const count = p.musicCount(t.id), sel = p.data.theme === t.id;
-      const label = t.consumable ? `${count} partie(s)` : 'Gratuit';
+      const label = count === Infinity ? (t.consumable ? 'Inclus avec ton dino' : 'Gratuit') : `${count} partie(s)`;
       const btn = sel ? '<button disabled>Choisi</button>' : count > 0 ? `<button data-theme="${t.id}">Choisir</button>` : this.#buyButton(`music:${t.id}`);
       return `<div class="card ${sel ? 'selected' : ''}"><div class="name">🎵 ${t.name}</div><div class="desc">${label} · ${t.bpm}→${Math.round(t.bpm * GAME.tempoLevels.at(-1).ratio)} BPM</div>${btn}</div>`;
     }).join('');

@@ -1,14 +1,14 @@
-import { MusicThemes } from '../kernel/Registry.js';
+import { MusicThemes, Skins } from '../kernel/Registry.js';
 
 const DEFAULTS = {
   version: 1,
   coins: 0,          // portefeuille (pièces cumulées de partie en partie)
   best: 0,
   runs: 0,
-  skins: ['classic'],
-  skin: 'classic',
+  skins: ['classic', 'reggae'],
+  skin: 'reggae',
   music: {},         // thèmes consommables : { reggae: 2, ... }
-  theme: 'techno',
+  theme: 'reggae',
   upgrades: {},      // { 'upgrade:weaponTime': 2, ... }
 };
 
@@ -18,6 +18,10 @@ export class Profile {
     this.storage = storage;
     this.key = key;
     this.data = { ...structuredClone(DEFAULTS), ...storage.load(key, {}) };
+    // Starter additions are granted without replacing the player's selection or progress.
+    for (const skin of Skins.all()) {
+      if (skin.starter && !this.data.skins.includes(skin.id)) this.data.skins.push(skin.id);
+    }
   }
 
   save() { this.storage.save(this.key, this.data); }
@@ -33,14 +37,24 @@ export class Profile {
   // Skins
   ownsSkin(id) { return this.data.skins.includes(id); }
   addSkin(id) { if (!this.ownsSkin(id)) this.data.skins.push(id); this.save(); }
-  selectSkin(id) { if (this.ownsSkin(id)) { this.data.skin = id; this.save(); } }
+  selectSkin(id) {
+    if (!this.ownsSkin(id)) return;
+    this.data.skin = id;
+    const theme = Skins.get(id).theme;
+    if (theme && this.musicCount(theme) > 0) this.data.theme = theme;
+    else if (this.musicCount(this.data.theme) <= 0) this.data.theme = 'techno';
+    this.save();
+  }
 
   // Musiques (consommables)
-  musicCount(id) { return MusicThemes.get(id).consumable ? (this.data.music[id] ?? 0) : Infinity; }
+  musicCount(id) {
+    if (Skins.get(this.data.skin).theme === id) return Infinity;
+    return MusicThemes.get(id).consumable ? (this.data.music[id] ?? 0) : Infinity;
+  }
   addMusic(id, n = 1) { this.data.music[id] = (this.data.music[id] ?? 0) + n; this.save(); }
   selectTheme(id) { if (this.musicCount(id) > 0) { this.data.theme = id; this.save(); } }
   consumeMusic(id) {
-    if (!MusicThemes.get(id).consumable) return true;
+    if (this.musicCount(id) === Infinity) return true;
     if ((this.data.music[id] ?? 0) <= 0) return false;
     this.data.music[id]--; this.save();
     return true;

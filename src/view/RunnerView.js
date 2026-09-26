@@ -26,6 +26,7 @@ export class RunnerView extends View {
     this.setSkin(ctx.skin ?? 'classic');
 
     this.listen('game:start', ({ loadout }) => { if (loadout.skin) this.setSkin(loadout.skin); this.#clearWeapon(); });
+    this.listen('skin:preview', ({ skin }) => this.setSkin(skin));
     this.listen('weapon:equip', ({ weapon }) => this.#setWeapon(weapon));
     this.listen('weapon:expire', () => this.#clearWeapon());
     this.listen('*', (type, payload) => { if (type.startsWith('runner:')) this.model.onEvent?.(type, payload); });
