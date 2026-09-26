@@ -1,6 +1,8 @@
 // Salon multijoueur : créer une partie (code + lien), rejoindre, liste des joueurs, lancement,
 // compte à rebours, classement live pendant la course et coup d'épaule.
 const $ = (id) => document.getElementById(id);
+const ROW = 44;
+const initial = (n) => esc((n || '?').trim().charAt(0).toUpperCase());
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 export class Lobby {
@@ -73,7 +75,7 @@ export class Lobby {
       let r = rows.get(key);
       if (!r) {
         const li = document.createElement('li');
-        li.innerHTML = '<b class="rk"></b><span class="av"></span><span class="nm"></span><em></em><i class="bar"><i></i></i><span class="delta"></span>';
+        li.innerHTML = '<b class="rk"></b><span class="av"><span class="ini"></span><i class="medal"></i></span><span class="txt"><span class="nm"></span><em></em></span><i class="bar"><i></i></i><span class="delta"></span>';
         el.appendChild(li);
         r = { li, rank: i, q: (s) => li.querySelector(s), html: {} };
         rows.set(key, r);
@@ -89,20 +91,21 @@ export class Lobby {
         clearTimeout(r.t); r.t = setTimeout(() => r.li.classList.remove('up', 'down'), 1100);
         r.rank = i;
       }
-      r.li.style.setProperty('--y', `${i * 34}px`);
+      r.li.style.setProperty('--y', `${i * ROW}px`);
       r.li.style.setProperty('--c', p.color);
       r.li.className = r.li.className.replace(/\b(p[123]|me|out)\b/g, '').trim();
       if (p.alive && i < 3) r.li.classList.add(`p${i + 1}`);
       if (p.me) r.li.classList.add('me');
       if (!p.alive) r.li.classList.add('out');
-      set('.rk', p.alive ? `${i + 1}` : '✕');
-      set('.av', esc((p.name || '?').trim().charAt(0).toUpperCase()));
+      set('.rk', `${i + 1}`);
+      set('.medal', p.alive && i < 3 ? `${i + 1}` : !p.alive ? '✕' : '');
+      set('.ini', initial(p.name));
       set('.nm', esc(p.name));
-      set('em', `${p.lives != null && p.alive ? `<span class="hearts">${'♥'.repeat(Math.max(0, p.lives))}</span>` : ''}${p.dist}<small>m</small>${p.rtt ? `<small class="rtt">${Math.round(p.rtt)}ms</small>` : ''}`);
+      set('em', `<span class="gem">◆</span>${p.dist}<small>m</small>${p.lives != null && p.alive ? `<span class="hearts">${'♥'.repeat(Math.max(0, p.lives))}</span>` : ''}${p.rtt ? `<small class="rtt">${Math.round(p.rtt)}ms</small>` : ''}`);
       r.q('.bar > i').style.transform = `scaleX(${Math.min(1, p.dist / lead)})`;
     });
     for (const [key, r] of rows) if (!seen.has(key)) { r.li.remove(); rows.delete(key); }
-    el.style.height = `${ranking.length * 34 + 12}px`;
+    el.style.height = `${ranking.length * ROW + 34}px`;
   }
 
   update() {
@@ -116,6 +119,14 @@ export class Lobby {
   resultsHtml() {
     const race = this.race;
     if (!race) return '';
-    return `<ol class="mp-results">${race.ranking().map((p, i) => `<li class="${p.me ? 'me' : ''} ${p.alive && i < 3 ? `p${i + 1}` : ''}" style="--c:${p.color};--i:${i}"><b>${i + 1}</b><span class="av">${esc((p.name || '?').trim().charAt(0).toUpperCase())}</span><span class="who">${esc(p.name)}</span><em>${p.alive ? `🏃 ${p.dist} m` : `💀 ${p.dist} m`}</em></li>`).join('')}</ol>`;
+    const rank = race.ranking(), score = (p) => `<span class="gem">◆</span>${p.dist} m`;
+    const cls = (p, i) => `${p.me ? 'me' : ''} ${p.alive ? '' : 'out'} p${i + 1}`;
+    const podium = [1, 0, 2].filter((i) => rank[i]).map((i) => { const p = rank[i]; return `<div class="pod ${cls(p, i)}" style="--c:${p.color}">
+      <div class="pav"><span>${initial(p.name)}</span><i class="medal">${i + 1}</i></div>
+      <div class="pname">${esc(p.name)}</div><div class="pscore">${score(p)}</div>
+      <div class="block"><b>${i + 1}</b></div></div>`; }).join('');
+    const rest = rank.slice(3).map((p, k) => `<li class="${cls(p, k + 3)}" style="--c:${p.color};--i:${k}"><b class="ghost">${k + 4}</b><span class="av">${initial(p.name)}</span><span class="txt"><span class="who">${esc(p.name)}</span><em>${score(p)}</em></span>${p.alive ? '' : '<span class="dead">✕</span>'}</li>`).join('');
+    return `<div class="mp-results"><h3>Leaderboard</h3><div class="lb-podium">${podium}</div>${rest ? `<ol class="lb-rest">${rest}</ol>` : ''}</div>`;
   }
+
 }
