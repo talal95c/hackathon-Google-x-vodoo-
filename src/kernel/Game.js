@@ -195,7 +195,8 @@ export class Game {
     const boundary = this.nextWorld * TRACK.zoneLength;
     if (!this.worldJump && this.nextWorld < ZONES.length) {
       const seconds = Math.ceil((boundary - WORLD_JUMP.lead - r.z) / Math.max(r.speed, 1));
-      if (seconds >= 1 && seconds <= GAME.worldWarning && seconds < (this.worldWarn ?? Infinity)) {
+      if (seconds > GAME.worldWarning) this.worldWarn = null;
+      else if (seconds >= 1 && (this.worldWarn === null || seconds < this.worldWarn || seconds > this.worldWarn + 1)) {
         this.worldWarn = seconds;
         this.emit('world:soon', { to: ZONES[this.nextWorld], seconds });
       }

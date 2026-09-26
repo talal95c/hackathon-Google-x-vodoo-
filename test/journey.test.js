@@ -56,7 +56,19 @@ test('une bannière prévient du changement de monde, seconde par seconde', () =
   g.on('world:soon', ({ seconds, to }) => warnings.push([seconds, to.id]));
   r.z = TRACK.zoneLength - WORLD_JUMP.lead - r.speed * 6;
   g.track.update(r.z); r.Y = g.track.frame(r.z).y; g.sMax = r.z;
-  for (let i = 0; i < 60 * 8 && !g.worldJump && warnings.length < 5; i++) g.update(1 / 60, idle);
+  for (let i = 0; i < 60 * 8 && !g.worldJump && warnings.length < 5; i++) { r.speed = r.cruise = 30; r.x = 0; r.invul = 10; g.update(1 / 60, idle); }
   assert.deepEqual(warnings.map(([s]) => s), [5, 4, 3, 2, 1]);
   assert.ok(warnings.every(([, id]) => id === 'browser'));
+});
+
+test('le compte à rebours du monde se corrige si le dino freine', () => {
+  const g = new Game({ seed: 9 }); g.start({ seed: 9 });
+  const r = g.runner, warnings = [];
+  g.on('world:soon', ({ seconds }) => warnings.push(seconds));
+  r.z = TRACK.zoneLength - WORLD_JUMP.lead - 20;
+  g.track.update(r.z); r.Y = g.track.frame(r.z).y; g.sMax = r.z;
+  r.speed = 20; g.update(1 / 120, idle);
+  assert.equal(warnings.at(-1), 1);
+  r.speed = 5; g.update(1 / 120, idle);
+  assert.ok(warnings.at(-1) > 1, 'nouvelle estimation après freinage');
 });
