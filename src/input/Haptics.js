@@ -64,6 +64,7 @@ export function bindHaptics(game, haptics) {
   on('runner:boost', ({ big }) => { if (big) haptics.pulse('boost'); });
   on('pad:used', () => haptics.pulse('boost'));
   on('combat:impact', ({ local }) => { if (local) haptics.pulse('shove', { light: true }); });
+  on('mp:countdown', ({ step }) => haptics.pulse(step === 0 ? 'boost' : 'shove'));
   on('world:soon', () => haptics.pulse('tap'));
   on('world:land', () => haptics.pulse('world'));
   on('boss:start', () => haptics.pulse('boss'));

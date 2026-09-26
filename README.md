@@ -37,7 +37,7 @@ This hackathon version uses public brokers from **HiveMQ, Mosquitto and EMQX**, 
 
 ## Fight Club: three seconds to win
 
-Every **450 meters**, an animated warning announces the next arena. The race pauses for everyone while the duel takes place, including the bots in solo mode.
+Every **700 meters**, an animated warning announces the next arena. The race pauses for everyone while the duel takes place, including the bots in solo mode.
 
 - **Tap for three seconds.** The player with the most taps wins, with slaps, kicks, flips, explosions and a crowd of cheering dinos bringing the fight to life.
 - **The winner steals coins:** half the loser's current-race coins, up to 20.

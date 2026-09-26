@@ -32,6 +32,15 @@
   <div id="flash"></div>
   <div id="banner"></div>
 
+  <div id="raceCountdown" class="race-countdown hidden" role="status" aria-live="assertive" aria-atomic="true">
+    <div class="countdown-kicker">MULTIPLAYER RACE</div>
+    <div class="countdown-lights" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="countdown-stage"><div class="countdown-ring" aria-hidden="true"></div><strong id="countdownNumber">READY</strong></div>
+    <div id="countdownLabel" class="countdown-label">ON YOUR MARKS</div>
+    <div class="countdown-hint control-keyboard">At GO, hold <kbd>↑</kbd> or <kbd>W</kbd> to run</div>
+    <div class="countdown-hint control-touch">At GO, hold either side of the screen to run</div>
+  </div>
+
   <!-- Écrans (pilotés par src/ui/Menus.js) -->
   <div class="screen" id="start">
     <div class="menu-brand"><span class="brand-icon">d.</span><span>DINO RACE FIGHT CLUB</span></div>
@@ -43,10 +52,26 @@
         <button class="mp-button" data-mp="open">⚔ Multiplayer</button>
       </div>
     </div>
-    <div class="menu-footer">
-      <div class="controls"><span><b>↑</b> run</span><span><b>← →</b> steer</span><span><b>SPACE</b> jump</span><span><b>SHIFT</b> slide</span><span><b>E / F</b> slap</span></div>
-      <div class="buttons"><button data-action="shop">🛒 Shop</button><button data-action="music">♫ Music</button></div>
-    </div>
+    <section class="menu-footer" aria-labelledby="controlsTitle">
+      <div class="controls-heading">
+        <div><h2 id="controlsTitle">HOW TO PLAY</h2><p>Keep moving. Stay on track.</p></div>
+        <div class="buttons"><button data-action="shop">🛒 Shop</button><button data-action="music">♫ Music</button></div>
+      </div>
+      <div class="controls control-keyboard">
+        <div class="control-card control-run"><kbd>↑ <small>/ W</small></kbd><strong>Hold to run</strong></div>
+        <div class="control-card"><kbd>← →</kbd><strong>Steer</strong></div>
+        <div class="control-card"><kbd>SPACE</kbd><strong>Jump</strong></div>
+        <div class="control-card"><kbd>SHIFT</kbd><strong>Drift → boost</strong></div>
+        <div class="control-card"><kbd>E / F</kbd><strong>Slap rivals</strong></div>
+        <div class="control-card"><kbd>↓ <small>/ S</small></kbd><strong>Brake</strong></div>
+      </div>
+      <div class="controls control-touch">
+        <div class="control-card control-run"><b>HOLD LEFT / RIGHT</b><strong>Run + steer</strong></div>
+        <div class="control-card"><b>SWIPE UP ↑</b><strong>Jump</strong></div>
+        <div class="control-card"><b>TWO FINGERS</b><strong>Drift → boost</strong></div>
+        <div class="control-card"><b>TAP ✋</b><strong>Slap rivals</strong></div>
+      </div>
+    </section>
   </div>
 
   <div class="screen hidden" id="over">

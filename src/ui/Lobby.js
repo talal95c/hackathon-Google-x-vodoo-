@@ -1,3 +1,5 @@
+import { RaceCountdown } from './RaceCountdown.js';
+
 // Salon multijoueur : créer une partie (code + lien), rejoindre, liste des joueurs, lancement,
 // compte à rebours, classement live pendant la course et coup d'épaule.
 import { Skins } from '../kernel/Registry.js';
@@ -9,8 +11,10 @@ const CODE_RE = /[A-Z0-9]{5}/;
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 export class Lobby {
-  constructor({ mp, bots, menus, hud, onLaunch }) {
+  constructor({ mp, bots, menus, hud, onLaunch, onInteract = () => {} }) {
     Object.assign(this, { mp, bots, menus, hud, onLaunch });
+    this.startCountdown = new RaceCountdown({ onStep: step => this.renderCountdown(step) });
+    mp.on('left', () => this.startCountdown.cancel());
     this.el = $('mpPanel');
     menus.panels.mp = this.el;
     $('mpName').value = mp.name;
@@ -20,6 +24,7 @@ export class Lobby {
       const b = e.target.closest('[data-mp]');
       if (!b) return;
       const a = b.dataset.mp;
+      onInteract();
       if (a === 'open') this.open();
       else if (a === 'create') await this.#connect(() => mp.create());
       else if (a === 'join') { const code = this.#readCode(); if (code) await this.#connect(() => mp.join(code)); else this.status('Type the 5-letter code your friend sent you.'); }
@@ -103,10 +108,25 @@ export class Lobby {
     $('mpLaunch').textContent = mp.peers.size ? `⚔ Start the race · ${rows.length} players` : '⚔ Start alone (to test)';
   }
 
-  // Compte à rebours avant le départ
-  countdown(delay, go) {
-    [3, 2, 1].forEach((n) => setTimeout(() => this.hud.banner(`${n}`, 0.9), Math.max(0, delay - n * 1000)));
-    setTimeout(() => { this.hud.banner('GO! ⚔', 0.8); go(); }, delay);
+  // Le départ garde le délai réseau, même si un onglet a pris du retard.
+  get countingDown() { return this.startCountdown.running; }
+  countdown(delay, go) { this.startCountdown.start(delay, go); }
+
+  renderCountdown(step) {
+    const el = $('raceCountdown');
+    el.classList.toggle('hidden', step === null);
+    document.body.classList.toggle('counting-down', this.countingDown);
+    if (step === null) return;
+    el.dataset.step = String(step);
+    $('countdownNumber').textContent = step === 'ready' ? 'READY' : step === 0 ? 'GO!' : String(step);
+    $('countdownLabel').textContent = step === 0 ? 'MAKE YOUR ESCAPE!' : step === 1 ? 'GET SET!' : 'ON YOUR MARKS';
+    el.querySelectorAll('.countdown-lights i').forEach((light, i) => {
+      light.classList.toggle('lit', step !== 'ready' && (step === 0 || i < 4 - step));
+    });
+    el.classList.remove('countdown-hit');
+    void el.offsetWidth;
+    el.classList.add('countdown-hit');
+    if (typeof step === 'number') this.mp.game.emit('mp:countdown', { step });
   }
 
   // Course en cours : multijoueur, ou solo avec PNJ

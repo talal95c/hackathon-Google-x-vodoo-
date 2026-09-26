@@ -44,6 +44,8 @@ test('vibrations : chaque action importante du jeu a son motif', () => {
     ['boss:defeated', {}, PATTERNS.bossDefeated],
     ['club:finisher', {}, PATTERNS.finisher],
     ['pad:used', {}, PATTERNS.boost],
+    ['mp:countdown', { step: 3 }, PATTERNS.shove],
+    ['mp:countdown', { step: 0 }, PATTERNS.boost],
   ]) {
     advance(200);
     g.emit(type, payload);
