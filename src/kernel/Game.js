@@ -88,6 +88,7 @@ export class Game {
     this.pausedRaceState = null;
     this.worldJump = null;
     this.nextWorld = 1;
+    this.worldWarn = null;
     this.track.update(this.runner.z);
   }
 
@@ -168,9 +169,9 @@ export class Game {
   update(dt, intent, wallDt = dt) {
     this.beat.update(Math.min(dt, 0.25)); // l'horloge musicale tourne en temps réel, même au menu
     if (intent.jump) this.pendingJump = true;
-    if (this.state !== 'playing' && this.state !== 'falling') return;
     const scale = this.timeWarp.left > 0 ? this.timeWarp.scale : 1;
     this.timeWarp.left = Math.max(0, this.timeWarp.left - wallDt);
+    if (this.state !== 'playing' && this.state !== 'falling') return;
     this.acc += Math.min(dt, 0.25) * scale;
     let n = 0;
     while (this.acc >= GAME.fixedDt && n < GAME.maxSubSteps) {
@@ -192,9 +193,18 @@ export class Game {
     r.cruise = S.get('baseSpeed') * this.tempo.ratio;
     while (!this.worldJump && this.nextWorld < ZONES.length && r.z > this.nextWorld * TRACK.zoneLength + WORLD_JUMP.tail) this.nextWorld++;
     const boundary = this.nextWorld * TRACK.zoneLength;
+    if (!this.worldJump && this.nextWorld < ZONES.length) {
+      const seconds = Math.ceil((boundary - WORLD_JUMP.lead - r.z) / Math.max(r.speed, 1));
+      if (seconds > GAME.worldWarning) this.worldWarn = null;
+      else if (seconds >= 1 && (this.worldWarn === null || seconds < this.worldWarn || seconds > this.worldWarn + 1)) {
+        this.worldWarn = seconds;
+        this.emit('world:soon', { to: ZONES[this.nextWorld], seconds });
+      }
+    }
     if (!this.worldJump && this.nextWorld < ZONES.length && r.z >= boundary - WORLD_JUMP.lead) {
       this.worldJump = { from: this.zoneIndex, to: this.nextWorld, start: boundary - WORLD_JUMP.lead, end: boundary + WORLD_JUMP.tail, x: r.x, y: Math.max(0, r.y), progress: 0 };
       r.drifting = false; r.manual = false; r.stumble = 0; r.latV = 0; r.push = 0;
+      this.worldWarn = null;
       this.emit('world:jump', { from: this.zone, to: ZONES[this.nextWorld] });
       this.nextWorld++;
     }

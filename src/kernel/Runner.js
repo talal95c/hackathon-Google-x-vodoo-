@@ -98,6 +98,16 @@ export class Runner {
     this.stumble = Math.max(0, this.stumble - dt);
     this.invul = Math.max(0, this.invul - dt);
 
+    const stun = this.effects.get('fightStun');
+    if (stun) {
+      // Le perdant attend une seconde après le ring. Aucun saut, boost ou virage ne peut l'emporter.
+      this.speed = this.latV = this.push = this.knockV = this.steer = this.jumpBuf = this.boost = 0;
+      this.#stopDrift(false); this.invul = Math.max(this.invul, .2);
+      stun.update(dt);
+      if (stun.timeLeft <= 0) { stun.remove(); this.effects.delete('fightStun'); g.emit('effect:expire', { effect: stun }); }
+      return; // le ralentissement de cinq secondes commence ensuite
+    }
+
     // Vertical (altitude absolue)
     if (intent.jump) this.jumpBuf = S.get('jumpBuffer');
     else this.jumpBuf = Math.max(0, this.jumpBuf - dt);

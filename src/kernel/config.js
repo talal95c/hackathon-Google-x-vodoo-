@@ -47,17 +47,19 @@ export const GAME = {
   // La musique suit (tempo × ratio) avec une transition DJ, en décalé : le jeu ne l'attend jamais.
   tempoLevels: [
     { at: 0, ratio: 1 },
-    { at: 450, ratio: 1.1 },
-    { at: 1100, ratio: 1.2 },
-    { at: 1900, ratio: 1.3 },
-    { at: 2900, ratio: 1.4 },
+    // un palier ~5 s après l'arrivée dans chaque nouveau monde (zoneLength × n + 200)
+    { at: 1880, ratio: 1.1 },
+    { at: 3560, ratio: 1.2 },
+    { at: 5240, ratio: 1.3 },
+    { at: 6920, ratio: 1.4 },
   ],
   fixedDt: 1 / 120,      // pas de simulation fixe (physique déterministe)
   maxSubSteps: 8,
+  worldWarning: 5,       // secondes d'avertissement avant un changement de monde
   nearMissMargin: 0.9,   // écart max (m) pour compter un frôlement
   nearMissSlowMo: 0.35,  // durée réelle du ralenti de frôlement (s)
   nearMissTimeScale: 0.4,
-  difficultyDistance: 5000,
+  difficultyDistance: 6720, // difficulté max à l'entrée du dernier monde
   fallDuration: 1.3,     // durée de la chute avant de perdre une vie et de réapparaître
   respawnInvul: 2,       // invulnérabilité après une réapparition
   coinValue: 25,
@@ -87,7 +89,7 @@ export const TRACK = {
   hardTurnChance: 0.14,  // probabilité à chaque nouvel arc (+ 0.1 avec la difficulté)
   hardTurnRadius: [10, 12],
   hardTurnAngle: [1.3, 1.9], // rad (75° → 110°)
-  zoneLength: 720,       // 6 morceaux : un nouveau monde environ toutes les 20 secondes
+  zoneLength: 1680,      // 14 morceaux : un nouveau monde environ toutes les 45 secondes
 };
 
 // Rythme des apparitions et des boss
@@ -95,7 +97,7 @@ export const DIRECTOR = {
   firstSpawn: 120,       // rien avant 120 m (échauffement)
   gapEasy: 30,           // espace moyen entre deux "événements" au début…
   gapHard: 18,           // …et à pleine difficulté
-  bossStart: 700,        // le boss apparaît à 700 m dans la zone…
+  bossStart: 1660,       // le boss apparaît à 1660 m dans la zone…
   // …et l'arène dure jusqu'à la fin de la zone (500 m) : s'il est encore en vie, il s'enfuit
   arenaWeaponEvery: 90,  // une arme garantie tous les 90 m dans l'arène
 };
