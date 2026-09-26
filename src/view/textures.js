@@ -83,3 +83,75 @@ export const chevronTex = (left) => canvasTex(512, 128, (g, w, h) => {
     g.fill();
   }
 });
+
+// --- Faces des obstacles (fond transparent, posées devant un volume arrondi)
+const UI_FONT = '"Avenir Next", "Trebuchet MS", "Segoe UI", system-ui, sans-serif';
+const roundRect = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r); };
+
+function drawCookie(g, x, y, r) {
+  g.fillStyle = '#c98a4b'; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#e0a868'; g.beginPath(); g.arc(x - r * .18, y - r * .18, r * .72, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#4a2c1a';
+  for (const [dx, dy, s] of [[-.35, -.3, .16], [.3, -.15, .13], [-.05, .35, .15], [.38, .38, .11], [-.45, .25, .1]]) {
+    g.beginPath(); g.arc(x + dx * r, y + dy * r, s * r, 0, Math.PI * 2); g.fill();
+  }
+}
+
+export const tabFaceTex = (label) => canvasTex(1024, 256, (g, w, h) => {
+  g.fillStyle = '#1a73e8'; g.beginPath(); g.arc(110, h / 2, 42, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#ffffff'; g.beginPath(); g.arc(110, h / 2, 16, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#202124'; g.font = `800 76px ${UI_FONT}`; g.textBaseline = 'middle';
+  g.fillText(label, 190, h / 2 + 4);
+});
+
+export const cookieFaceTex = () => canvasTex(1024, 208, (g, w, h) => {
+  drawCookie(g, 92, h / 2, 56);
+  g.textBaseline = 'middle';
+  g.fillStyle = '#202124'; g.font = `800 50px ${UI_FONT}`; g.fillText('Ce site utilise des cookies', 180, 76);
+  g.fillStyle = '#5f6368'; g.font = `600 32px ${UI_FONT}`; g.fillText('pour améliorer votre fuite.', 180, 134);
+});
+
+export const acceptTex = () => canvasTex(256, 96, (g, w, h) => {
+  g.fillStyle = '#1a73e8'; roundRect(g, 0, 0, w, h, 26); g.fill();
+  g.fillStyle = '#ffffff'; g.font = `900 38px ${UI_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText('ACCEPTER', w / 2, h / 2 + 2);
+});
+
+export const popupFaceTex = () => canvasTex(512, 256, (g, w, h) => {
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillStyle = '#fbbc04'; g.font = `900 34px ${UI_FONT}`; g.fillText('★ FÉLICITATIONS ★', w / 2, 44);
+  g.fillStyle = '#202124'; g.font = `900 46px ${UI_FONT}`;
+  g.fillText('Vous avez gagné', w / 2, 102); g.fillText('un iPhone 27 !', w / 2, 152);
+  g.fillStyle = '#34a853'; roundRect(g, w / 2 - 130, 186, 260, 58, 29); g.fill();
+  g.fillStyle = '#ffffff'; g.font = `900 30px ${UI_FONT}`; g.fillText('RÉCLAMER', w / 2, 216);
+});
+
+export const popupTitleTex = () => canvasTex(512, 64, (g, w, h) => {
+  g.fillStyle = '#ffffff'; g.font = `800 30px ${UI_FONT}`; g.textBaseline = 'middle';
+  g.fillText('publicite-gratuite.exe', 22, h / 2 + 2);
+});
+
+// Bande danger jaune / noir (bas des barrières)
+export const hazardTex = () => {
+  const t = canvasTex(256, 32, (g, w, h) => {
+    g.fillStyle = '#202124'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#fbbc04';
+    for (let x = -h; x < w + h; x += 32) { g.beginPath(); g.moveTo(x, h); g.lineTo(x + 16, h); g.lineTo(x + 16 + h, 0); g.lineTo(x + h, 0); g.fill(); }
+  });
+  t.wrapS = THREE.RepeatWrapping;
+  return t;
+};
+
+// Ombre de contact douce (disque radial)
+export const shadowTex = () => canvasTex(128, 128, (g, w, h) => {
+  const grd = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+  grd.addColorStop(0, 'rgba(0,0,0,.55)'); grd.addColorStop(.55, 'rgba(0,0,0,.25)'); grd.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grd; g.fillRect(0, 0, w, h);
+});
+
+// Halo lumineux (blanc, teinté par le matériau)
+export const glowTex = () => canvasTex(128, 128, (g, w, h) => {
+  const grd = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+  grd.addColorStop(0, 'rgba(255,255,255,1)'); grd.addColorStop(.35, 'rgba(255,255,255,.35)'); grd.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grd; g.fillRect(0, 0, w, h);
+});

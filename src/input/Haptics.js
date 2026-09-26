@@ -15,6 +15,7 @@ export const PATTERNS = {
   shove: 25,
   fall: 180,
   boost: 40,
+  pad: 22,
   world: [25, 40, 25],
   boss: [80, 50, 80],
   bossDefeated: [40, 30, 40, 30, 140],
@@ -61,6 +62,7 @@ export function bindHaptics(game, haptics) {
   on('runner:nearMiss', () => haptics.pulse('nearMiss'));
   on('runner:hit', () => haptics.pulse('hit'));
   on('runner:fall', () => haptics.pulse('fall'));
+  on('pad:used', () => haptics.pulse('pad', { light: true }));
   on('runner:boost', ({ big }) => { if (big) haptics.pulse('boost'); });
   on('combat:impact', ({ local }) => { if (local) haptics.pulse('shove', { light: true }); });
   on('world:land', () => haptics.pulse('world'));
