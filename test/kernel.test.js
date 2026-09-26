@@ -6,7 +6,7 @@ import { Game } from '../src/kernel/Game.js';
 import { Shop } from '../src/meta/Shop.js';
 import { Profile } from '../src/meta/Profile.js';
 import { MemoryStorage } from '../src/meta/Storage.js';
-import { CHALLENGES } from '../src/content/challenges.js';
+import { CHALLENGES, FLASH_CHALLENGE } from '../src/content/challenges.js';
 import { Input } from '../src/input/Input.js';
 
 const idle = { steer: 0, drift: false, brake: false, jump: false };
@@ -123,6 +123,45 @@ test('défis facultatifs : sélection conservée, seule la réussite crédite la
   for (let i = 0; i < 3; i++) { g.runner.invul = 0; g.runner.hurt({}); }
   assert.equal(result.challenge.complete, false);
   assert.equal(profile.recordRun(result).challengeReward, 0);
+});
+
+test('récompense quotidienne : une demande par jour UTC, série conservée et réinitialisée après une absence', () => {
+  const storage = new MemoryStorage();
+  const profile = new Profile(storage);
+  const day = Date.UTC(2026, 8, 26);
+  assert.deepEqual(profile.dailyStatus(day), { claimed: false, day: 1, reward: 10 });
+  assert.equal(profile.claimDaily(day), 10);
+  assert.equal(profile.claimDaily(day + 1000), 0);
+  const restored = new Profile(storage);
+  assert.equal(restored.dailyStatus(day + 86400000).day, 2);
+  assert.equal(restored.claimDaily(day + 86400000), 20);
+  assert.equal(restored.coins, 30);
+  assert.equal(restored.dailyStatus(day + 3 * 86400000).day, 1);
+  assert.equal(restored.claimDaily(day + 3 * 86400000), 10);
+  assert.equal(restored.coins, 40);
+  for (let i = 4; i < 11; i++) restored.claimDaily(day + i * 86400000);
+  assert.equal(restored.dailyStatus(day + 10 * 86400000).day, 7);
+  assert.equal(restored.dailyStatus(day + 12 * 86400000).day, 1);
+});
+
+test('défi éclair : inscription facultative, gain unique avant expiration et reprise après minuit UTC', () => {
+  const storage = new MemoryStorage();
+  const profile = new Profile(storage);
+  const now = Date.UTC(2026, 8, 26, 23, 58);
+  assert.equal(profile.completeFlash(12, now), 0);
+  assert.equal(profile.startFlash(now), true);
+  assert.equal(profile.startFlash(now), false);
+  const restored = new Profile(storage);
+  assert.equal(restored.flashStatus(now + 3 * 60000).state, 'active');
+  assert.equal(restored.completeFlash(11, now + 3 * 60000), 0);
+  assert.equal(restored.completeFlash(12, now + 4 * 60000), FLASH_CHALLENGE.reward);
+  assert.equal(restored.completeFlash(12, now + 5 * 60000), 0);
+  restored.recordRun({ coins: 12, score: 100 });
+  assert.equal(restored.coins, 12 + FLASH_CHALLENGE.reward);
+  assert.equal(restored.startFlash(now + 5 * 60000), true);
+  assert.equal(restored.flashStatus(now + 5 * 60000 + FLASH_CHALLENGE.durationMs).state, 'expired');
+  assert.equal(restored.completeFlash(12, now + 5 * 60000 + FLASH_CHALLENGE.durationMs), 0);
+  assert.equal(restored.startFlash(now + 5 * 60000 + FLASH_CHALLENGE.durationMs), false);
 });
 
 test('le choix de trajectoire propose une voie sûre et une voie dorée en bord de piste', () => {

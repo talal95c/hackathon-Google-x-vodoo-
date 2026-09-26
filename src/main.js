@@ -68,6 +68,7 @@ const hud = new Hud(game, profile);
 const input = new Input();
 const menus = new Menus({ game, profile, shop, lyria, music, onPlay: play });
 let overAt = 0;
+let runFlashReward = 0;
 
 function play() {
   sfx.init(); // l'audio ne peut démarrer qu'après une action du joueur
@@ -81,13 +82,24 @@ input.onAction((a) => {
   if (game.state === 'menu' || (game.state === 'over' && performance.now() - overAt > 900)) play();
 });
 
-game.on('game:start', ({ loadout }) => hud.setMusicLabel(`🎵 ${MusicThemes.get(loadout.theme).name}${lyria.ready ? ' · Lyria' : ''}`));
+game.on('game:start', ({ loadout }) => {
+  runFlashReward = 0;
+  hud.setMusicLabel(`🎵 ${MusicThemes.get(loadout.theme).name}${lyria.ready ? ' · Lyria' : ''}`);
+});
+game.on('coins', ({ total }) => {
+  if (game.state !== 'playing') return;
+  const reward = profile.completeFlash(total);
+  if (!reward) return;
+  runFlashReward = reward;
+  hud.banner(`DÉFI ÉCLAIR RÉUSSI ! +${reward} ★`);
+  menus.refresh();
+});
 lyria.onStatus((status) => { if (status === 'playing') hud.setMusicLabel(`🎵 ${lyria.theme.name} · Lyria live`); });
 game.on('game:over', (result) => {
   overAt = performance.now();
   const record = profile.recordRun(result);
   hud.setBest(record.best);
-  setTimeout(() => menus.showGameOver(result, record), 700);
+  setTimeout(() => menus.showGameOver(result, { ...record, flashReward: runFlashReward }), 700);
 });
 
 // --- Boucle
@@ -103,6 +115,7 @@ function frame(now) {
   for (const v of views) v.update(dt, time);
   music.update(dt);
   hud.update(dt);
+  menus.update();
   world.update(dt, ctx.focus);
   world.render(ctx.fx?.pulse ?? 0, game.worldJump ? Math.sin(game.worldJump.progress * Math.PI) : game.feverTime > 0 ? 1 : game.runner.boost > 0 ? .8 : 0);
   requestAnimationFrame(frame);

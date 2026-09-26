@@ -3,3 +3,5 @@ export const CHALLENGES = [
   { id: 'parrier', name: 'Paradeur', description: 'Réussir 2 parades dans une course', metric: 'parries', target: 2, reward: 60 },
   { id: 'traveler', name: 'Voyageur', description: 'Parcourir 900 m dans une course', metric: 'distance', target: 900, reward: 50 },
 ];
+
+export const FLASH_CHALLENGE = { target: 12, reward: 35, durationMs: 10 * 60 * 1000 };
