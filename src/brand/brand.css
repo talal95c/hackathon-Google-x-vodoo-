@@ -1,8 +1,13 @@
+/* Brand overlay: brand colors on top of the game's own UI styles (src/ui/style.css). */
 .branded #start h1 span { color: var(--brand-accent); }
 .branded #start .menu-brand { align-items: center; }
 .branded .brand-logo { height: 42px; max-width: 160px; object-fit: contain; background: var(--brand-primary); padding: 6px 10px; border-radius: 10px; }
-.branded .brand-cta { display: inline-flex; align-items: center; gap: 8px; padding: 14px 22px; border-radius: 999px; background: var(--brand-accent); color: var(--brand-primary); font-weight: 900; text-decoration: none; letter-spacing: .02em; }
+.branded .brand-cta { display: inline-flex; align-items: center; gap: 9px; padding: 13px 20px; border: 1px solid var(--brand-accent); border-radius: 14px; background: var(--brand-accent); color: var(--brand-primary); font: inherit; font-size: 14px; font-weight: 700; text-decoration: none; transition: transform .15s, box-shadow .15s; }
+.branded .brand-cta:hover { transform: translateY(-2px); box-shadow: 0 5px 15px #163f4214; }
+.branded .brand-cta:focus-visible { outline: 3px solid #e78759; outline-offset: 4px; }
 .branded .brand-cta::after { content: '↗'; }
-.branded #start .hero-tag .tag-dot, .branded .live-dot { background: var(--brand-accent); }
-.brand-badge { position: fixed; left: 14px; top: 50%; transform: translateY(-50%); flex-direction: column; max-width: 150px; text-align: center; z-index: 5; display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; border-radius: 14px; background: var(--brand-primary); color: var(--brand-light); font: 700 12px/1.2 sans-serif; text-decoration: none; letter-spacing: .04em; text-transform: uppercase; box-shadow: 0 6px 20px #0004; }
+.branded #start .hero-tag .tag-dot, .branded .live-dot { background: var(--brand-accent); box-shadow: 0 0 0 4px #0000000d; }
+.brand-badge { position: fixed; right: 16px; top: 50%; transform: translateY(-50%); z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 150px; padding: 12px 14px; border-radius: 15px; background: var(--brand-primary); color: var(--brand-light); font: inherit; font-size: 11px; font-weight: 700; line-height: 1.25; letter-spacing: 1px; text-align: center; text-transform: uppercase; text-decoration: none; box-shadow: 0 5px 20px #174b4022; }
 .brand-badge .brand-logo { height: 30px; padding: 0; }
+@media (max-width: 700px) { .brand-badge { display: none; } }
+@media (prefers-reduced-motion: reduce) { .branded .brand-cta { transition: none; } }
