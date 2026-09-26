@@ -6,7 +6,8 @@ import { skinPortraits } from './SkinPortraits.js';
 const $ = (id) => document.getElementById(id);
 const MAX_PLAYERS = 7; // autant que de couleurs côté réseau
 const CODE_RE = /[A-Z0-9]{5}/;
-const ROW = 44;
+const COMPACT = globalThis.matchMedia?.('(max-width: 759px), (max-height: 500px)'); // même seuil que style.css
+const rowH = () => (COMPACT?.matches ? 32 : 44);
 const initial = (n) => esc((n || '?').trim().charAt(0).toUpperCase());
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -144,7 +145,7 @@ export class Lobby {
         clearTimeout(r.t); r.t = setTimeout(() => r.li.classList.remove('up', 'down'), 1100);
         r.rank = i;
       }
-      r.li.style.setProperty('--y', `${i * ROW}px`);
+      r.li.style.setProperty('--y', `${i * rowH()}px`);
       r.li.style.setProperty('--c', p.color);
       r.li.className = r.li.className.replace(/\b(p[123]|me|out)\b/g, '').trim();
       if (p.alive && i < 3) r.li.classList.add(`p${i + 1}`);
@@ -158,7 +159,7 @@ export class Lobby {
       r.q('.bar > i').style.transform = `scaleX(${Math.min(1, p.dist / lead)})`;
     });
     for (const [key, r] of rows) if (!seen.has(key)) { r.li.remove(); rows.delete(key); }
-    el.style.height = `${ranking.length * ROW + 34}px`;
+    el.style.height = `${ranking.length * rowH() + 34}px`;
   }
 
   update() {
