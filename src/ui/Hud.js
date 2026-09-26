@@ -27,7 +27,7 @@ export class Hud {
       this.el.touchHint.classList.add('active');
     });
     on('tempo', ({ level }) => { if (level > 0) this.banner(`VITESSE ×${game.tempo.ratio.toFixed(1)}`, 1.4); });
-    on('zone', ({ number, zone }) => { this.banner(`MONDE ${Math.min(number + 1, 5)} — ${zone.name}`); this.el.hud.style.color = zone.palette.text; this.el.banner.style.color = zone.palette.text; });
+    on('zone', ({ number, zone }) => { this.banner(`MONDE ${Math.min(number + 1, 5)} — ${zone.name}`); this.el.hud.style.color = zone.palette.text; this.el.banner.style.setProperty('--banner-color', zone.palette.text); });
     on('world:jump', ({ to }) => this.banner(`ÉVASION → ${to.name}`, 1.8));
     on('world:land', ({ zone }) => this.banner(zone.subtitle, 2.2));
     on('life:lost', () => this.#lives(true));

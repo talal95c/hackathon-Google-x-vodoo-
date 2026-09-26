@@ -89,7 +89,7 @@ body:not(.in-game) #hud { opacity: 0; }
 #flash { background: white; opacity: 0; }
 #banner {
   position: fixed; top: 25%; left: 12px; right: 12px;
-  color: var(--ink); text-align: center; font-size: clamp(20px, 4vw, 34px);
+  color: var(--banner-color, var(--ink)); text-align: center; font-size: clamp(20px, 4vw, 34px);
   font-weight: 950; letter-spacing: -.04em; text-shadow: 0 2px 8px #ffffffb3;
   opacity: 0; pointer-events: none; transition: opacity .4s;
 }
@@ -226,7 +226,26 @@ body:not(.in-game) #hud { opacity: 0; }
     background: #183d42e8; color: white; text-align: center; font-size: 10px; font-weight: 750;
     animation: hint-out 5s forwards;
   }
-  #banner { top: 50%; }
+  #banner {
+    top: calc(max(12px, env(safe-area-inset-top)) + 160px);
+    left: 50%;
+    right: auto;
+    width: min(280px, 80vw);
+    height: 39px;
+    padding: 11px 10px;
+    transform: translateX(-50%);
+    overflow: hidden;
+    border: 1px solid #ffffffb8;
+    border-radius: 16px;
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 6px 20px #123f3919;
+    font-size: 12px;
+    line-height: 16px;
+    text-overflow: ellipsis;
+    text-shadow: none;
+    white-space: nowrap;
+  }
   .panel { inset: auto 0 0; max-height: min(88dvh, 880px); padding: 22px 16px calc(20px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; }
   .panel-head h2 { font-size: 23px; }
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
