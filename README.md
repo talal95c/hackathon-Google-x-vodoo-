@@ -31,7 +31,13 @@ boss, boutique (skins, musiques, améliorations) et musique générée en direct
 - ↓ : freiner
 - Mobile (pouce) : le pouce reste posé et glisse ; gauche/droite = direction analogique, coup vers le haut = saut,
   glisser vers le bas = glissade, coup sec sur le côté = pousser, tap ou 2e doigt = objet
-- Course Royale : E/F = objet, X = pousser, 1-4 = emotes
+- Course Royale : E = objet, X = pousser, 1-4 = emotes
+- F : parer un bloc violet à proximité (fenêtre de 0,14 s)
+
+Les pièces remplissent la jauge de Frénésie : pendant 6 secondes, le dino écrase les obstacles
+sur la route, mais peut toujours tomber. Certaines sections proposent une voie sûre avec des
+pièces normales et une voie en bord de piste avec des pièces dorées. Le menu Défis permet de
+sélectionner un objectif facultatif par course, sans limite de temps.
 
 ## Course Royale (multijoueur 2-5 joueurs)
     npm run server     # serveur WebSocket sur ws://localhost:2567 (salons, bots, trophées, Elo)

@@ -41,6 +41,7 @@ export class ThumbGestures {
   up(id, x, y, t) {
     const m = this.#main;
     if (!m || m.id !== id) return;
+    this.move(id, x, y, t); // coup rapide sans touchmove intermédiaire
     if (t - m.t0 < THUMB.tapMs && m.moved < THUMB.tapMove) this.#item = true; // tap bref
     this.#main = null;
     this.steer = 0; this.drift = false;

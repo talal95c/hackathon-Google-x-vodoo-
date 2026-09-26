@@ -47,7 +47,7 @@ export class Runner {
     this.tricking = false; this.trickDone = false;
   }
 
-  get isInvulnerable() { return !!this.game.worldJump || this.invul > 0 || this.autopilot > 0 || !!this.weapon?.grantsInvulnerability; }
+  get isInvulnerable() { return !!this.game.worldJump || this.invul > 0 || this.game.feverTime > 0 || this.autopilot > 0 || !!this.weapon?.grantsInvulnerability; }
   get raging() { return this.effects.has('rage'); }
 
   // Coup d'épaule : petit dash latéral (dir +1 = gauche). Renvoie false pendant le temps de recharge.
@@ -58,7 +58,7 @@ export class Runner {
     this.game.emit('runner:dash', { dir: Math.sign(dir) });
     return true;
   }
-  get smashes() { return !!this.weapon?.smashes; }
+  get smashes() { return this.game.feverTime > 0 || !!this.weapon?.smashes; }
 
   // --- API utilisée par les entités / armes
   hurt(source) {

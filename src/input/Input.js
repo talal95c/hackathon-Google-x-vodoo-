@@ -1,14 +1,14 @@
 import { ThumbGestures } from './ThumbInput.js';
 
 // Clavier (QWERTY + AZERTY) et tactile → "intention" lue par le kernel à chaque frame :
-//   { steer: -1..1 (+1 = gauche), drift, brake, jump, item, shove: -1|0|1 } (jump/item/shove = front montant)
-// Tactile : scheme 'thumb' (pouce qui glisse, voir ThumbInput.js) ou 'halves' (moitiés d'écran, ancien).
+//   { steer: -1..1 (+1 = gauche), drift, brake, jump, attack, item, shove: -1|0|1 } (jump/attack/item/shove = front montant)
+// Tactile : scheme 'thumb' (pouce qui glisse, voir ThumbInput.js) ou 'halves' (moitiés d'écran, tap bref = parade ; en mode pouce, le tap sert aussi à parer).
 // onAction(fn) : fn('confirm') sur ESPACE / ENTRÉE / tap (démarrer, réessayer), fn('emote', i) sur 1-4.
 export class Input {
   #keys = new Set();
   #touches = new Map();
   #swipe = new Map();
-  #jump = false; #item = false; #shove = 0;
+  #jump = false; #attack = false; #item = false; #shove = 0;
   #listeners = new Set();
   steer = 0;
   enabled = true; // false quand un menu a le focus
@@ -23,7 +23,8 @@ export class Input {
       this.#keys.add(e.code);
       if (e.repeat) return;
       if (JUMP.includes(e.code)) this.#jump = true;
-      if (e.code === 'KeyE' || e.code === 'KeyF') this.#item = true;
+      if (e.code === 'KeyF') this.#attack = true;
+      if (e.code === 'KeyE') this.#item = true;
       if (e.code === 'KeyX') this.#shove = this.steer > 0.15 ? 1 : this.steer < -0.15 ? -1 : (this.lastSide ?? 1);
       if (/^Digit[1-4]$/.test(e.code)) this.#fire('emote', +e.code.slice(5) - 1);
       if (e.code === 'Space' || e.code === 'Enter') this.#fire('confirm');
@@ -44,8 +45,13 @@ export class Input {
         this.#touches.clear();
         for (const t of e.touches) this.#touches.set(t.identifier, t.clientX < window.innerWidth / 2 ? 1 : -1);
         for (const t of e.changedTouches) {
-          if (e.type === 'touchstart') this.#swipe.set(t.identifier, t.clientY);
-          else if (this.#swipe.has(t.identifier) && this.#swipe.get(t.identifier) - t.clientY > 50) { this.#jump = true; this.#swipe.delete(t.identifier); }
+          if (e.type === 'touchstart') this.#swipe.set(t.identifier, { y: t.clientY, x: t.clientX, at: performance.now() });
+          else if (this.#swipe.has(t.identifier)) {
+            const start = this.#swipe.get(t.identifier);
+            if (e.type !== 'touchcancel' && start.y - t.clientY > 50) { this.#jump = true; this.#swipe.delete(t.identifier); }
+            else if (e.type === 'touchend' && performance.now() - start.at < 300
+              && Math.hypot(t.clientX - start.x, t.clientY - start.y) < 25 && e.touches.length === 0) this.#attack = true;
+          }
           if (e.type === 'touchend' || e.type === 'touchcancel') this.#swipe.delete(t.identifier);
         }
       }
@@ -83,9 +89,9 @@ export class Input {
     const on = this.enabled;
     const out = {
       steer: this.steer, drift, brake: k.has('ArrowDown') || k.has('KeyS'),
-      jump: on && (this.#jump || g.jump), item: on && (this.#item || g.item), shove: on ? (this.#shove || g.shove) : 0,
+      jump: on && (this.#jump || g.jump), attack: on && (this.#attack || g.item), item: on && (this.#item || g.item), shove: on ? (this.#shove || g.shove) : 0,
     };
-    this.#jump = false; this.#item = false; this.#shove = 0;
+    this.#jump = false; this.#attack = false; this.#item = false; this.#shove = 0;
     return out;
   }
 }

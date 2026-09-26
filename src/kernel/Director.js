@@ -51,8 +51,8 @@ export class Director {
       }
       if (g.track.hardTurnAt(s, 25)) { s += 10; continue; } // rien dans les virages durs : le défi, c'est le virage
       const entry = this.#pick(zone.spawns, s);
-      const span = entry.pattern ? (entry.count ?? 8) * (entry.spacing ?? 3) : 0;
-      if (intersectsWorldSafe(s, s + span)) { s += 12; continue; }
+      const span = entry.pattern ? (entry.count ?? (entry.pattern === 'riskFork' ? 6 : 8)) * (entry.spacing ?? (entry.pattern === 'riskFork' ? 3.5 : 3)) : 0;
+      if (intersectsWorldSafe(s, s + span) || (span && g.track.hardTurnAt(s + span, 25))) { s += 12; continue; }
       s += entry.pattern ? PATTERNS[entry.pattern](g, chunk, s, W, entry) : this.#spawnOne(entry.type, chunk, s, W);
       s += gap * r.range(0.7, 1.3);
     }
@@ -105,6 +105,15 @@ const PATTERNS = {
   coinSnake(g, chunk, s, W, { count = 8, type = 'coin', spacing = 3 } = {}) {
     const amp = W / 2 - 2, ph = g.rng.range(0, 6), group = [];
     for (let k = 0; k < count; k++) group.push(g.spawn(type, s + k * spacing, Math.sin(ph + k * 0.5) * amp, { chunk: chunk.index, group }));
+    return count * spacing;
+  },
+  riskFork(g, chunk, s, _W, { count = 6, spacing = 3.5 } = {}) {
+    const side = g.rng.sign(), group = [], frame = {};
+    for (let k = 0; k < count; k++) {
+      const at = s + k * spacing, width = g.track.frame(at, frame).w;
+      g.spawn('coin', at, -side * width * 0.22, { chunk: chunk.index, group });
+      g.spawn('goldCoin', at, side * (width / 2 - 1.3), { chunk: chunk.index, group });
+    }
     return count * spacing;
   },
 };

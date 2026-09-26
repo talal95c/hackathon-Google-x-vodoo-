@@ -87,7 +87,7 @@ function play() {
   sfx.init(); // l'audio ne peut démarrer qu'après une action du joueur
   if (lyria.hasKey() && !lyria.ready && lyria.status !== 'connecting') lyria.connect();
   menus.show(null);
-  game.start(shop.prepareRun());
+  game.start({ ...shop.prepareRun(), challenge: profile.data.challenge });
 }
 
 input.onAction((a, arg) => {
@@ -123,7 +123,7 @@ function frame(now) {
   hud.update(dt);
   raceHud.update(dt);
   world.update(dt, ctx.focus);
-  world.render(ctx.fx?.pulse ?? 0, game.worldJump ? Math.sin(game.worldJump.progress * Math.PI) : game.runner.boost > 0 ? .8 : 0);
+  world.render(ctx.fx?.pulse ?? 0, game.worldJump ? Math.sin(game.worldJump.progress * Math.PI) : game.feverTime > 0 ? 1 : game.runner.boost > 0 ? .8 : 0);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

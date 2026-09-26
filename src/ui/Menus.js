@@ -1,5 +1,6 @@
 import { Skins, MusicThemes } from '../kernel/Registry.js';
 import { GAME } from '../kernel/config.js';
+import { CHALLENGES } from '../content/challenges.js';
 
 // Écrans (titre, fin de partie) et panneaux (boutique, musique Lyria).
 // Ne connaît le jeu qu'à travers des callbacks : onPlay().
@@ -12,7 +13,7 @@ export class Menus {
   constructor({ game, profile, shop, lyria, music, onPlay }) {
     Object.assign(this, { game, profile, shop, lyria, music, onPlay });
     this.screens = { start: $('start'), over: $('over') };
-    this.panels = { shop: $('shop'), music: $('musicPanel') };
+    this.panels = { shop: $('shop'), music: $('musicPanel'), challenges: $('challengesPanel') };
 
     document.addEventListener('click', (e) => {
       const b = e.target.closest('button');
@@ -22,6 +23,7 @@ export class Menus {
       else if (a === 'reggae') { profile.selectSkin('reggae'); game.emit('skin:preview', { skin: 'reggae' }); this.refresh(); }
       else if (a === 'shop') this.open('shop');
       else if (a === 'music') this.open('music');
+      else if (a === 'challenges') this.open('challenges');
       else if (a === 'close') this.closePanels();
       else if (a === 'connect') this.#connect();
       else if (a === 'forget') { lyria.setApiKey(''); $('apiKey').value = ''; this.#renderMusic(); }
@@ -29,6 +31,7 @@ export class Menus {
       else if (b.dataset.buy) { shop.buy(b.dataset.buy); this.refresh(); }
       else if (b.dataset.skin) { profile.selectSkin(b.dataset.skin); game.emit('skin:preview', { skin: b.dataset.skin }); this.refresh(); }
       else if (b.dataset.theme) { profile.selectTheme(b.dataset.theme); this.refresh(); }
+      else if (b.dataset.challenge) { profile.selectChallenge(b.dataset.challenge === 'none' ? null : b.dataset.challenge); this.refresh(); }
     });
     lyria.onStatus(() => this.#renderMusic());
     const voc = $('vocals');
@@ -53,7 +56,7 @@ export class Menus {
   open(name) { this.closePanels(); this.panels[name].classList.remove('hidden'); this.refresh(); }
   closePanels() { for (const p of Object.values(this.panels)) p.classList.add('hidden'); }
 
-  showGameOver(result, { isBest, best }) {
+  showGameOver(result, { isBest, best, challengeReward }) {
     const TXT = {
       fall: ['ERR_404 — le dino est tombé hors de la page', 'Page introuvable.'],
       dead: ['ERR_TOO_MANY_HITS — plus de vies', 'Le dino a planté.'],
@@ -62,7 +65,7 @@ export class Menus {
     $('overErr').textContent = TXT[0];
     $('overTitle').textContent = TXT[1];
     $('overScore').textContent = `${result.score} pts`;
-    $('overDetails').innerHTML = `${result.distance} m · +${result.coins} ★ (total ${this.profile.coins} ★)<br/>${isBest ? '🏆 NOUVEAU RECORD !' : `Record : ${best} pts`}`;
+    $('overDetails').innerHTML = `${result.distance} m · +${result.coins} ★${challengeReward ? ` · Défi +${challengeReward} ★` : ''} (total ${this.profile.coins} ★)<br/>${isBest ? '🏆 NOUVEAU RECORD !' : `Record : ${best} pts`}`;
     this.show('over');
   }
 
@@ -72,6 +75,16 @@ export class Menus {
     $('wallet').textContent = `★ ${this.profile.coins} pièces · skin ${Skins.get(this.profile.data.skin).name} · musique ${MusicThemes.get(this.profile.data.theme).name}`;
     this.#renderShop();
     this.#renderMusic();
+    this.#renderChallenges();
+  }
+
+  #renderChallenges() {
+    const selected = this.profile.data.challenge;
+    $('challengeGrid').innerHTML = CHALLENGES.map((c) => `<div class="card ${selected === c.id ? 'selected' : ''}">
+      <div class="name">${c.name}</div><div class="desc">${c.description} · +${c.reward} ★ par course réussie</div>
+      <button data-challenge="${c.id}" ${selected === c.id ? 'disabled' : ''}>${selected === c.id ? 'Sélectionné' : 'Choisir'}</button></div>`).join('')
+      + `<div class="card"><div class="name">Sans défi</div><div class="desc">Joue librement sans objectif supplémentaire.</div>
+      <button data-challenge="none" ${selected ? '' : 'disabled'}>${selected ? 'Choisir' : 'Sélectionné'}</button></div>`;
   }
 
   #renderShop() {
