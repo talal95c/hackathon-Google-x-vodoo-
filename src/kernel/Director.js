@@ -74,7 +74,7 @@ export class Director {
 
   // Déclenche le boss quand le dino entre dans l'arène
   update() {
-    const g = this.game, s = g.runner.z, n = Track.zoneNumber(s), zone = ZONES[Track.zoneIndex(s)];
+    const g = this.game, s = g.runner.z, n = Track.zoneNumber(s), zone = ZONES[g.track.zoneIndex(s)];
     if (!zone.boss || this.bossZone === n || s < this.arenaStart(s)) return;
     this.bossZone = n;
     this.boss = g.spawn(zone.boss, s + 30, 0, { arenaEnd: this.arenaEnd(s) });

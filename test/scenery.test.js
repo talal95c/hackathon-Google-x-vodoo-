@@ -48,6 +48,7 @@ test('décors : streaming et redémarrage libèrent les anciennes scènes',()=>{
 
 test('les tunnels sont retirés autour des virages en épingle',()=>{
   const chunk={index:1,s0:120,s1:240,zone:0};
-  assert.ok(tunnelSpan({hardTurns:[]},chunk));
-  assert.equal(tunnelSpan({hardTurns:[{s:210,end:235}]},chunk),null);
+  let salt=0;while(!tunnelSpan({salt,hardTurns:[]},chunk))salt++;
+  assert.ok(tunnelSpan({salt,hardTurns:[]},chunk));
+  assert.equal(tunnelSpan({salt,hardTurns:[{s:120,end:240}]},chunk),null);
 });

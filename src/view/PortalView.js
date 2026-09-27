@@ -1,8 +1,7 @@
 import * as THREE from 'three';
 import { View } from './View.js';
 import { ZONES } from '../content/zones.js';
-import { TRACK } from '../kernel/config.js';
-import { WORLD_JUMP } from '../kernel/WorldJourney.js';
+import { WORLD_JUMP, boundariesIn } from '../kernel/WorldJourney.js';
 
 // Le portail animé dans la porte de chaque monde (la porte elle-même est bâtie par WorldDecorView) :
 // un vortex aux couleurs du monde suivant, qui s'intensifie quand le dino approche et pulse au rythme.
@@ -21,10 +20,8 @@ export class PortalView extends View {
 
   #build(chunk) {
     if (ZONES[chunk.zone]?.site) return; // monde généré : pas de portail
-    for (let number = 1; number < ZONES.length; number++) {
-      const boundary = number * TRACK.zoneLength;
-      if (boundary < chunk.s0 || boundary >= chunk.s1) continue;
-      const to = ZONES[number].palette, f = this.track.frame(boundary, {});
+    for (const boundary of boundariesIn(chunk)) {
+      const to = ZONES[this.track.zoneIndex(boundary)].palette, f = this.track.frame(boundary, {});
       const material = new THREE.ShaderMaterial({
         transparent: true, depthWrite: false, side: THREE.DoubleSide,
         uniforms: {

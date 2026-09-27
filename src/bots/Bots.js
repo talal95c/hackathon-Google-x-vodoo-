@@ -1,3 +1,6 @@
+import { bounceOnBowl } from '../kernel/RoadProfiles.js';
+import { isWorldSafe } from '../kernel/WorldJourney.js';
+import { ZONES } from '../content/zones.js';
 import { bumpImpulse, shoveTarget, FIGHT } from '../net/rules.js';
 import { RUNNER } from '../kernel/config.js';
 
@@ -130,6 +133,8 @@ export class Bots {
         b.shoveCd = 2.5 + Math.random() * 2;
       }
 
+      track.frame(b.s,f);
+      if(ZONES[track.zoneIndex(b.s)].id==='pool'&&!isWorldSafe(b.s))bounceOnBowl(b,f.w,'d');
       // sorti de la route (poussé !) → éliminé
       if (b.y <= 0 && Math.abs(b.d) > f.w / 2 + 0.4) this.#eliminate(b, 'fall');
     }
