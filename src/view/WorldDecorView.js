@@ -178,9 +178,9 @@ export class WorldDecorView extends View {
     // The full route ahead is already generated when these chunks become visible.
     for (const chunk of this.track.chunks) if (!this.chunks.has(chunk.index) && chunk.s0 < this.game.runner.z + 310) this.build(chunk);
     this.palettes.forEach((palette,i)=>{
-      const night=ZONES[i].palette.night;
-      palette.neon.emissiveIntensity = (night?3.2:1.35) + (this.ctx.fx?.pulse ?? 0) * .35;
-      palette.gold.emissiveIntensity = (night?2.2:1.15) + (this.ctx.fx?.down ?? 0) * .3;
+      const sunset=ZONES[i].palette.sunset;
+      palette.neon.emissiveIntensity = (sunset?3.2:1.35) + (this.ctx.fx?.pulse ?? 0) * .35;
+      palette.gold.emissiveIntensity = (sunset?2.2:1.15) + (this.ctx.fx?.down ?? 0) * .3;
     });
     for (const group of this.chunks.values()) for (const mesh of group.userData.kinetics) {
       const m=mesh.userData.motion;

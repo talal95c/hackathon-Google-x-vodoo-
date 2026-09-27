@@ -58,7 +58,7 @@ export class SideLightShow extends View {
     const pulse=this.ctx.fx?.pulse??0;
     this.palette.forEach(row=>row.forEach((m,i)=>{m.emissiveIntensity=2.2+pulse*.65+Math.sin(time*2-i)*.12;}));
     const f=this.track.frame(this.game.runner.z,{}),colors=COLORS[this.game.zoneIndex];
-    this.lights.forEach((l,i)=>{const side=i?1:-1;l.color.setHex(colors[i]);l.position.set(f.x+f.lx*side*(f.w/2+2),f.y+3.5,f.z+f.lz*side*(f.w/2+2));l.intensity=(this.game.zone.palette.softLight?0:this.game.zone.palette.night?40+pulse*6:24+pulse*8)*(1-(this.world.enclosure??0));});
+    this.lights.forEach((l,i)=>{const side=i?1:-1;l.color.setHex(colors[i]);l.position.set(f.x+f.lx*side*(f.w/2+2),f.y+3.5,f.z+f.lz*side*(f.w/2+2));l.intensity=(this.game.zone.palette.softLight?0:this.game.zone.palette.sunset?40+pulse*6:24+pulse*8)*(1-(this.world.enclosure??0));});
   }
   dispose(){super.dispose();for(const i of [...this.chunks.keys()])this.remove(i);this.poolGeo.dispose();this.dark.dispose();this.cap.dispose();[this.palette,this.pools].forEach(rows=>rows.flat().forEach(m=>m.dispose()));this.lights.forEach(l=>{l.removeFromParent();l.dispose();});}
 }

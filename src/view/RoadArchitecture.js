@@ -18,9 +18,9 @@ const palettes=[
 export function buildRoadArchitecture(track,chunk) {
   const root=new THREE.Group(),buckets=new Map(),theme=chunk.zone;
   const colors=palettes[theme],span=tunnelSpan(track,chunk);
-  const night=ZONES[theme].palette.night;
+  const sunset=ZONES[theme].palette.sunset;
   const materials=colors.map((color,i)=>{
-    const settings={color,emissive:i===3?color:0,emissiveIntensity:i===3?(night?3.1:1.7):0,side:THREE.DoubleSide,flatShading:true};
+    const settings={color,emissive:i===3?color:0,emissiveIntensity:i===3?(sunset?3.1:1.7):0,side:THREE.DoubleSide,flatShading:true};
     return theme===2?new THREE.MeshLambertMaterial(settings):new THREE.MeshStandardMaterial({...settings,roughness:.86,envMapIntensity:.15});
   });
   root.userData.materials=materials;
@@ -55,7 +55,7 @@ export function buildRoadArchitecture(track,chunk) {
         const wave=theme===0?Math.sin(s*.21)*.2:0;
         rod(theme===0?(Math.floor(s/4)%2?0:1):theme===1?0:3,
           point(s,side*(w+.7),.45+wave),point(s+2,side*(nw+.7),.45+wave),theme===0?.52:theme===1?.38:.16);
-        if(night)rod(3,point(s,side*(w+.52),.13),point(s+2,side*(nw+.52),.13),.09);
+        if(sunset)rod(3,point(s,side*(w+.52),.13),point(s+2,side*(nw+.52),.13),.09);
         if(theme===4)rod(2,point(s,side*(w+.9),-.65),point(s+2,side*(nw+.9),-.65),.5);
         if(theme===1) { // Each leaf vein joins the edge of the living boardwalk.
           if(Math.floor(s)%10===0)rod(1,point(s,side*(w+.65),-.1),point(s+6,side*(nw+2.6),-.4),.12);

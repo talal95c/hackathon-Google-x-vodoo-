@@ -16,8 +16,8 @@ export const ZONES = [
     boss: null,
   },
   {
-    id: 'moon', name: 'MOON GARDEN', subtitle: 'A little stranger after dark.',
-    palette: { night: true, sky: 0x142b3c, skyTop: 0x060d24, cloud: 0x253753, sun: 0xb1d1ef, road: 0x57788b, edge: 0x68ffd2, dash: 0xccebea, text: '#d6fff3', clouds: false },
+    id: 'moon', name: 'MOON GARDEN', subtitle: 'Golden hour in the garden.',
+    palette: { sunset: true, sky: 0xf0ac8c, skyMid: 0xce8fba, skyTop: 0x7866a8, cloud: 0xf0bcc2, sun: 0xffd2a3, road: 0x57788b, edge: 0x68ffd2, dash: 0xccebea, text: '#d6fff3', clouds: true },
     scenery: [0x9f77c9,0xffd8ca,0x35284e,0x554e75,0x72cfb5,0x78ffd2,0xffaa91],
     spawns: [
       { type: 'popup', weight: 2 },
@@ -41,14 +41,14 @@ export const ZONES = [
     spawns: [{ type: 'rollingCookie', weight: 1.6 }, { type: 'popup', weight: 2 }, { type: 'tabWall', weight: 1 }, { type: 'popupSlider', weight: 1 }, { pattern: 'coinSnake', weight: 2 }, { type: 'shieldPickup', weight: .35 }], boss: null,
   },
   {
-    id: 'lava', name: 'LAVA DISCO', subtitle: 'Midnight laps. Neon moves.',
-    palette: { night: true, sky: 0x25132e, skyTop: 0x080b22, cloud: 0x352443, sun: 0xc6bfff, road: 0x514166, edge: 0xff66b5, dash: 0xcbbfe1, text: '#ffe0f3', clouds: false },
+    id: 'lava', name: 'LAVA DISCO', subtitle: 'Sunset laps. Neon moves.',
+    palette: { sunset: true, sky: 0xf4a16e, skyMid: 0xd88097, skyTop: 0x735c95, cloud: 0xf3b4a8, sun: 0xffc48d, road: 0x514166, edge: 0xff66b5, dash: 0xcbbfe1, text: '#ffe0f3', clouds: true },
     scenery: [0x774765,0xe5bbd3,0x201a34,0x2b203c,0xb177b3,0xff49ae,0x4de0ee],
     spawns: [{ type: 'rollingCookie', weight: 1.5 }, { type: 'tabWall', weight: 1.5 }, { type: 'popupSlider', weight: 2 }, { pattern: 'coinRow', weight: 2 }, { type: 'boostPad', weight: 1 }, { type: 'laserPickup', weight: .35 }], boss: null,
   },
   {
     id: 'orbit', name: 'ORBIT PLAYGROUND', subtitle: 'Gravity is just a suggestion.',
-    palette: { night: true, sky: 0x141f40, skyTop: 0x050b20, cloud: 0x27344e, sun: 0xbbd4ff, road: 0x63739e, edge: 0x5bddf2, dash: 0xb7dbe5, text: '#e4f6ff', clouds: false },
+    palette: { sunset: true, sky: 0xf0b19b, skyMid: 0xb98dc0, skyTop: 0x667fae, cloud: 0xe6b5d3, sun: 0xffd5a7, road: 0x63739e, edge: 0x5bddf2, dash: 0xb7dbe5, text: '#e4f6ff', clouds: true },
     scenery: [0x776db3,0xc7d4ea,0x22223e,0x323d65,0x669dad,0x51dff4,0xfc79cd],
     spawns: [{ type: 'popup', weight: 1 }, { type: 'rollingCookie', weight: 2.4 }, { pattern: 'coinSnake', weight: 3 }, { type: 'boostPad', weight: 1 }, { type: 'doubleCoinsPickup', weight: .4 }], boss: null,
   },

@@ -33,8 +33,8 @@ The five decks now have distinct analytic materials and geometry: taffy stripes 
 Route tests raycast the running/jumping corridor over thousands of lane samples, verify continuity at section joins and ensure physics slopes match the visible road.
 
 
-### Neon nights and glare control
+### Neon sunsets and glare control
 
-Moon Garden, Lava Disco and Orbit Playground use explicit night palettes, a shaded moon, a slow aurora, coloured guide rails and emissive sculpture details. Hemisphere and camera-side fill lighting keep the dino and hazards readable. Lighting and film grading blend at world transitions. Neon bloom is restricted by a luminance threshold rather than raising global exposure.
+Moon Garden, Lava Disco and Orbit Playground use three-stop peach, rose and lilac sunset palettes, a warm low sun, drifting flattened clouds, coloured guide rails and emissive sculpture details. The sun disc is blended into the sky below the bloom threshold to avoid a white glare spot. Hemisphere and camera-side fill lighting keep the dino and hazards readable. Lighting and film grading blend at world transitions. Neon bloom is restricted by a luminance threshold rather than raising global exposure.
 
 Poolside's floor and curved banks use diffuse-only Lambert materials: direct lights and the environment cannot create specular hotspots on the playable surface. Its sun, bloom, decorative glints and side lights are also softened. Road patterns, shadows and collision geometry are preserved.
