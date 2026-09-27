@@ -264,7 +264,7 @@ test('multijoueur : une chute coûte une vie et on réapparaît au bon endroit ;
   g.on('game:over', (r) => { over = r; });
   const idle = { steer: 0, throttle: 1, drift: false, brake: false, jump: false };
   for (let t = 0; t < 120 && !over; t += 1 / 60) {
-    if (g.state === 'playing' && g.runner.invul <= 0) g.runner.x += 0.5; // on se jette dans le vide
+    if (g.state === 'playing' && g.runner.invul <= 0) g.runner.x = g.track.frame(g.runner.z).w / 2 + 5; // chute au-delà des bords, y compris le rebord de Poolside
     g.update(1 / 60, idle);
   }
   assert.equal(respawns.length, 2, 'deux réapparitions (3 vies)');

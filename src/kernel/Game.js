@@ -1,5 +1,6 @@
+import { bounceOnBowl } from './RoadProfiles.js';
 import { GAME, RUNNER, TRACK } from './config.js';
-import { WORLD_JUMP } from './WorldJourney.js';
+import { WORLD_JUMP, isWorldSafe } from './WorldJourney.js';
 import { EventBus } from './EventBus.js';
 import { Random } from './Random.js';
 import { Entities } from './Registry.js';
@@ -221,6 +222,9 @@ export class Game {
       this.emit('zone', { index: zi, number: Track.zoneNumber(r.z), zone: this.zone });
     }
 
+    // Poolside's visible bowl walls catch the dino rather than letting it
+    // fall through ceramic. A high jump can still clear the rim.
+    if (this.zone.id === 'pool' && !isWorldSafe(r.z)) bounceOnBowl(r,f.w);
     // Sorti de la route → chute
     if (r.grounded && Math.abs(r.x) > f.w / 2 + 0.4) return this.#startFall(f);
 

@@ -35,18 +35,15 @@ export class SideLightShow extends View {
     const box=(key,f,x,y,z,w,h,d)=>add(key,new RoundedBoxGeometry(w,h,d,1,Math.min(w,h,d)*.15),f,x,y,z);
     for(let j=0;j<5;j++) {
       const s=chunk.s0+10+j*24;
-      if(isWorldSafe(s)||(span&&s>span.start-6&&s<span.end+6))continue;
+      if(isWorldSafe(s)||chunk.zone===2||(span&&s>span.start-6&&s<span.end+6))continue;
       const f=this.track.frame(s,{});
       for(const side of [-1,1]) {
-        const col=side<0?0:1,x=side*(f.w/2+2.4);
+        const col=side<0?0:1,x=side*(f.w/2+1.6);
         if(this.track.clearance(f.x+f.lx*x,f.z+f.lz*x,s)<f.w/2+1.9)continue;
-        box('cap',f,x,-.15,0,1.25,.5,1.25);
-        box('dark',f,x,1.6,0,.22,3.5,.22);
-        box('dark',f,x,3.4,0,1.0,.18,1.0);
-        box(col,f,x,3.95,0,.72,.92,.72);
-        for(const dx of [-.46,.46])for(const dz of [-.46,.46])box('dark',f,x+dx,3.95,dz,.09,1.15,.09);
-        add('cap',new THREE.ConeGeometry(.85,.5,4).rotateY(Math.PI/4),f,x,4.76,0);
-        box('dark',f,x,4.55,0,1.18,.17,1.18);
+        // Small sculptural edge lights replace street lanterns. Architecture
+        // now provides the tall silhouettes; these simply mark the safe deck.
+        box('dark',f,x,-.25,0,.8,.6,.8);
+        add(col,new THREE.OctahedronGeometry(.48,0),f,x,.5,0);
         const pool=new THREE.Mesh(this.poolGeo,this.pools[chunk.zone][col]);
         pool.position.set(x,-.37,0).applyAxisAngle(UP,f.th).add(new THREE.Vector3(f.x,f.y,f.z));pool.rotation.y=f.th;root.add(pool);
         for(let k=0;k<3;k++)box(col,f,side*(f.w/2+.25),.03,k*3-3,.1,.1,1.1);

@@ -1,3 +1,4 @@
+import { RoadProfiles } from './RoadProfiles.js';
 import { TRACK } from './config.js';
 import { worldIndex, universeOrder } from './WorldJourney.js';
 
@@ -26,7 +27,8 @@ export class Track {
     // sel du décor : change à chaque partie (dérivé de la graine de route → reproductible)
     this.salt = Math.floor(this.rng.next() * 1e6);
     this.universes = universeOrder(this.salt);
-    this.gen = { th: 0, k: 0, kT: 0, kLeft: 60, inArc: false, slope: 0, slT: 0, slLeft: 80, lastHard: -Infinity };
+    this.profiles = new RoadProfiles(this.salt);
+    this.gen = { baseY: 0, th: 0, k: 0, kT: 0, kLeft: 60, inArc: false, slope: 0, slT: 0, slLeft: 80, lastHard: -Infinity };
     this.hardTurns = [];   // virages durs : { s, end, sign (+1 = à gauche) }, lus par le Director et les vues
   }
 
@@ -63,7 +65,9 @@ export class Track {
           g.inArc = false; g.kT = 0; g.kLeft = r.range(0, 40) * (1 - diff * 0.5);
         } else {
           const rMin = TRACK.radiusEasy + (TRACK.radiusHard - TRACK.radiusEasy) * diff;
-          const R = r.chance(0.3) ? rMin : r.range(rMin, TRACK.radiusMax);
+          const shape = this.profiles.section(dist).style;
+          const sweep = { ribbon: 1, viaduct: 1.5, ripple: 1.12, terrace: 1.3 }[shape];
+          const R = (r.chance(0.3) ? rMin : r.range(rMin, TRACK.radiusMax)) * sweep;
           let sign = r.sign();
           if (Math.abs(g.th) > 0.5) sign = -Math.sign(g.th);
           const room = TRACK.maxHeading - sign * g.th;
@@ -79,7 +83,7 @@ export class Track {
       if (g.slLeft <= 0) {
         const sMax = TRACK.slopeEasy + (TRACK.slopeHard - TRACK.slopeEasy) * diff;
         g.slT = r.chance(0.25) ? 0 : r.range(-1, 1) * sMax;
-        const y = this.Y[i - 1];
+        const y = g.baseY;
         if (y > TRACK.heightLimit) g.slT = -Math.abs(g.slT);
         else if (y < -TRACK.heightLimit) g.slT = Math.abs(g.slT);
         g.slLeft = r.range(30, 100);
@@ -87,11 +91,15 @@ export class Track {
       g.slope += ((warm ? 0 : g.slT) - g.slope) * 0.05;
 
       g.th += g.k * TRACK.step;
-      this.TH.push(g.th); this.K.push(g.k); this.SL.push(g.slope);
+      const profile = this.profiles.sample(dist);
+      g.baseY += g.slope * TRACK.step;
+      const y = g.baseY + profile.elevation;
+      this.TH.push(g.th); this.K.push(g.k);
+      this.SL.push((y-this.Y[i-1])/TRACK.step);
       this.X.push(this.X[i - 1] + Math.sin(g.th) * TRACK.step);
       this.Z.push(this.Z[i - 1] + Math.cos(g.th) * TRACK.step);
-      this.Y.push(this.Y[i - 1] + g.slope * TRACK.step);
-      this.W.push(Math.max(TRACK.widthMin, TRACK.width - dist / 900) + Math.min(4, Math.abs(g.k) * TRACK.curveWidening));
+      this.Y.push(y);
+      this.W.push(Math.max(TRACK.widthMin, TRACK.width - dist / 900) + Math.min(4, Math.abs(g.k) * TRACK.curveWidening) + profile.widen);
     }
   }
 

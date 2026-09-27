@@ -65,6 +65,7 @@ export class WorldDecorView extends View {
     // Sculpted platforms provide a ground plane, leaving the inter-world jump
     // completely open. The route boundaries remain physically visible.
     const ground = [], edge = [];
+    const drop=[7,10,6,18,14][chunk.zone];
     const pt = (i, d, y) => [track.X[i] + Math.cos(track.TH[i]) * d, track.Y[i] + y, track.Z[i] - Math.sin(track.TH[i]) * d];
     const quad = (arr, a, b, c, d) => arr.push(...a, ...b, ...c, ...b, ...d, ...c);
     const width = chunk.zone === 4 ? 39 : 62;
@@ -88,9 +89,12 @@ export class WorldDecorView extends View {
     for (let i = chunk.i0; i < chunk.i1; i++) {
       if (isWorldSafe((i + .5) * TRACK.step)) continue;
       for (const side of [-1, 1]) {
-        const a = side * (track.W[i] / 2 + .5), b = side * (track.W[i + 1] / 2 + .5);
-        quad(ground, pt(i, a, -.4), pt(i, side * far(i, side), -.4), pt(i + 1, b, -.4), pt(i + 1, side * far(i + 1, side), -.4));
-        quad(edge, pt(i, a, -.4), pt(i, a, -3.6), pt(i + 1, b, -.4), pt(i + 1, b, -3.6));
+        const a = side * (track.W[i] / 2 + 7), b = side * (track.W[i + 1] / 2 + 7);
+        if(far(i,side)<Math.abs(a)||far(i+1,side)<Math.abs(b))continue;
+        // Valleys below the deck reveal the road's shape and bridge supports.
+        const dip=drop+Math.sin(i*.04)*2, nextDip=drop+Math.sin((i+1)*.04)*2;
+        quad(ground, pt(i, a, -dip), pt(i, side * far(i, side), -dip), pt(i + 1, b, -nextDip), pt(i + 1, side * far(i + 1, side), -nextDip));
+        quad(edge, pt(i, a, -dip), pt(i, a, -dip-3), pt(i + 1, b, -nextDip), pt(i + 1, b, -nextDip-3));
       }
     }
     for (const [key, points] of [['ground', ground], ['base', edge]]) if (points.length) {

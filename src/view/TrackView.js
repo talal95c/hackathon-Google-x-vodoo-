@@ -3,6 +3,8 @@ import { View } from './View.js';
 import { TRACK } from '../kernel/config.js';
 import { isWorldGap } from '../kernel/WorldJourney.js';
 import { ZONES } from '../content/zones.js';
+import { roadSurface } from './RoadSurface.js';
+import { buildRoadArchitecture, disposeRoadArchitecture } from './RoadArchitecture.js';
 import * as TX from './textures.js';
 
 let CHEV = null;
@@ -27,38 +29,44 @@ export class TrackView extends View {
   }
 
   #build(chunk) {
+    // A distant respawn / preview seek generates intermediate kernel chunks;
+    // do not allocate GPU scenery that is already behind the player.
+    if(chunk.s1<this.game.runner.z-TRACK.behindDistance)return;
     const t = this.track, zone = ZONES[chunk.zone], pal = zone.palette;
-    const top = [], walls = [], edges = [], dashes = [];
+    const top = [], topUv = [], walls = [], edges = [];
     const pt = (i, d, dy = 0) => [t.X[i] + Math.cos(t.TH[i]) * d, t.Y[i] + dy, t.Z[i] - Math.sin(t.TH[i]) * d];
     const quad = (arr, a, b, c, d) => arr.push(...a, ...b, ...c, ...b, ...d, ...c);
     for (let i = chunk.i0; i < chunk.i1; i++) {
       if (isWorldGap((i + .5) * TRACK.step)) continue;
       const w0 = t.W[i] / 2, w1 = t.W[i + 1] / 2;
       quad(top, pt(i, w0), pt(i, -w0), pt(i + 1, w1), pt(i + 1, -w1));
+      const s0=i*TRACK.step,s1=(i+1)*TRACK.step;
+      topUv.push(w0,s0,-w0,s0,w1,s1,-w0,s0,-w1,s1,w1,s1);
       for (const s of [1, -1]) {
         quad(walls, pt(i, s * w0), pt(i, s * w0, -1.8), pt(i + 1, s * w1), pt(i + 1, s * w1, -1.8));
         quad(edges, pt(i, s * w0, 0.03), pt(i, s * (w0 - 0.45), 0.03), pt(i + 1, s * w1, 0.03), pt(i + 1, s * (w1 - 0.45), 0.03));
       }
       quad(walls, pt(i, w0, -1.8), pt(i, -w0, -1.8), pt(i + 1, w1, -1.8), pt(i + 1, -w1, -1.8));
-      if (i % 4 < 2) quad(dashes, pt(i, 0.15, 0.03), pt(i, -0.15, 0.03), pt(i + 1, 0.15, 0.03), pt(i + 1, -0.15, 0.03));
+
     }
     const group = new THREE.Group();
-    const add = (arr, mat, receive = false) => {
+    const add = (arr, mat, receive = false, uv = null) => {
       const g = new THREE.BufferGeometry();
       g.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3));
       g.computeVertexNormals();
+      if(uv)g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
       const m = new THREE.Mesh(g, mat);
       m.receiveShadow = receive;
       m.userData.trackSurface = true;
       group.add(m);
     };
-    add(top, new THREE.MeshStandardMaterial({ color: new THREE.Color(pal.road).multiplyScalar(.72), roughness: .87, metalness: 0, side: THREE.DoubleSide }), true);
+    add(top, roadSurface(chunk.zone), true, topUv);
     add(walls, new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.road).multiplyScalar(0.72), side: THREE.DoubleSide }));
     const edgeMat = new THREE.MeshBasicMaterial({ color: pal.edge, side: THREE.DoubleSide });
     add(edges, edgeMat);
     this.ctx.beatMaterials?.add(edgeMat); // pulse sur les temps (BeatFx)
     group.userData.edgeMat = edgeMat;
-    add(dashes, new THREE.MeshBasicMaterial({ color: pal.dash, side: THREE.DoubleSide }));
+    group.add(buildRoadArchitecture(t,chunk));
     this.#hardTurns(group, chunk);
     // Décors physiques propres à chaque monde : WorldDecorView.
     this.scene.add(group);
@@ -115,9 +123,14 @@ export class TrackView extends View {
     this.scene.remove(g);
     this.ctx.beatMaterials?.delete(g.userData.edgeMat);
     for (const child of g.children) {
+      if(child.userData.routeArchitecture) {disposeRoadArchitecture(child);continue;}
       if (!child.userData.trackSurface) continue;
       child.geometry.dispose(); child.material.dispose();
     }
     this.meshes.delete(chunk.index);
+  }
+  dispose() {
+    super.dispose();
+    for(const index of [...this.meshes.keys()])this.#remove({index});
   }
 }

@@ -23,10 +23,10 @@ export class DioramaView extends View {
     const geo=new THREE.IcosahedronGeometry(1,1).scale(2.1,.5,2.7);
     const sampleMesh=new THREE.Mesh(geo,this.palettes[chunk.zone][0]);
     const sampler=new MeshSurfaceSampler(sampleMesh).setRandomGenerator(()=>rng.next()).build();
-    for(let j=0;j<13;j++)for(const side of [-1,1]) {
-      const s=chunk.s0+5+j*9+rng.range(-2,2);
+    for(let j=0;j<8;j++)for(const side of [-1,1]) {
+      const s=chunk.s0+5+j*15+rng.range(-2,2);
       if(isWorldSafe(s)||(tunnel&&s>tunnel.start-8&&s<tunnel.end+8))continue;
-      const f=this.track.frame(s,{}),x=side*(f.w/2+5+rng.range(0,2));
+      const f=this.track.frame(s,{}),x=side*(f.w/2+7+rng.range(0,3));
       if(this.track.clearance(f.x+f.lx*x,f.z+f.lz*x,s)<f.w/2+4)continue;
       soil.push(geo.clone().translate(x,-.5,0).rotateY(f.th).translate(f.x,f.y,f.z));
       for(let k=0;k<18;k++) {
