@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ZONES } from '../content/zones.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PostProcessing } from './PostProcessing.js';
 
 // Le "plateau" : renderer, scène, caméra, ciel en dégradé, nuages, lumières.
@@ -107,18 +108,19 @@ export class World {
     const geo = new THREE.IcosahedronGeometry(1, 1);
     this.clouds = [];
     for (let i = 0; i < 14; i++) {
-      const g = new THREE.Group();
+      const pieces = [];
       const n = 4 + Math.floor(Math.random() * 4);
       for (let k = 0; k < n; k++) {
-        const m = new THREE.Mesh(geo, mat);
         const s = 5 + Math.random() * 7;
-        m.scale.set(s * 1.3, s, s);
-        m.position.set((k - n / 2) * 7 + Math.random() * 3, Math.random() * 3 - (k === 0 || k === n - 1) * 3, Math.random() * 4);
-        g.add(m);
+        pieces.push(geo.clone().scale(s*1.3,s,s).translate((k-n/2)*7+Math.random()*3,Math.random()*3-(k===0||k===n-1)*3,Math.random()*4));
       }
+      const g = new THREE.Mesh(mergeGeometries(pieces), mat);
+      pieces.forEach(piece=>piece.dispose());
+      g.userData.noAO = true;
       this.clouds.push({ g, a: (i / 14) * Math.PI * 2 + Math.random() * 0.3, r: 170 + Math.random() * 110, y: 35 + Math.random() * 45 });
       this.scene.add(g);
     }
+    geo.dispose();
   }
 
   #buildLights() {
@@ -162,8 +164,9 @@ export class World {
       cl.g.lookAt(cam.x, cl.y, cam.z);
     }
     const inside = this.enclosure ?? 0;
-    this.ambient.intensity = .92 - inside * .53;
-    this.sun.intensity = 2.65 - inside * 2.1;
+    const night = p.clouds === false ? 1 : 0;
+    this.ambient.intensity = .92 - inside * .53 - night * .14;
+    this.sun.intensity = 2.65 - inside * 2.1 - night * .65;
     this.scene.environmentIntensity = .28 - inside * .13;
     this.sun.position.set(focus.x + 25, focus.y + 32, focus.z - 18);
     this.sun.target.position.copy(focus);

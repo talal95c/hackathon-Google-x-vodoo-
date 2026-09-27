@@ -9,20 +9,21 @@ import { WORLD_JUMP, isWorldSafe, isWorldGap } from '../src/kernel/WorldJourney.
 
 const idle = { steer: 0, drift: false, brake: false, jump: false };
 
-test('le parcours traverse les cinq couches puis reste dans le cloud', () => {
-  assert.deepEqual(ZONES.map(z => z.id), ['offline', 'browser', 'windows', 'hardware', 'cloud']);
-  for (let i = 0; i < 5; i++) assert.equal(Track.zoneIndex(i * TRACK.zoneLength + 2), i);
-  assert.equal(Track.zoneIndex(1e6), 4);
-  assert.equal(isWorldGap(4 * TRACK.zoneLength), true);
-  assert.equal(isWorldGap(5 * TRACK.zoneLength), false);
+test('each race shuffles five universes and keeps travelling after the fifth', () => {
+  assert.deepEqual(ZONES.map(z => z.id), ['soda', 'moon', 'pool', 'lava', 'orbit']);
+  const g = new Game({ seed: 42 }); g.start({ seed: 42 });
+  const order = Array.from({ length: 5 }, (_, i) => g.track.zoneIndex(i * TRACK.zoneLength + 2));
+  assert.equal(new Set(order).size, 5);
+  assert.equal(g.track.zoneIndex(5 * TRACK.zoneLength + 2), order[0]);
+  for (const n of [1,4,5,9,23]) assert.equal(isWorldGap(n * TRACK.zoneLength), true);
 });
 
-for (let next = 1; next < 5; next++) test(`portail ${next} : saut guidé, changement de monde et atterrissage`, () => {
+for (const next of [1,2,3,4,5,6,11]) test(`portail ${next} : saut guidé, changement de monde et atterrissage`, () => {
   const g = new Game({ seed: 9 }); g.start({ seed: 9 });
   const boundary = next * TRACK.zoneLength, r = g.runner;
   r.z = boundary - WORLD_JUMP.lead + .01; r.x = 3;
   g.track.update(r.z); r.Y = g.track.frame(r.z).y;
-  g.zoneIndex = next - 1; g.nextWorld = next; g.sMax = r.z;
+  g.zoneIndex = g.track.zoneIndex(r.z); g.nextWorld = next; g.sMax = r.z;
   let launched = 0, landed = 0, changed = 0, maxHeight = 0;
   g.on('world:jump', () => launched++); g.on('world:land', () => landed++);
   g.on('zone', () => changed++);
@@ -34,7 +35,7 @@ for (let next = 1; next < 5; next++) test(`portail ${next} : saut guidé, change
     maxHeight = Math.max(maxHeight, r.y);
   }
   assert.equal(g.state, 'playing'); assert.equal(g.worldJump, null);
-  assert.equal(g.zoneIndex, next); assert.equal(changed, 1); assert.equal(landed, 1);
+  assert.equal(g.zoneIndex, g.track.zoneIndex(boundary + 2)); assert.equal(changed, 1); assert.equal(landed, 1);
   assert.ok(maxHeight > 16); assert.ok(r.grounded); assert.ok(Math.abs(r.x) < .1);
   assert.ok(r.z >= boundary + WORLD_JUMP.tail); assert.equal(isWorldGap(r.z), false);
   const oldLatV = r.latV;
@@ -58,7 +59,7 @@ test('une bannière prévient du changement de monde, seconde par seconde', () =
   g.track.update(r.z); r.Y = g.track.frame(r.z).y; g.sMax = r.z;
   for (let i = 0; i < 60 * 8 && !g.worldJump && warnings.length < 5; i++) { r.speed = r.cruise = 30; r.x = 0; r.invul = 10; g.update(1 / 60, idle); }
   assert.deepEqual(warnings.map(([s]) => s), [5, 4, 3, 2, 1]);
-  assert.ok(warnings.every(([, id]) => id === 'browser'));
+  assert.ok(warnings.every(([, id]) => id === ZONES[g.track.zoneIndex(TRACK.zoneLength)].id));
 });
 
 test('le compte à rebours du monde se corrige si le dino freine', () => {

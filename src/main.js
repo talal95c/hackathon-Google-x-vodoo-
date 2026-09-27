@@ -58,6 +58,7 @@ const shop = new Shop(profile, game.bus);
 
 // --- Rendu (l'ordre compte : RunnerView met à jour ctx.focus pour les suivants)
 const world = new World();
+world.setPalette(game.zone.palette);
 game.on('zone', ({ zone }) => world.setPalette(zone.palette));
 const ctx = { game, world, focus: new THREE.Vector3(), skin: profile.data.skin };
 const views = [

@@ -1,5 +1,4 @@
 import { TRACK } from '../kernel/config.js';
-import { ZONES } from '../content/zones.js';
 import { Weapons, Effects } from '../kernel/Registry.js';
 
 // HUD en DOM : lit l'état du jeu chaque frame et réagit aux événements.
@@ -22,7 +21,7 @@ export class Hud {
     on('game:start', () => { this.#lives(false); this.el.boss.classList.add('hidden'); });
     on('tempo', ({ level }) => { if (level > 0) { this.banner(`SPEED ×${game.tempo.ratio.toFixed(1)}`, 1.4); this.#pop(this.el.speed); } });
     on('runner:boost', () => this.#pop(this.el.speed));
-    on('zone', ({ number, zone }) => { this.banner(`WORLD ${Math.min(number + 1, 5)} — ${zone.name}`); this.el.hud.style.color = zone.palette.text; this.el.banner.style.color = zone.palette.text; });
+    on('zone', ({ number, zone }) => { this.banner(`TRIP ${number + 1} — ${zone.name}`); this.el.hud.style.color = zone.palette.text; this.el.banner.style.color = zone.palette.text; });
     on('world:soon', ({ to, seconds }) => this.banner(`⚠ NEW WORLD IN ${seconds}s — ${to.name}`, 1.2));
     on('world:jump', ({ to }) => this.banner(`ESCAPE → ${to.name}`, 1.8));
     on('world:land', ({ zone }) => this.banner(zone.subtitle, 2.2));
@@ -78,8 +77,8 @@ export class Hud {
     this.#set('spd', (v) => { el.speed.style.setProperty('--spd', v); }, spd.toFixed(2));
     this.#set('spdTier', (v) => { el.speed.dataset.tier = v; }, r.boost > 0 ? 'boost' : spd > 0.66 ? 'fast' : spd > 0.33 ? 'quick' : 'cruise');
 
-    this.#set('worldName', v => { el.worldName.textContent = v; }, `${String(g.zoneIndex + 1).padStart(2, '0')} / 05 · ${g.zone.name}`);
-    el.worldProgress.style.width = `${g.zoneIndex === ZONES.length - 1 ? 100 : (g.distance % TRACK.zoneLength) / TRACK.zoneLength * 100}%`;
+    this.#set('worldName', v => { el.worldName.textContent = v; }, `TRIP ${String(Math.floor(g.distance / TRACK.zoneLength) + 1).padStart(2, '0')} · ${g.zone.name}`);
+    el.worldProgress.style.width = `${(g.distance % TRACK.zoneLength) / TRACK.zoneLength * 100}%`;
 
     // jauge de glissade (se vide en glissant, se recharge sinon) ; couleur = charge du sprint
     el.driftFill.style.width = `${r.slideGauge * 100}%`;

@@ -1,30 +1,33 @@
 import { intersectsWorldSafe } from '../kernel/WorldJourney.js';
+import { Random } from '../kernel/Random.js';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { View } from './View.js';
 import { ZONES } from '../content/zones.js';
 
-const COLORS = [0xffba67, 0xaa8bff, 0x55cfff, 0x46efb6, 0x75e4df];
+const COLORS = ZONES.map(z => z.scenery[5]);
 
 // Keep roofs away from the aerial transitions and tight hairpins. The route is
 // already generated before a visible chunk is built; no gameplay RNG is used.
 export function tunnelSpan(track, chunk) {
   if (ZONES[chunk.zone]?.site) return null;
-  if (![1, 3].includes((chunk.index + (track.salt || 0)) % 6)) return null; // position des tunnels : change à chaque partie
-  const start = chunk.s0 + 18, end = chunk.s1 - 10;
+  const rng = new Random(`tunnel-${track.salt || 0}-${chunk.index}`);
+  if (chunk.index === 0 || rng.next() > .48) return null;
+  const start = chunk.s0 + rng.range(10,26), end = Math.min(chunk.s1-8, start+rng.range(46,92));
+  const style = Math.floor(rng.next()*3), ribStep = rng.range(5.5,10), height = rng.range(10,14);
   if (intersectsWorldSafe(start - 24, end + 24)) return null; // jamais sur un saut entre deux mondes
   if (track.hardTurns.some(turn => turn.s < end + 24 && turn.end > start - 24)) return null;
-  return { start, end, zone: chunk.zone };
+  return { start, end, zone: chunk.zone, style, ribStep, height };
 }
 
 export class TunnelView extends View {
   chunks = new Map();
   constructor(ctx) {
     super(ctx);
-    const shells = [0x775044, 0x544f79, 0x294769, 0x183f3b, 0x48868c];
+    const shells = ZONES.map(z => z.scenery[2]);
     this.materials = shells.map((color, i) => ({
       shell: new THREE.MeshStandardMaterial({ color, roughness: .83, side: THREE.DoubleSide, flatShading: true }),
-      rib: new THREE.MeshStandardMaterial({ color: [0xd3a886,0xaaa4cb,0x7bacc9,0x4f786b,0xc2e4df][i], roughness: .72 }),
+      rib: new THREE.MeshStandardMaterial({ color: ZONES[i].scenery[0], roughness: .72 }),
       light: new THREE.MeshStandardMaterial({ color: COLORS[i], emissive: COLORS[i], emissiveIntensity: 3.2, roughness: .45 }),
       dark: new THREE.MeshStandardMaterial({ color: 0x293b42, roughness: .75 }),
     }));
@@ -42,8 +45,11 @@ export class TunnelView extends View {
     const put = (key, geometry) => { if (!buckets.has(key)) buckets.set(key, []); buckets.get(key).push(geometry); };
     const point = (f, x, y) => new THREE.Vector3(f.x + f.lx * x, f.y + y, f.z + f.lz * x);
     const profile = f => {
-      const r = f.w / 2 + 3.3, points = [[r, -.8], [r, 3.4]];
-      for (let k = 1; k <= 10; k++) { const a = k * Math.PI / 10; points.push([Math.cos(a) * r, 3.4 + Math.sin(a) * 10.8]); }
+      const r = f.w / 2 + 3.3, h=span.height;
+      if(span.style===1) return [[r,-.8],[r,8],[r*.7,h+3.4],[-r*.7,h+3.4],[-r,8],[-r,-.8]];
+      if(span.style===2) return [[r,-.8],[r,h+3.4],[-r,h+3.4],[-r,-.8]];
+      const points = [[r, -.8], [r, 3.4]];
+      for (let k = 1; k <= 10; k++) { const a = k * Math.PI / 10; points.push([Math.cos(a) * r, 3.4 + Math.sin(a) * h]); }
       points.push([-r, -.8]); return points;
     };
     const bar = (key, a, b, width, depth = width) => {
@@ -57,7 +63,7 @@ export class TunnelView extends View {
       for (let k = 0; k < pa.length - 1; k++) {
         const a = point(f, ...pa[k]).toArray(), b = point(f, ...pa[k+1]).toArray();
         const c = point(next, ...pb[k]).toArray(), d = point(next, ...pb[k+1]).toArray();
-        wall.push(...a,...b,...c,...b,...d,...c);
+        if(span.style!==2 || Math.floor((s-span.start)/6)%3!==1) wall.push(...a,...b,...c,...b,...d,...c);
       }
       for (const side of [-1,1]) {
         const x = side * (f.w / 2 + .8), nx = side * (next.w / 2 + .8);
@@ -69,7 +75,7 @@ export class TunnelView extends View {
     }
     const shell = new THREE.BufferGeometry(); shell.setAttribute('position', new THREE.Float32BufferAttribute(wall,3)); shell.computeVertexNormals(); put('shell',shell);
     const rings = [];
-    for (let s = span.start; s < span.end; s += 8) rings.push(s);
+    for (let s = span.start; s < span.end; s += span.ribStep) rings.push(s);
     rings.push(span.end);
     rings.forEach((s, index) => {
       const f = this.track.frame(s, {}), p = profile(f), entrance = index === 0 || index === rings.length-1;

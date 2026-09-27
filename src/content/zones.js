@@ -1,12 +1,9 @@
-// Zones traversées par le dino. Chaque zone = une couche du navigateur.
-//   palette   → lue par les vues (ciel, route, bordures, HUD)
-//   spawns    → table de spawn pondérée lue par le Director
-//   boss      → boss de fin de zone (null = pas de boss ; voir entities/Boss.js pour en créer un)
+// Surreal palettes. Their visit order is seeded per race; obstacles remain hazards.
 export const ZONES = [
   {
-    id: 'offline', name: 'OFFLINE DESERT', subtitle: 'Leave the no-connection page.',
-    palette: { sky: 0xd5b5a5, skyTop: 0x718baf, cloud: 0xf4dfc3, sun: 0xffdfad, road: 0xe1b58b, edge: 0x725a4c, dash: 0xf3dbad, text: '#535353' },
-    decor: 'clouds',
+    id: 'soda', name: 'SODA DUNES', subtitle: 'Stay fizzy. Keep drifting.',
+    palette: { sky: 0xefbaa7, skyTop: 0x638bd1, cloud: 0xffe7bd, sun: 0xffe1ae, road: 0xf6c79c, edge: 0xe86697, dash: 0xfff4d6, text: '#fff3dc', clouds: true },
+    scenery: [0xe89568,0xffe7b0,0x5c4481,0xe9ac85,0x59cfc1,0xff638f,0xffd356],
     spawns: [
       { type: 'cactus', weight: 3 },
       { type: 'cactusBig', weight: 1.5 },
@@ -19,9 +16,9 @@ export const ZONES = [
     boss: null,
   },
   {
-    id: 'browser', name: 'BROWSER', subtitle: 'Dodge the tabs and pop-ups.',
-    palette: { sky: 0xc4b4cf, skyTop: 0x6d86ab, cloud: 0xf1dccb, sun: 0xffe6c6, road: 0xd3bcd5, edge: 0x73629c, dash: 0xffffff, text: '#1a3d7c' },
-    decor: 'windows',
+    id: 'moon', name: 'MOON GARDEN', subtitle: 'A little stranger after dark.',
+    palette: { sky: 0x645980, skyTop: 0x201c4e, cloud: 0xc6a9df, sun: 0xffd3b5, road: 0x78779d, edge: 0x81f6ce, dash: 0xfbe6c6, text: '#fff3dc', clouds: false },
+    scenery: [0x9f77c9,0xffd8ca,0x35284e,0x554e75,0x72cfb5,0x78ffd2,0xffaa91],
     spawns: [
       { type: 'popup', weight: 2 },
       { type: 'rollingCookie', weight: 3 },
@@ -38,21 +35,21 @@ export const ZONES = [
     boss: null,
   },
   {
-    id: 'windows', name: 'WINDOWS', subtitle: 'Cross the system desktop.',
-    palette: { sky: 0xb4cfd7, skyTop: 0x587fac, cloud: 0xe7ece5, sun: 0xffedcf, road: 0xbbd4d3, edge: 0x0078d4, dash: 0xffffff, text: '#164c7d' },
-    decor: 'desktop',
+    id: 'pool', name: 'POOLSIDE', subtitle: 'Make a splash. Miss the obstacles.',
+    palette: { sky: 0xffc5b1, skyTop: 0x739fd0, cloud: 0xffeada, sun: 0xffe0af, road: 0xa7d9d8, edge: 0xf87080, dash: 0xfaf2cf, text: '#fff3dc', clouds: true },
+    scenery: [0xef7e89,0xffebc3,0x315e79,0x68b7bb,0x4faee1,0x7efbe5,0xffbf60],
     spawns: [{ type: 'rollingCookie', weight: 1.6 }, { type: 'popup', weight: 2 }, { type: 'tabWall', weight: 1 }, { type: 'popupSlider', weight: 1 }, { pattern: 'coinSnake', weight: 2 }, { type: 'shieldPickup', weight: .35 }], boss: null,
   },
   {
-    id: 'hardware', name: 'HARDWARE', subtitle: 'Dive into the heart of the machine.',
-    palette: { clouds: false, sky: 0x143834, skyTop: 0x071c22, cloud: 0x23594d, sun: 0xccfff1, road: 0x16433b, edge: 0x34e9b4, dash: 0xd4b36b, text: '#bdffed' },
-    decor: 'circuits',
+    id: 'lava', name: 'LAVA DISCO', subtitle: 'Hot laps. Cool moves.',
+    palette: { sky: 0x513660, skyTop: 0x191934, cloud: 0xa86279, sun: 0xffb5a0, road: 0x685073, edge: 0xff9769, dash: 0xffe8ba, text: '#fff3dc', clouds: false },
+    scenery: [0x774765,0xffbe99,0x29273d,0x49364e,0xb177b3,0xff764e,0xffd07a],
     spawns: [{ type: 'rollingCookie', weight: 1.5 }, { type: 'tabWall', weight: 1.5 }, { type: 'popupSlider', weight: 2 }, { pattern: 'coinRow', weight: 2 }, { type: 'boostPad', weight: 1 }, { type: 'laserPickup', weight: .35 }], boss: null,
   },
   {
-    id: 'cloud', name: 'CLOUD', subtitle: 'Free at last. How far will you go?',
-    palette: { sky: 0xe8f7ff, skyTop: 0x70bce9, cloud: 0xffffff, sun: 0xfff6df, road: 0xf0f8fc, edge: 0x21bad0, dash: 0xaedee8, text: '#126476' },
-    decor: 'cloud',
+    id: 'orbit', name: 'ORBIT PLAYGROUND', subtitle: 'Gravity is just a suggestion.',
+    palette: { sky: 0x7786b0, skyTop: 0x242456, cloud: 0xefc6e0, sun: 0xffd9d9, road: 0xb1bbd9, edge: 0xf593c8, dash: 0xffeed7, text: '#fff3dc', clouds: false },
+    scenery: [0x918bc9,0xffe2bd,0x383057,0x727aa5,0x88daca,0xff89c9,0xffd179],
     spawns: [{ type: 'popup', weight: 1 }, { type: 'rollingCookie', weight: 2.4 }, { pattern: 'coinSnake', weight: 3 }, { type: 'boostPad', weight: 1 }, { type: 'doubleCoinsPickup', weight: .4 }], boss: null,
   },
 ];

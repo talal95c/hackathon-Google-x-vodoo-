@@ -59,7 +59,7 @@ export class Game {
     this.#resetWorld(loadout.seed ?? (Math.random() * 2 ** 32) >>> 0, loadout.modifiers);
     this.#setState('playing');
     this.emit('game:start', { loadout, seed: this.seed });
-    this.emit('zone', { index: 0, number: 0, zone: this.zone });
+    this.emit('zone', { index: this.zoneIndex, number: 0, zone: this.zone });
     this.emit('tempo', this.tempo);
   }
 
@@ -78,7 +78,7 @@ export class Game {
     this.lives = this.runner.stats.get('maxLives');
     this.coins = 0;
     this.sMax = this.runner.z;
-    this.zoneIndex = 0;
+    this.zoneIndex = this.track.zoneIndex(this.runner.z);
     this.tempo = this.tempoAt(0);
     this.acc = 0;
     this.nearMisses = 0;
@@ -191,21 +191,21 @@ export class Game {
     const tempo = this.tempoAt(this.sMax);
     if (tempo.level !== this.tempo.level) { this.tempo = tempo; this.emit('tempo', tempo); }
     r.cruise = S.get('baseSpeed') * this.tempo.ratio;
-    while (!this.worldJump && this.nextWorld < ZONES.length && r.z > this.nextWorld * TRACK.zoneLength + WORLD_JUMP.tail) this.nextWorld++;
+    while (!this.worldJump && r.z > this.nextWorld * TRACK.zoneLength + WORLD_JUMP.tail) this.nextWorld++;
     const boundary = this.nextWorld * TRACK.zoneLength;
-    if (!this.worldJump && this.nextWorld < ZONES.length) {
+    if (!this.worldJump) {
       const seconds = Math.ceil((boundary - WORLD_JUMP.lead - r.z) / Math.max(r.speed, 1));
       if (seconds > GAME.worldWarning) this.worldWarn = null;
       else if (seconds >= 1 && (this.worldWarn === null || seconds < this.worldWarn || seconds > this.worldWarn + 1)) {
         this.worldWarn = seconds;
-        this.emit('world:soon', { to: ZONES[this.nextWorld], seconds });
+        this.emit('world:soon', { to: ZONES[this.track.zoneIndex(boundary)], seconds });
       }
     }
-    if (!this.worldJump && this.nextWorld < ZONES.length && r.z >= boundary - WORLD_JUMP.lead) {
-      this.worldJump = { from: this.zoneIndex, to: this.nextWorld, start: boundary - WORLD_JUMP.lead, end: boundary + WORLD_JUMP.tail, x: r.x, y: Math.max(0, r.y), progress: 0 };
+    if (!this.worldJump && r.z >= boundary - WORLD_JUMP.lead) {
+      this.worldJump = { from: this.zoneIndex, to: this.track.zoneIndex(boundary), start: boundary - WORLD_JUMP.lead, end: boundary + WORLD_JUMP.tail, x: r.x, y: Math.max(0, r.y), progress: 0 };
       r.drifting = false; r.manual = false; r.stumble = 0; r.latV = 0; r.push = 0;
       this.worldWarn = null;
-      this.emit('world:jump', { from: this.zone, to: ZONES[this.nextWorld] });
+      this.emit('world:jump', { from: this.zone, to: ZONES[this.track.zoneIndex(boundary)] });
       this.nextWorld++;
     }
     if (this.worldJump) return this.#stepWorldJump(h);
@@ -215,7 +215,7 @@ export class Game {
     if (r.grounded) { r.Y = f.y; r.y = 0; }
     this.sMax = Math.max(this.sMax, r.z);
 
-    const zi = Track.zoneIndex(r.z);
+    const zi = this.track.zoneIndex(r.z);
     if (zi !== this.zoneIndex) {
       this.zoneIndex = zi;
       this.emit('zone', { index: zi, number: Track.zoneNumber(r.z), zone: this.zone });
@@ -255,10 +255,10 @@ export class Game {
     r.vy = (r.Y - previousY) / h;
     r.grounded = false; r.steer = 0; r.gait += h * r.speed * .42;
     this.sMax = Math.max(this.sMax, r.z);
-    const index = Track.zoneIndex(r.z);
+    const index = this.track.zoneIndex(r.z);
     if (index !== this.zoneIndex) {
       this.zoneIndex = index;
-      this.emit('zone', { index, number: index, zone: this.zone });
+      this.emit('zone', { index, number: Track.zoneNumber(r.z), zone: this.zone });
     }
     this.track.update(r.z);
     // The short cinematic pauses obstacles, power-ups and damage. Input resumes

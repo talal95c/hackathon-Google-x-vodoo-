@@ -6,7 +6,7 @@ import { ZONES } from '../content/zones.js';
 import { isWorldSafe } from '../kernel/WorldJourney.js';
 import { tunnelSpan } from './TunnelView.js';
 
-const COLORS = [[0xffc17b,0x77dfce],[0xffcb93,0xb3a1ff],[0xffd389,0x64d5ee],[0xf5bd71,0x55e7b0],[0xffd5ac,0x8be2df]];
+const COLORS = ZONES.map(z => [z.scenery[6], z.scenery[5]]);
 const UP = new THREE.Vector3(0,1,0);
 
 // The lights belong to the miniature scenery: frosted lanterns, short guide

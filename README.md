@@ -1,17 +1,17 @@
 # Dino Race Fight Club
 
-The offline dinosaur is escaping the browser — and taking the fight with it.
+Race a dino through a surreal, ever-changing road trip — and slap your way to first place.
 
 A colorful 3D racing game for desktop. Dodge obstacles, drift around corners, slap nearby rivals and battle in quick Fight Club duels, with a soundtrack generated live by AI.
 
-![Racing through the desert and its glowing tunnels](docs/screenshots/race-desert-desktop.png)
+![Soda Dunes: giant candy sculptures and warm vintage colour](docs/screenshots/race-soda-desktop.png)
 
 > **PC version only for now.** The game is designed for desktop browsers with a keyboard. Mobile support is a work in progress.
 
 ## How to play
 
 - Select **Play** to race against three bots, or **Multiplayer** to race with friends. Create a game, share its room code and start the race once everyone has joined.
-- Escape through five worlds: **Offline Desert → Browser → Windows → Hardware → Cloud**.
+- Jump between **Soda Dunes, Moon Garden, Poolside, Lava Disco and Orbit Playground**. A new race shuffles their order, scenery and tunnels; the trip keeps going after all five.
 - Stay on the road, dodge cactus and cookie obstacles, and collect coins to spend in the shop. Pick your favorite dino skin and music style.
 - You start with **three lives**. Outlast your rivals and see how far you can go!
 
@@ -56,6 +56,12 @@ To try it, open **Music**, paste your **Gemini API key with access to Lyria Real
 
 You can also play without a key using the built-in synthesized soundtrack.
 
+## A colourful road trip
+
+Twenty low-poly landmark compositions, moving sculptures, scattered miniature gardens and three tunnel profiles make each run feel different. Warm film grain, soft halation, bloom and lifted shadows give the scene a vintage postcard look. Multiplayer racers share the same procedural seed.
+
+The visuals reuse official **Three.js** addons under the MIT licence. See the [visual references and code credits](docs/visual-references.md).
+
 ## Skin voices
 
 Every skin has **its own voice** and shouts a short line when it slaps a rival, adding personality to each fight.
@@ -73,13 +79,13 @@ Open **http://localhost:5173** in your browser, then select **Play**.
 
 ## More screenshots
 
-**Inside the browser**
+**Moon Garden**
 
-![Browser-world race with giant windows and cookie obstacles](docs/screenshots/race-browser-desktop.png)
+![Moon Garden: glowing mushrooms and lunar sculptures](docs/screenshots/race-moon-desktop.png)
 
-**Through the hardware**
+**Orbit Playground**
 
-![Hardware-world race through circuits and neon tunnels](docs/screenshots/race-hardware-desktop.png)
+![Orbit Playground: floating planets and kinetic sculptures](docs/screenshots/race-orbit-desktop.png)
 
 **Fight Club flips**
 

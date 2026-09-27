@@ -1,0 +1,40 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Universe preview</title><style>body{margin:0;overflow:hidden;font:14px system-ui;color:#fff4df}canvas{display:block}nav{position:fixed;z-index:5;top:16px;left:16px;right:16px;display:flex;gap:10px;align-items:center}select,input,button{font:inherit;background:#292333dd;border:1px solid #fff3;border-radius:8px;padding:9px;color:inherit}input{width:85px}#stats{margin-left:auto;background:#211b2bba;padding:12px;border-radius:10px}h1{position:fixed;bottom:32px;left:32px;font-size:36px;letter-spacing:-1px;text-shadow:0 2px 8px #241c46}small{font-size:12px;display:block;letter-spacing:3px;margin-bottom:8px}body.capture nav{display:none}</style></head><body><nav><select id="universe" aria-label="Universe"></select><label>Seed <input id="seed" value="42" type="number"></label><label>Distance <input id="distance" value="86" type="number"></label><button id="load">Load</button><button id="film">Film: on</button><button id="shot">Clean view</button><output id="stats"></output></nav><h1><small>DINO RACE / POSTCARD</small><span id="name"></span></h1><script type="module">
+import * as THREE from 'three';
+import '../src/content/index.js';
+import '../src/view/models/entities.js';
+import '../src/view/models/blockDino.js';
+import '../src/view/models/reggaeDino.js';
+import { Game } from '../src/kernel/Game.js';
+import { ZONES } from '../src/content/zones.js';
+import { TRACK } from '../src/kernel/config.js';
+import { World } from '../src/view/World.js';
+import { TrackView } from '../src/view/TrackView.js';
+import { WorldDecorView } from '../src/view/WorldDecorView.js';
+import { PortalView } from '../src/view/PortalView.js';
+import { DioramaView } from '../src/view/DioramaView.js';
+import { SideLightShow } from '../src/view/SideLightShow.js';
+import { TunnelView } from '../src/view/TunnelView.js';
+import { EntityViews } from '../src/view/EntityViews.js';
+import { RunnerView } from '../src/view/RunnerView.js';
+import { CameraRig } from '../src/view/CameraRig.js';
+import { AtmosphereFx } from '../src/view/AtmosphereFx.js';
+const $=id=>document.getElementById(id), q=new URLSearchParams(location.search);
+const game=new Game({seed:42}),world=new World();
+world.renderer.info.autoReset=false;
+const ctx={game,world,focus:new THREE.Vector3(),fx:{pulse:0,down:0}};
+game.on('zone',({zone})=>world.setPalette(zone.palette));
+const views=[new TrackView(ctx),new WorldDecorView(ctx),new PortalView(ctx),new DioramaView(ctx),new TunnelView(ctx),new SideLightShow(ctx),new EntityViews(ctx),new RunnerView(ctx),new AtmosphereFx(ctx),new CameraRig(ctx)];
+$('universe').innerHTML=ZONES.map((z,i)=>`<option value="${i}">${z.name}</option>`).join('');
+$('universe').value=q.get('theme')||'0';$('seed').value=q.get('seed')||'42';$('distance').value=q.get('distance')||'86';
+function load(){
+ game.start({seed:Number($('seed').value),skin:'reggae'});
+ const theme=Number($('universe').value),sector=game.track.universes.indexOf(theme);
+ const s=sector*TRACK.zoneLength+Number($('distance').value);
+ game.runner.z=s;game.runner.Y=game.track.frame(s,{}).y;game.runner.y=0;game.runner.speed=32;game.runner.grounded=true;game.sMax=s;game.zoneIndex=theme;game.track.update(s);
+ world.setPalette(game.zone.palette);world.update(1,ctx.focus);for(const v of views)v.snap=true;
+ $('name').textContent=game.zone.name;
+}
+$('load').onclick=load;$('universe').onchange=load;$('film').onclick=()=>{world.post.film.enabled=!world.post.film.enabled;world.post.grade.enabled=world.post.film.enabled;$('film').textContent=`Film: ${world.post.film.enabled?'on':'off'}`;};$('shot').onclick=()=>document.body.classList.toggle('capture');load();
+let last=performance.now(),frames=0,start=last;
+function frame(now){const dt=Math.min(.04,(now-last)/1000);last=now;game.runner.gait+=dt*9;for(const v of views)v.update(dt,now/1000);world.update(dt,ctx.focus);world.renderer.info.reset();world.render();frames++;if(now-start>1000){$('stats').textContent=`${Math.round(frames*1000/(now-start))} fps · ${world.renderer.info.render.calls} calls · ${Math.round(world.renderer.info.render.triangles/1000)}k triangles`;frames=0;start=now;}requestAnimationFrame(frame);}requestAnimationFrame(frame);
+</script></body></html>

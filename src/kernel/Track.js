@@ -1,5 +1,5 @@
 import { TRACK } from './config.js';
-import { worldIndex } from './WorldJourney.js';
+import { worldIndex, universeOrder } from './WorldJourney.js';
 
 // Route procédurale continue (virages + dénivelé), en données pures.
 //
@@ -25,6 +25,7 @@ export class Track {
     this.X = [0]; this.Y = [0]; this.Z = [0]; this.TH = [0]; this.K = [0]; this.SL = [0]; this.W = [TRACK.width];
     // sel du décor : change à chaque partie (dérivé de la graine de route → reproductible)
     this.salt = Math.floor(this.rng.next() * 1e6);
+    this.universes = universeOrder(this.salt);
     this.gen = { th: 0, k: 0, kT: 0, kLeft: 60, inArc: false, slope: 0, slT: 0, slLeft: 80, lastHard: -Infinity };
     this.hardTurns = [];   // virages durs : { s, end, sign (+1 = à gauche) }, lus par le Director et les vues
   }
@@ -32,6 +33,8 @@ export class Track {
   get chunkLength() { return TRACK.step * TRACK.chunkSamples; }
 
   static zoneIndex(s) { return worldIndex(s); }
+
+  zoneIndex(s) { return this.universes[worldIndex(s)]; }
   static zoneNumber(s) { return Math.floor(Math.max(0, s) / TRACK.zoneLength); }
 
   // --- Échantillons
@@ -137,7 +140,7 @@ export class Track {
     const i0 = index * TRACK.chunkSamples, i1 = i0 + TRACK.chunkSamples;
     const s0 = i0 * TRACK.step, s1 = i1 * TRACK.step;
     this.ensure(s1 + TRACK.step);
-    const zone = Track.zoneIndex(s0);
+    const zone = this.zoneIndex(s0);
     const chunk = { index, i0, i1, s0, s1, zone };
     this.chunks.push(chunk);
     this.bus.emit('chunk:add', chunk);
