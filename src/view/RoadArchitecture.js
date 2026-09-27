@@ -2,14 +2,15 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { isWorldSafe } from '../kernel/WorldJourney.js';
 import { tunnelSpan } from './TunnelView.js';
+import { ZONES } from '../content/zones.js';
 
 const UP=new THREE.Vector3(0,1,0);
 const palettes=[
   [0xe8759c,0xffe9bd,0xa26ac4,0x6de0ce],
   [0x527c6b,0xdfe9b9,0x342e54,0x93ffd3],
-  [0x66bbc8,0xffeccd,0xec8995,0xffbb75],
-  [0x483451,0xf9c6a4,0x272133,0xff8855],
-  [0x738aaa,0xcbeee8,0x37304f,0xffa1d6],
+  [0x58a8b7,0xd9d6bd,0xd46e85,0xffbb75],
+  [0x483451,0x94dce4,0x272133,0xff57b5],
+  [0x677b9d,0x83cdda,0x272b49,0x61dcff],
 ];
 
 // Architectural cross-sections surround the real flat playable deck. All
@@ -17,8 +18,11 @@ const palettes=[
 export function buildRoadArchitecture(track,chunk) {
   const root=new THREE.Group(),buckets=new Map(),theme=chunk.zone;
   const colors=palettes[theme],span=tunnelSpan(track,chunk);
-  const materials=colors.map((color,i)=>new THREE.MeshStandardMaterial({color,roughness:i===0?.5:.8,
-    emissive:i===3?color:0,emissiveIntensity:i===3?1.7:0,side:THREE.DoubleSide,flatShading:true}));
+  const night=ZONES[theme].palette.night;
+  const materials=colors.map((color,i)=>{
+    const settings={color,emissive:i===3?color:0,emissiveIntensity:i===3?(night?3.1:1.7):0,side:THREE.DoubleSide,flatShading:true};
+    return theme===2?new THREE.MeshLambertMaterial(settings):new THREE.MeshStandardMaterial({...settings,roughness:.86,envMapIntensity:.15});
+  });
   root.userData.materials=materials;
   const put=(key,g)=>{if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(g);};
   const point=(s,x,y)=>{const f=track.frame(s,{});return new THREE.Vector3(f.x+f.lx*x,f.y+y,f.z+f.lz*x);};
@@ -51,6 +55,7 @@ export function buildRoadArchitecture(track,chunk) {
         const wave=theme===0?Math.sin(s*.21)*.2:0;
         rod(theme===0?(Math.floor(s/4)%2?0:1):theme===1?0:3,
           point(s,side*(w+.7),.45+wave),point(s+2,side*(nw+.7),.45+wave),theme===0?.52:theme===1?.38:.16);
+        if(night)rod(3,point(s,side*(w+.52),.13),point(s+2,side*(nw+.52),.13),.09);
         if(theme===4)rod(2,point(s,side*(w+.9),-.65),point(s+2,side*(nw+.9),-.65),.5);
         if(theme===1) { // Each leaf vein joins the edge of the living boardwalk.
           if(Math.floor(s)%10===0)rod(1,point(s,side*(w+.65),-.1),point(s+6,side*(nw+2.6),-.4),.12);
@@ -122,7 +127,7 @@ export function buildRoadArchitecture(track,chunk) {
         const a=k*Math.PI/18;
         points.push(local(s,Math.cos(a)*(w+4),2+Math.sin(a)*15));
       }
-      for(let k=0;k<18;k++)rod(theme===0?(k%2?1:0):0,points[k],points[k+1],theme===0?.65:.42);
+      for(let k=0;k<18;k++)rod(theme===0?(k%2?1:0):(k%3===0?3:0),points[k],points[k+1],theme===0?.65:.42);
       if(theme===1)for(let k=3;k<16;k+=3) {
         const leaf=new THREE.IcosahedronGeometry(1,0).scale(1.5,.4,3).rotateY(k);
         put(k%2?1:3,leaf.translate(...points[k].toArray()));

@@ -46,13 +46,14 @@ export class PostProcessing {
     this.grade = new ShaderPass({
       uniforms: {
         tDiffuse: { value: null }, time: { value: 0 }, aspect: { value: 1 }, texel: { value: new THREE.Vector2(1,1) },
+        night: { value: 0 }, softLight: { value: 0 },
         rush: { value: 0 }, lines: { value: 0 }, blur: { value: 0 },
         flash: { value: 0 }, flashColor: { value: new THREE.Color(0xffffff) },
       },
       vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
       fragmentShader: `
         uniform sampler2D tDiffuse; uniform float time; uniform float aspect; uniform vec2 texel;
-        uniform float rush; uniform float lines; uniform float blur; uniform float flash; uniform vec3 flashColor;
+        uniform float night; uniform float softLight; uniform float rush; uniform float lines; uniform float blur; uniform float flash; uniform vec3 flashColor;
         varying vec2 vUv;
         float hash(float n){ return fract(sin(n*127.1+311.7)*43758.5453); }
         vec3 fetch(vec2 uv, vec2 split){ return vec3(texture2D(tDiffuse,uv+split).r,texture2D(tDiffuse,uv).g,texture2D(tDiffuse,uv-split).b); }
@@ -79,11 +80,11 @@ export class PostProcessing {
           halo+=max(texture2D(tDiffuse,vUv-texel*vec2(0.,3.)).rgb-.72,0.);
           c=mix(vec3(l),c,1.12);
           c=(c-.5)*1.045+.5;
-          c*=mix(vec3(.96,.965,1.08),vec3(1.065,1.012,.92),smoothstep(.05,.9,l));
-          c=c*.96+vec3(.028,.019,.032)*(1.-smoothstep(.0,.4,l));
-          c+=halo*vec3(.13,.048,.022);
+          c*=mix(vec3(.96,.965,1.08),mix(vec3(1.065,1.012,.92),vec3(.98,1.01,1.045),night),smoothstep(.05,.9,l));
+          c=c*.96+vec3(.028,.019,.032)*(1.-smoothstep(.0,.4,l))*(1.-night*.55);
+          c+=halo*mix(vec3(.13,.048,.022),vec3(.035,.045,.075),night)*(1.-softLight*.8);
           float leak=pow(max(0.,1.-vUv.x),12.)*(.75+.25*sin(time*.35));
-          c+=vec3(.035,.012,.004)*leak;
+          c+=vec3(.035,.012,.004)*leak*(1.-night);
           if(lines>.001){
             // lignes de vitesse : secteurs angulaires, chacun avec sa largeur, sa phase et sa vitesse
             float a=atan(dir.y,dir.x)/6.2831853+.5;
@@ -110,11 +111,19 @@ export class PostProcessing {
     this.composer.addPass(this.grade);
   }
   setScene(scene) { this.renderPass.scene = scene; if (this.ao) this.ao.scene = scene; }
+  setAtmosphere(night=0,softLight=0) {
+    this.grade.uniforms.night.value=night;
+    this.grade.uniforms.softLight.value=softLight;
+    this.film.uniforms.intensity.value=.13-night*.045-softLight*.04;
+  }
   resize(w,h,dpr){this.composer.setPixelRatio(dpr);this.composer.setSize(w,h);this.grade.uniforms.aspect.value=w/h;this.grade.uniforms.texel.value.set(1/(w*dpr),1/(h*dpr));}
   // fx : { rush, lines, blur, flash, flashColor } (voir view/TransitionFx.js)
   render(pulse=0,fx=NONE){
     const u=this.grade.uniforms;
-    this.bloom.strength=.38+pulse*.07+fx.rush*.10+fx.lines*.05;
+    // Bloom belongs to neon emitters; matte road highlights stay below threshold.
+    const night=u.night.value,soft=u.softLight.value;
+    this.bloom.threshold=1.8-night*.35+soft*.6;
+    this.bloom.strength=.30-soft*.16-night*.08+pulse*.04+fx.rush*.06+fx.lines*.03;
     u.time.value=performance.now()/1000;
     u.rush.value=fx.rush; u.lines.value=fx.lines; u.blur.value=fx.blur; u.flash.value=fx.flash;
     if(fx.flashColor)u.flashColor.value.copy(fx.flashColor);

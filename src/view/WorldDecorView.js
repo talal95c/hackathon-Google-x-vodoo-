@@ -19,7 +19,7 @@ export class WorldDecorView extends View {
     super(ctx);
     const colors = ZONES.map(zone => zone.scenery);
     this.palettes = colors.map(row => Object.fromEntries(['base', 'white', 'dark', 'ground', 'glass', 'neon', 'gold'].map((name, i) => [name, new THREE.MeshStandardMaterial({
-      color: row[i], roughness: name === 'glass' ? .28 : .82, metalness: name === 'glass' ? .28 : 0, flatShading: true,
+      color: row[i], roughness: name === 'glass' ? .7 : .9, metalness: 0, envMapIntensity: .15, flatShading: true,
       emissive: ['neon', 'gold'].includes(name) ? row[i] : 0, emissiveIntensity: name === 'neon' ? 2.4 : 1.6,
       side: THREE.DoubleSide,
     })])));
@@ -177,10 +177,11 @@ export class WorldDecorView extends View {
   update(dt, time) {
     // The full route ahead is already generated when these chunks become visible.
     for (const chunk of this.track.chunks) if (!this.chunks.has(chunk.index) && chunk.s0 < this.game.runner.z + 310) this.build(chunk);
-    for (const palette of this.palettes) {
-      palette.neon.emissiveIntensity = 1.7 + (this.ctx.fx?.pulse ?? 0) * .65;
-      palette.gold.emissiveIntensity = 1.35 + (this.ctx.fx?.down ?? 0) * .5;
-    }
+    this.palettes.forEach((palette,i)=>{
+      const night=ZONES[i].palette.night;
+      palette.neon.emissiveIntensity = (night?3.2:1.35) + (this.ctx.fx?.pulse ?? 0) * .35;
+      palette.gold.emissiveIntensity = (night?2.2:1.15) + (this.ctx.fx?.down ?? 0) * .3;
+    });
     for (const group of this.chunks.values()) for (const mesh of group.userData.kinetics) {
       const m=mesh.userData.motion;
       mesh.rotation.y=mesh.userData.baseRotation+time*m.spin;

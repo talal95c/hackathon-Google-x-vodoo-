@@ -31,3 +31,10 @@ Run `npm run dev`, then open `/dev/universes.html`. Choose a universe and seed t
 The five decks now have distinct analytic materials and geometry: taffy stripes and wafer layers, leaf veins and folded foliage, a curved ceramic bowl, piano keys with hanging resonators, and a magnetic deck inside helical rails. RoadProfiles changes actual elevation, width and curve radius using an independent seeded stream. The visible Poolside banks bounce both the player and solo rivals; a jump above the rim can still leave the deck.
 
 Route tests raycast the running/jumping corridor over thousands of lane samples, verify continuity at section joins and ensure physics slopes match the visible road.
+
+
+### Neon nights and glare control
+
+Moon Garden, Lava Disco and Orbit Playground use explicit night palettes, a shaded moon, a slow aurora, coloured guide rails and emissive sculpture details. Hemisphere and camera-side fill lighting keep the dino and hazards readable. Lighting and film grading blend at world transitions. Neon bloom is restricted by a luminance threshold rather than raising global exposure.
+
+Poolside's floor and curved banks use diffuse-only Lambert materials: direct lights and the environment cannot create specular hotspots on the playable surface. Its sun, bloom, decorative glints and side lights are also softened. Road patterns, shadows and collision geometry are preserved.

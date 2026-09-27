@@ -38,6 +38,7 @@ export function createSculpture(theme, variant, seed, materials) {
     }
     geo.computeVertexNormals();add('base',geo);
     tube('ground',0,-.55,0,8,.65,8,12);
+    if(theme===1||theme===3||theme===4)ring('neon',0,-.12,0,7.85,.11,Math.PI/2);
   };
   island();
   if (theme === 0) {
@@ -128,6 +129,12 @@ export function createSculpture(theme, variant, seed, materials) {
       ring('accent',0,9,0,3.4,.35,Math.PI/2);
     } else if(variant===1) { // Rotating disco ball, concentric dance rings.
       tube('dark',0,4,0,1,9,.65);
+      // Equalizer bars frame the disco ball, within the island footprint.
+      for(let k=0;k<7;k++) {
+        const h=3+(k%4)*2;
+        box('dark',(k-3)*1.9,h/2,-5,1.2,h,1.1);
+        for(let y=1;y<h;y+=1.2)box(k%2?'neon':'gold',(k-3)*1.9,y,-5.58,.8,.35,.12);
+      }
       animate(new THREE.IcosahedronGeometry(4.7,2),'glass',0,13,0,.5,.4);
       for(let i=0;i<3;i++)ring(i%2?'gold':'neon',0,13,0,5.5+i*.7,.15,(i-1)*.7);
     } else if(variant===2) {
@@ -152,7 +159,7 @@ export function createSculpture(theme, variant, seed, materials) {
       animate(new THREE.IcosahedronGeometry(1.4,1),'neon',6,16,0,.5,1);
       tube('white',0,3,0,2,6,1);
     } else if(variant===1) {
-      for(let k=0;k<3;k++)animate(new THREE.TorusGeometry(5.5+k,.45,6,32).rotateY(k*1.05),'glass',0,11,0,.2+k*.1,.3);
+      for(let k=0;k<3;k++)animate(new THREE.TorusGeometry(5.5+k,.22,6,32).rotateY(k*1.05),k%2?'gold':'neon',0,11,0,.2+k*.1,.3);
       animate(new THREE.IcosahedronGeometry(3,1),'accent',0,11,0,.6,.6);
       tube('base',0,3,0,4,6,2,6);
     } else if(variant===2) { // A kinetic gallery sculpture, a real Three.js torus knot.

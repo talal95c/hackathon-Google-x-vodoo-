@@ -4,7 +4,7 @@ Race a dino through a surreal, ever-changing road trip — and slap your way to 
 
 A colorful 3D racing game for desktop. Dodge obstacles, drift around corners, slap nearby rivals and battle in quick Fight Club duels, with a soundtrack generated live by AI.
 
-![Poolside: a winding ceramic skate bowl with sculptural scenery](docs/screenshots/race-pool-desktop.png)
+![Poolside: a matte ceramic skate bowl with clear tiles and sculptural scenery](docs/screenshots/race-pool-desktop.png)
 
 > **PC version only for now.** The game is designed for desktop browsers with a keyboard. Mobile support is a work in progress.
 
@@ -60,6 +60,8 @@ You can also play without a key using the built-in synthesized soundtrack.
 
 The track itself changes character: a striped candy ribbon, a living leaf walkway, a tiled skate bowl, a giant piano bridge and a magnetic orbital deck wrapped in spirals. Seeded hills and widening sections change the actual route, while Poolside's walls bounce racers back onto the deck.
 
+Soda Dunes and Poolside run in daylight; **Moon Garden, Lava Disco and Orbit Playground are neon night stages**, with starry skies, gentle auroras, glowing rails and illuminated sculptures. Poolside uses matte tiles and softer lighting to keep the racing line clear.
+
 Twenty low-poly landmark compositions, moving sculptures, scattered miniature gardens and three tunnel profiles make each run feel different. Warm film grain, soft halation, bloom and lifted shadows give the scene a vintage postcard look. Multiplayer racers share the same procedural seed.
 
 The visuals reuse official **Three.js** addons under the MIT licence. See the [visual references and code credits](docs/visual-references.md).
@@ -85,17 +87,17 @@ Open **http://localhost:5173** in your browser, then select **Play**.
 
 ![A winding striped candy track and frosting arches](docs/screenshots/race-soda-desktop.png)
 
-**Moon Garden**
+**Moon Garden — neon night**
 
-![Moon Garden: glowing mushrooms and lunar sculptures](docs/screenshots/race-moon-desktop.png)
+![Moon Garden at night: glowing mushrooms, mint rails and lunar sculptures](docs/screenshots/race-moon-desktop.png)
 
-**Orbit Playground**
+**Orbit Playground — neon night**
 
-![Orbit Playground: floating planets and kinetic sculptures](docs/screenshots/race-orbit-desktop.png)
+![Orbit Playground at night: cyan spirals, floating planets and kinetic sculptures](docs/screenshots/race-orbit-desktop.png)
 
-**Lava Disco — piano bridge**
+**Lava Disco — midnight piano bridge**
 
-![Piano keys across a suspended bridge in Lava Disco](docs/screenshots/race-lava-desktop.png)
+![Pink neon arches and piano keys across the midnight bridge in Lava Disco](docs/screenshots/race-lava-desktop.png)
 
 **Fight Club flips**
 

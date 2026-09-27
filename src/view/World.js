@@ -59,6 +59,7 @@ export class World {
       top: { value: this.colors.skyTop }, bottom: { value: this.colors.sky },
       sunColor: { value: new THREE.Color(0xfff1d0) }, sunDir: { value: new THREE.Vector3(-0.35, 0.2, 1).normalize() },
       cirrus: { value: this.colors.cloud }, time: { value: 0 }, stars: { value: 0 },
+      night: { value: 0 }, sunStrength: { value: 1 }, aurora: { value: new THREE.Color(0x68ffd2) },
     };
     this.sky = new THREE.Mesh(
       new THREE.SphereGeometry(380, 48, 24),
@@ -67,7 +68,7 @@ export class World {
         uniforms: this.skyUniforms,
         vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
         fragmentShader: `
-          uniform vec3 top, bottom, sunColor, sunDir, cirrus; uniform float time, stars; varying vec3 vP;
+          uniform vec3 top, bottom, sunColor, sunDir, cirrus, aurora; uniform float time, stars, night, sunStrength; varying vec3 vP;
           float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
           float noise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f);
             return mix(mix(hash(i), hash(i+vec2(1,0)), f.x), mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y); }
@@ -78,12 +79,12 @@ export class World {
             vec3 c = mix(bottom, top * .78, h);
             // brume lumineuse à l'horizon, teintée par le soleil
             float sd = max(dot(d, sunDir), 0.);
-            c += sunColor * pow(1. - abs(d.y), 6.) * .18 * (.4 + sd);
+            c += sunColor * pow(1. - abs(d.y), 6.) * .18 * (.4 + sd) * (1.-night) * sunStrength;
             // voiles de cirrus (projetés sur un plafond, défilent lentement)
             if (d.y > 0.02) {
               vec2 uv = d.xz / (d.y + .25) * 1.6 + vec2(time * .006, time * .0025);
               float w = smoothstep(.52, .82, fbm(uv * vec2(1., 3.2)));
-              c = mix(c, cirrus * 1.05 + sunColor * sd * .15, w * .42 * smoothstep(.02, .3, d.y));
+              c = mix(c, cirrus * 1.05 + sunColor * sd * .15, w * .42 * smoothstep(.02, .3, d.y) * (1.-night));
             }
             // étoiles (ciel sombre)
             if (stars > .01 && d.y > .05) {
@@ -92,7 +93,15 @@ export class World {
               c += vec3(st) * stars * smoothstep(.05, .4, d.y);
             }
             // soleil : disque + halo (valeurs > 1 → bloom)
-            c += sunColor * (smoothstep(.9985, .9993, sd) * 2.2 + pow(sd, 350.) * 1.1 + pow(sd, 18.) * .22);
+            c += sunColor * (smoothstep(.9985, .9993, sd) * 2.2 + pow(sd, 350.) * 1.1 + pow(sd, 18.) * .22) * (1.-night) * sunStrength;
+            // A restrained moon and a slow aurora replace the sun at night.
+            // Both live above the route, never as additive overlays over hazards.
+            float moon=smoothstep(.9986,.9992,sd);
+            float craters=.86+.14*noise(d.xz*160.);
+            c+=vec3(.54,.69,.9)*moon*craters*night;
+            float band=.3+.06*sin(d.x*5.+d.z*3.+time*.025)+.025*sin(d.x*13.-time*.04);
+            float curtain=exp(-abs(d.y-band)*25.)*smoothstep(.1,.25,d.y);
+            c+=aurora*curtain*(.025+.025*noise(d.xz*8.+time*.015))*night;
             gl_FragColor = vec4(c, 1.);
           }`,
       }),
@@ -135,6 +144,10 @@ export class World {
     sun.shadow.radius = 3;
     Object.assign(sun.shadow.camera, { left: -38, right: 38, top: 38, bottom: -38, near: 1, far: 120 });
     this.scene.add(sun, sun.target);
+    // Broad camera-side fill keeps the dino and hazards readable at night.
+    // No extra shadow map or moving pool of glare on the track.
+    this.fill = new THREE.DirectionalLight(0x91b8eb, 0);
+    this.scene.add(this.fill, this.fill.target);
   }
 
   // focus : point suivi par l'ombre du soleil (le dino)
@@ -144,6 +157,8 @@ export class World {
     c.skyTop.lerp(tmp.setHex(p.skyTop), k);
     c.cloud.lerp(tmp.setHex(p.cloud), k);
     this.sun.color.lerp(tmp.setHex(p.sun), k);
+    this.night = THREE.MathUtils.lerp(this.night ?? 0, p.night ? 1 : 0, k);
+    this.softLight = THREE.MathUtils.lerp(this.softLight ?? 0, p.softLight ? 1 : 0, k);
     this.scene.fog.color.copy(c.sky);
     document.body.style.background = `#${c.sky.getHexString()}`;
 
@@ -155,6 +170,10 @@ export class World {
     const u = this.skyUniforms;
     u.time.value += dt;
     u.sunColor.value.copy(this.sun.color);
+    u.night.value = this.night;
+    u.sunStrength.value = 1 - this.softLight * .78;
+    u.aurora.value.lerp(tmp.setHex(p.edge), k);
+    u.sunDir.value.set(-.35, .2 + this.softLight*.38 + this.night*.25, 1).normalize();
     const darkness = 1 - (c.skyTop.r * .2126 + c.skyTop.g * .7152 + c.skyTop.b * .0722);
     u.stars.value += (THREE.MathUtils.smoothstep(darkness, .7, .9) - u.stars.value) * Math.min(1, dt);
     for (const cl of this.clouds) {
@@ -164,10 +183,16 @@ export class World {
       cl.g.lookAt(cam.x, cl.y, cam.z);
     }
     const inside = this.enclosure ?? 0;
-    const night = p.clouds === false ? 1 : 0;
-    this.ambient.intensity = .92 - inside * .53 - night * .14;
-    this.sun.intensity = 2.65 - inside * 2.1 - night * .65;
-    this.scene.environmentIntensity = .28 - inside * .13;
+    const night = this.night, soft = this.softLight;
+    this.ambient.color.lerp(tmp.setHex(p.night ? 0xb5c8ff : 0xb6c7ef), k);
+    this.ambient.groundColor.lerp(tmp.setHex(p.night ? 0x554570 : 0x987259), k);
+    this.ambient.intensity = (.92 - night*.10) * (1-inside*.4);
+    this.sun.intensity = THREE.MathUtils.lerp(2.65-soft*.95, 1.15, night) * (1-inside*.7);
+    this.scene.environmentIntensity = THREE.MathUtils.lerp(.22-soft*.1, .10, night) * (1-inside*.45);
+    this.fill.intensity = night*.6*(1-inside*.4);
+    this.fill.position.set(cam.x, cam.y+10, cam.z);
+    this.fill.target.position.copy(focus);
+    this.post.setAtmosphere(night, soft);
     this.sun.position.set(focus.x + 25, focus.y + 32, focus.z - 18);
     this.sun.target.position.copy(focus);
   }

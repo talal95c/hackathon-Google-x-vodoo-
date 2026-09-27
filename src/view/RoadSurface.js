@@ -4,13 +4,15 @@ import { ZONES } from '../content/zones.js';
 // Analytic material patterns: no bitmap downloads and no repeated center dashes.
 // UVs are metres along/across the collision surface, so bends do not stretch tiles.
 export function roadSurface(theme) {
-  const z=ZONES[theme],material=new THREE.MeshStandardMaterial({
-    color:z.palette.road,roughness:theme===2?.3:.69,metalness:theme===4?.28:0,
-    side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1,
+  const z=ZONES[theme],settings={color:z.palette.road,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1};
+  // Pool tiles are diffuse-only: neither the sun nor point lights can form a
+  // specular hotspot over a hazard. Shadows and the ceramic pattern remain.
+  const material=theme===2?new THREE.MeshLambertMaterial(settings):new THREE.MeshStandardMaterial({
+    ...settings,roughness:.86,metalness:0,envMapIntensity:.18,
   });
   material.onBeforeCompile=shader=>{
-    shader.uniforms.roadInk={value:new THREE.Color([0xe9849f,0x81bba0,0x7bc9d8,0x2c2441,0x546488][theme])};
-    shader.uniforms.roadCream={value:new THREE.Color([0xffe8b3,0xcce7aa,0xffedd3,0xecc7a2,0xc0dce9][theme])};
+    shader.uniforms.roadInk={value:new THREE.Color([0xe9849f,0x608e85,0x589baf,0x211c39,0x3a5379][theme])};
+    shader.uniforms.roadCream={value:new THREE.Color([0xffe8b3,0xa4ccba,0xcdcfb9,0xbaabc7,0x8cbed2][theme])};
     shader.vertexShader='varying vec2 vRoadUv;\n'+shader.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\nvRoadUv=uv;');
     shader.fragmentShader='varying vec2 vRoadUv;uniform vec3 roadInk,roadCream;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
       vec2 q=vRoadUv;

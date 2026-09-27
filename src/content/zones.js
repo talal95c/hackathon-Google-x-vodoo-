@@ -17,7 +17,7 @@ export const ZONES = [
   },
   {
     id: 'moon', name: 'MOON GARDEN', subtitle: 'A little stranger after dark.',
-    palette: { sky: 0x645980, skyTop: 0x201c4e, cloud: 0xc6a9df, sun: 0xffd3b5, road: 0x78779d, edge: 0x81f6ce, dash: 0xfbe6c6, text: '#fff3dc', clouds: false },
+    palette: { night: true, sky: 0x142b3c, skyTop: 0x060d24, cloud: 0x253753, sun: 0xb1d1ef, road: 0x57788b, edge: 0x68ffd2, dash: 0xccebea, text: '#d6fff3', clouds: false },
     scenery: [0x9f77c9,0xffd8ca,0x35284e,0x554e75,0x72cfb5,0x78ffd2,0xffaa91],
     spawns: [
       { type: 'popup', weight: 2 },
@@ -36,20 +36,20 @@ export const ZONES = [
   },
   {
     id: 'pool', name: 'POOLSIDE', subtitle: 'Make a splash. Miss the obstacles.',
-    palette: { sky: 0xffc5b1, skyTop: 0x739fd0, cloud: 0xffeada, sun: 0xffe0af, road: 0xa7d9d8, edge: 0xf87080, dash: 0xfaf2cf, text: '#fff3dc', clouds: true },
+    palette: { softLight: true, sky: 0xe3bdb4, skyTop: 0x739fd0, cloud: 0xe7e2d8, sun: 0xffedd6, road: 0x86babb, edge: 0xe5677e, dash: 0xdad7bc, text: '#fff3dc', clouds: true },
     scenery: [0xef7e89,0xffebc3,0x315e79,0x68b7bb,0x4faee1,0x7efbe5,0xffbf60],
     spawns: [{ type: 'rollingCookie', weight: 1.6 }, { type: 'popup', weight: 2 }, { type: 'tabWall', weight: 1 }, { type: 'popupSlider', weight: 1 }, { pattern: 'coinSnake', weight: 2 }, { type: 'shieldPickup', weight: .35 }], boss: null,
   },
   {
-    id: 'lava', name: 'LAVA DISCO', subtitle: 'Hot laps. Cool moves.',
-    palette: { sky: 0x513660, skyTop: 0x191934, cloud: 0xa86279, sun: 0xffb5a0, road: 0x685073, edge: 0xff9769, dash: 0xffe8ba, text: '#fff3dc', clouds: false },
-    scenery: [0x774765,0xffbe99,0x29273d,0x49364e,0xb177b3,0xff764e,0xffd07a],
+    id: 'lava', name: 'LAVA DISCO', subtitle: 'Midnight laps. Neon moves.',
+    palette: { night: true, sky: 0x25132e, skyTop: 0x080b22, cloud: 0x352443, sun: 0xc6bfff, road: 0x514166, edge: 0xff66b5, dash: 0xcbbfe1, text: '#ffe0f3', clouds: false },
+    scenery: [0x774765,0xe5bbd3,0x201a34,0x2b203c,0xb177b3,0xff49ae,0x4de0ee],
     spawns: [{ type: 'rollingCookie', weight: 1.5 }, { type: 'tabWall', weight: 1.5 }, { type: 'popupSlider', weight: 2 }, { pattern: 'coinRow', weight: 2 }, { type: 'boostPad', weight: 1 }, { type: 'laserPickup', weight: .35 }], boss: null,
   },
   {
     id: 'orbit', name: 'ORBIT PLAYGROUND', subtitle: 'Gravity is just a suggestion.',
-    palette: { sky: 0x7786b0, skyTop: 0x242456, cloud: 0xefc6e0, sun: 0xffd9d9, road: 0xb1bbd9, edge: 0xf593c8, dash: 0xffeed7, text: '#fff3dc', clouds: false },
-    scenery: [0x918bc9,0xffe2bd,0x383057,0x727aa5,0x88daca,0xff89c9,0xffd179],
+    palette: { night: true, sky: 0x141f40, skyTop: 0x050b20, cloud: 0x27344e, sun: 0xbbd4ff, road: 0x63739e, edge: 0x5bddf2, dash: 0xb7dbe5, text: '#e4f6ff', clouds: false },
+    scenery: [0x776db3,0xc7d4ea,0x22223e,0x323d65,0x669dad,0x51dff4,0xfc79cd],
     spawns: [{ type: 'popup', weight: 1 }, { type: 'rollingCookie', weight: 2.4 }, { pattern: 'coinSnake', weight: 3 }, { type: 'boostPad', weight: 1 }, { type: 'doubleCoinsPickup', weight: .4 }], boss: null,
   },
 ];

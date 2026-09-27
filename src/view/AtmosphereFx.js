@@ -8,7 +8,7 @@ import { View } from './View.js';
 const STYLES = [
   { color: 0xffc999, size: 1.4, drift: [3.5, 0.3, 0.6], shape: 0, twinkle: 0.2, alpha: 0.75 },  // soda dust
   { color: 0x9bffd9, size: 1.1, drift: [0.4, 0.6, 0], shape: 1, twinkle: 0.6, alpha: 0.6 },      // garden fireflies
-  { color: 0xffe4c5, size: 0.8, drift: [0, 0.8, 0], shape: 2, twinkle: 1, alpha: 0.8 },           // pool glints
+  { color: 0xa9dcdb, size: 0.55, drift: [0, 0.8, 0], shape: 0, twinkle: .2, alpha: .2 },           // pool glints
   { color: 0xff986d, size: 1.0, drift: [0, 3.2, 0], shape: 1, twinkle: 0.8, alpha: 0.85 },        // disco embers
   { color: 0xffb9e6, size: 1.8, drift: [0.6, 0.25, 0], shape: 0, twinkle: 0.4, alpha: 0.5 },      // orbital glitter
 ];
